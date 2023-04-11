@@ -12,5 +12,6 @@
     <Application.Styles>
         <FluentTheme  />
         <StyleInclude Source="avares://WireMockAdminUI/Styles.axaml"></StyleInclude>
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
     </Application.Styles>
 </Application>

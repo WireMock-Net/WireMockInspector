@@ -33,12 +33,12 @@
                 <PathIcon Data="{StaticResource arrow_sync_circle_regular}" ></PathIcon>
             </Button>
         </Grid>
-        <Grid  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 300" VerticalAlignment="Stretch" Grid.Row="1" Margin="0,10">
+        <Grid  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch" Grid.Row="1" Margin="0,10">
         <ListBox SelectedItem="{Binding SelectedRequest}" Items="{Binding Requests}"   Margin="0 20, 10,0" Background="Transparent">
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
               <Setter Property="Padding" Value="0"></Setter>
-              <Setter Property="Margin" Value="0,5"></Setter>
+              <Setter Property="Margin" Value="0,5,20,5"></Setter>
               <Setter Property="ClipToBounds" Value="True"></Setter>
               <Setter Property="CornerRadius" Value="10"></Setter>
             </Style>
@@ -56,7 +56,7 @@
                     <PathIcon Data="{StaticResource checkmark_circle_regular}" Foreground="green" IsVisible="{Binding IsMatched}" ></PathIcon>
                   </Panel>
                   <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat={}{0:s}}" Foreground="white" VerticalAlignment="Center" ></TextBlock>
-                  <Border Grid.Column="2"  BorderThickness="1" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="green">
+                  <Border Grid.Column="2"  BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="green">
                     <TextBlock TextAlignment="Center"  Text="{Binding Method}" Margin="5" Foreground="white"></TextBlock>
                   </Border>
                   <TextBlock Grid.Column="3" Text="{Binding Path}" Foreground="white" VerticalAlignment="Center" Margin="10,0"></TextBlock>
@@ -68,7 +68,7 @@
           <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch"></GridSplitter>
           <Panel Grid.Column="2"  HorizontalAlignment="Stretch"  Margin="10,25,0,0" >
               <ScrollViewer HorizontalAlignment="Stretch" >
-                <ItemsControl Items="{Binding RelatedMapping.RequestParts}" HorizontalAlignment="Stretch" >
+                <ItemsControl Items="{Binding RelatedMapping.RequestParts}" HorizontalAlignment="Stretch" Margin="0,0,20,0" >
                     <ItemsControl.Styles>
                         <Style Selector="ListBoxItem">
                             <Setter Property="Padding" Value="0"></Setter>
@@ -85,116 +85,73 @@
                     <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:MatchDetailsViewModel">
                       <Expander HorizontalAlignment="Stretch">
-                        <Expander.Header>
+                          <Expander.Styles>
+                              <Style Selector="PathIcon.matched">
+                                  <Setter Property="Data" Value="{StaticResource checkmark_circle_regular}"></Setter>
+                                  <Setter Property="Foreground" Value="green"></Setter>
+                              </Style>
+                              <Style Selector="PathIcon.unmatched">
+                                  <Setter Property="Data" Value="{StaticResource dismiss_circle_regular}"></Setter>
+                                  <Setter Property="Foreground" Value="red"></Setter>
+                              </Style>
+                              <Style Selector="PathIcon.matched.noexpectations">
+                                  <Setter Property="Data" Value="{StaticResource missing_metadata_regular}"></Setter>
+                                  <Setter Property="Foreground" Value="gray"></Setter>
+                              </Style>
+                          </Expander.Styles>
+                          <Expander.Header>
                           <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
                             <Panel Margin="5,0,15,0" VerticalAlignment="Center">
-                              <PathIcon Data="{StaticResource dismiss_circle_regular}" Foreground="red" IsVisible="{Binding !Matched}" ></PathIcon>
-                              <PathIcon Data="{StaticResource checkmark_circle_regular}" Foreground="green" IsVisible="{Binding Matched}" ></PathIcon>
+                                <PathIcon 
+                                  Classes.matched="{Binding Matched}" 
+                                  Classes.unmatched="{Binding !Matched}" 
+                                  Classes.noexpectations="{Binding NoExpectations}" 
+                                  ></PathIcon>
                             </Panel>
                             <TextBlock Text="{Binding RuleName}"></TextBlock>
                           </StackPanel>
                         </Expander.Header>
-                        <ContentControl Content="{Binding}">
-                          <ContentControl.DataTemplates>
-                            <DataTemplate DataType="{x:Type vm:ClientIPMatchDetailsViewModel}" >
-                              <StackPanel Orientation="Vertical">
-                                <Label VerticalAlignment="Center">Actual value:</Label>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding ActualValue}" FontWeight="Bold"></TextBlock>
-                                <Label VerticalAlignment="Center">Expectations:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding Expectations}"></md:MarkdownScrollViewer>
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type vm:MethodMatchDetailsViewModel}">
-                              <StackPanel Orientation="Vertical">
-                                <Label VerticalAlignment="Center">Actual value:</Label>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding ActualValue}" FontWeight="Bold"></TextBlock>
-                                <Label VerticalAlignment="Center">Expectations:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding Expectations}"></md:MarkdownScrollViewer>
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type vm:UrlMatchDetailsViewModel}">
-                              <StackPanel  Orientation="Vertical">
-                                <Label VerticalAlignment="Center">Actual value:</Label>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding ActualValue}" FontWeight="Bold"></TextBlock>
-                                <Label VerticalAlignment="Center">Expectations:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding Expectations}"></md:MarkdownScrollViewer>
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type vm:PathMatchDetailsViewModel}">
-                              <StackPanel  Orientation="Vertical">
-                                <Label VerticalAlignment="Center">Actual value:</Label>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding ActualValue}" FontWeight="Bold"></TextBlock>
-                                <Label VerticalAlignment="Center">Expectations:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding Expectations}"></md:MarkdownScrollViewer>
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type vm:HeaderMatchDetailsViewModel}">
-                              <StackPanel  Orientation="Vertical">
-                                <Label VerticalAlignment="Center">Actual values:</Label>
-                                <ListBox Items="{Binding ActualValues}">
-                                  <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                      <StackPanel  Orientation="Horizontal">
-                                        <Label VerticalAlignment="Center" Content="{Binding Key}"></Label>
-                                        <TextBlock VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold" ToolTip.Tip="{Binding Value}" TextWrapping="WrapWithOverflow"></TextBlock>
-                                      </StackPanel>
-                                    </DataTemplate>
-                                  </ListBox.ItemTemplate>
 
-                                </ListBox>
-                                <Label VerticalAlignment="Center">Expectations:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding Expectations}"></md:MarkdownScrollViewer>
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type vm:CookieMatchDetailsViewModel}">
-                              <StackPanel  Orientation="Vertical">
-                                <Label VerticalAlignment="Center">Actual values:</Label>
-                                <ListBox Items="{Binding ActualValues}">
-                                  <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                      <StackPanel  Orientation="Horizontal">
-                                        <Label VerticalAlignment="Center" Content="{Binding Key}"></Label>
-                                        <TextBlock VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold" ToolTip.Tip="{Binding Value}" TextWrapping="WrapWithOverflow"></TextBlock>
-                                      </StackPanel>
-                                    </DataTemplate>
-                                  </ListBox.ItemTemplate>
-                                </ListBox>
-                                <Label VerticalAlignment="Center">Expectations:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding Expectations}"></md:MarkdownScrollViewer>
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type vm:ParamMatchDetailsViewModel}">
-                              <StackPanel  Orientation="Vertical"  HorizontalAlignment="Stretch">
-                                <Label Content="Actual values"></Label>
-                                <ListBox Items="{Binding ActualValues}">
-                                  <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                      <StackPanel  Orientation="Horizontal">
-                                        <Label VerticalAlignment="Center" Content="{Binding Key}"></Label>
-                                        <TextBlock VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold" ToolTip.Tip="{Binding Value}" TextWrapping="WrapWithOverflow"></TextBlock>
-                                      </StackPanel>
-                                    </DataTemplate>
-                                  </ListBox.ItemTemplate>
-                                </ListBox>
-                                <Label VerticalAlignment="Center">Expectations:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding Expectations}" HorizontalAlignment="Stretch"></md:MarkdownScrollViewer>
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type vm:BodyMatchDetailsViewModel}" >
-                              <StackPanel Orientation="Vertical">
-                                <Label VerticalAlignment="Center">Actual value:</Label>
-                                <md:MarkdownScrollViewer Markdown="{Binding ActualPayload}" />
+                          <StackPanel Orientation="Vertical">
+                              <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,0,0,15">
+                                  <Label VerticalAlignment="Center" >Actual value</Label>
+                              </Border>
+                              <ContentControl Content="{Binding ActualValue}">
+                                  <ContentControl.DataTemplates>
+                                      <DataTemplate DataType="{x:Type vm:SimpleActualValue}">
+                                          <SelectableTextBlock Margin="5,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold"></SelectableTextBlock>
+                                      </DataTemplate>
+                                      <DataTemplate DataType="{x:Type vm:MarkdownActualValue}">
+                                          <md:MarkdownScrollViewer Markdown="{Binding Value}"></md:MarkdownScrollViewer>
+                                      </DataTemplate>
+                                      <DataTemplate DataType="{x:Type vm:KeyValueListActualValue}">
+                                          <DataGrid Items="{Binding Items}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
+                                              <DataGrid.Styles>
+                                                  <Style Selector="DataGridColumnHeader">
+                                                      <Setter Property="Background" Value="#505050"></Setter>
+                                                  </Style>
+                                                  <Style Selector="DataGridColumnHeader TextBlock">
+                                                      <Setter Property="Foreground" Value="White"></Setter>
+                                                  </Style>
+                                                  <Style Selector="DataGridCell TextBlock">
+                                                      <Setter Property="FontSize" Value="10"></Setter>
+                                                  </Style>
+                                              </DataGrid.Styles>
+                                              <DataGrid.Columns>
+                                                  <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/>
+                                                  <DataGridTextColumn Header="Value" Binding="{Binding Value}" />
+                                              </DataGrid.Columns>
+                                          </DataGrid>
+                                      </DataTemplate>
 
-
-                              </StackPanel>
-                            </DataTemplate>
-                            <DataTemplate DataType="{x:Type  vm:MatchDetailsViewModel}">
-                              <StackPanel>
-                                <TextBlock VerticalAlignment="Center">Not Matched</TextBlock>
-                              </StackPanel>
-                            </DataTemplate>
-                          </ContentControl.DataTemplates>
-                        </ContentControl>
+                                  </ContentControl.DataTemplates>
+                              </ContentControl>
+                              <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,5">
+                                  <Label VerticalAlignment="Center">Expectations</Label>
+                              </Border>
+                              <md:MarkdownScrollViewer Markdown="{Binding Expectations}" IsVisible="{Binding !NoExpectations}"></md:MarkdownScrollViewer>
+                              <TextBlock FontSize="10" Margin="5,5,0,0" IsVisible="{Binding NoExpectations}">(No Expectations)</TextBlock>
+                          </StackPanel>
                       </Expander>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>

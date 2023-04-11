@@ -6,9 +6,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using DynamicData;
-using DynamicData.Binding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
@@ -19,32 +17,6 @@ using WireMock.Client;
 
 namespace WireMockAdminUI.ViewModels
 {
-    public static class DesignTimeData
-    {
-        public static MainWindowViewModel MainViewModel { get; set; } = new MainWindowViewModel()
-        {
-            Requests =
-            {
-                new RequestViewModel()
-                {
-                    Timestamp = DateTime.Now,
-                    IsMatched = true,
-                    Path = "/api/v1.0/weather?lat=10.99&lon=44.34",
-                    Method = "POST",
-                    StatusCode = 200
-                },
-                new RequestViewModel()
-                {
-                    Timestamp = DateTime.Now,
-                    IsMatched = false,
-                    Path = "/api/v1.0/weather?lat=10.99&lon=44.34",
-                    Method = "GET",
-                    StatusCode = 404
-                },
-            }
-        };
-    }
-
     public class MainWindowViewModel : ViewModelBase
     {
         public string AdminUrl
@@ -57,21 +29,16 @@ namespace WireMockAdminUI.ViewModels
 
         public ObservableCollection<RequestViewModel> Requests { get; } = new();
 
-        public RequestViewModel SelectedRequest
+        public RequestViewModel? SelectedRequest
         {
             get => _selectedRequest;
             set => this.RaiseAndSetIfChanged(ref _selectedRequest, value);
         }
 
-        private RequestViewModel _selectedRequest;
-
-
-
-
+        private RequestViewModel? _selectedRequest;
 
         public MainWindowViewModel()
         {
-            
             LoadRequestsCommand = ReactiveCommand.CreateFromTask(async () =>
             {
                 var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
@@ -84,25 +51,30 @@ namespace WireMockAdminUI.ViewModels
                 .Subscribe(x => 
                 {
                     Requests.Clear();
-                    Requests.AddRange(x.Select(r => new RequestViewModel
+                    Requests.AddRange(x.Select(r =>
                     {
-                        Raw = r,
-                        Path = r.Request.Url.Substring(AdminUrl.Length),
-                        Timestamp = r.Request.DateTime,
-                        IsMatched = r.PartialRequestMatchResult?.IsPerfectMatch ?? false,
-                        Method = r.Request.Method,
-                        StatusCode = r.Response.StatusCode is int val ? val: 0,
-                        MappingId = r.PartialMappingGuid,
-                        Matches = r.PartialRequestMatchResult?.MatchDetails.OfType<JObject>().Select(x=>
+                        var matchModel = r.PartialRequestMatchResult ?? r.RequestMatchResult;
+                        var mappingGuid = r.PartialMappingGuid ?? r.MappingGuid;
+                        return new RequestViewModel
                         {
-                            var v = x.ToObject<MatchJOBject>();
-                            return new MatchInfo()
+                            Raw = r,
+                            Path = r.Request.Url.Substring(AdminUrl.Length),
+                            Timestamp = r.Request.DateTime,
+                            IsMatched = matchModel?.IsPerfectMatch ?? false,
+                            Method = r.Request.Method,
+                            StatusCode = r.Response.StatusCode is int val ? val : 0,
+                            MappingId = mappingGuid,
+                            Matches = matchModel?.MatchDetails.OfType<JObject>().Select(x =>
                             {
-                                Matched = v.Score >0,
-                                RuleName = v.Name
-                            };
-                        }).ToList()?? new List<MatchInfo>()
-                }).OrderByDescending(x=>x.Timestamp));
+                                var v = x.ToObject<MatchJOBject>();
+                                return new MatchInfo()
+                                {
+                                    Matched = v.Score > 0,
+                                    RuleName = v.Name
+                                };
+                            }).ToList() ?? new List<MatchInfo>()
+                        };
+                    }).OrderByDescending(x=>x.Timestamp));
             });
             LoadRequestsCommand.ThrownExceptions.Subscribe(exception =>
             {
@@ -112,83 +84,8 @@ namespace WireMockAdminUI.ViewModels
 
             LoadMatchedMappingCommand = ReactiveCommand.CreateFromTask(async (RequestViewModel req, CancellationToken c) =>
             {
-                MappingModel expecations = null;
-                if (req.MappingId.HasValue)
-                {
-                    var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
-                    var mappingData = await api.GetMappingAsync(req.MappingId.Value, c);
-                    expecations = mappingData;
-                }
-                else
-                {
-                    expecations = new MappingModel();
-                }
-                
-                return new MappingDetails
-                {
-                    RequestParts = new List<MatchDetailsViewModel>
-                    {
-                        new ClientIPMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "ClientIPMatcher"),
-                            ActualValue = req.Raw.Request.ClientIP,
-                            Expectations = AsJson(expecations.Request?.ClientIP)
-                        },
-                        new MethodMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "MethodMatcher"),
-                            ActualValue = req.Raw.Request.Method,
-                            Expectations = AsJson(expecations.Request?.Methods)
-                        },
-                        new UrlMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "UrlMatcher"),
-                            ActualValue = req.Raw.Request.Url,
-                            Expectations = AsJson(expecations.Request?.Url)
-                        },
-                        new PathMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "PathMatcher"),
-                            ActualValue = req.Raw.Request.Path,
-                            Expectations = AsJson(expecations.Request?.Path)
-                        },
-                        new HeaderMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "HeaderMatcher"),
-                            ActualValues = req.Raw.Request.Headers?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>(),
-                            Expectations = AsJson(expecations.Request?.Headers)
-                        },
-                        new CookieMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "CookieMatcher"),
-                            ActualValues = req.Raw.Request.Cookies?.OrderBy(x=>x.Key).Select(x=>x).ToList() ?? new List<KeyValuePair<string, string>>(),
-                            Expectations = AsJson(expecations.Request?.Cookies)
-                        },
-                        new ParamMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "ParamMatcher"),
-                            ActualValues = req.Raw.Request.Query?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>(),
-                            Expectations = AsJson(expecations.Request?.Params)
-                        },
-                        new BodyMatchDetailsViewModel
-                        {
-                            Matched = IsMatched(req, "BodyMatcher"),
-                            ActualPayload = req.Raw.Request.DetectedBodyType switch
-                            {
-                                "String" or "FormUrlEncoded" => req.Raw.Request.Body?? string.Empty,
-                                "Json" => $"```json\r\n{req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty}\r\n```",
-                                "Bytes" => req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty,
-                                "File" => "[FileContent]",
-                                _ => ""
-                            },
-                            Expectations = AsJson(expecations.Request?.Body)
-                        },
-                        new ScenarioMatchDetailsViewModel()
-                        {
-                            Matched = IsMatched(req, "ScenarioAndStateMatcher")
-                        }
-                    }
-                };
+                var expectations = await GetExpectations(req, c);
+                return GetMappingDetails(req, expectations);
             });
 
             LoadMatchedMappingCommand
@@ -196,12 +93,132 @@ namespace WireMockAdminUI.ViewModels
                 .Subscribe(details => RelatedMapping = details);
 
             this.WhenAnyValue(x => x.SelectedRequest)
-                .Where(x => x != null)               
+                .OfType<RequestViewModel>()
                 .InvokeCommand(LoadMatchedMappingCommand);
         }
 
-        private static string AsJson(object? data)
+        private static MappingDetails GetMappingDetails(RequestViewModel req, MappingModel expectations)
         {
+            return new MappingDetails
+            {
+                RequestParts = new List<MatchDetailsViewModel>
+                {
+                    new()
+                    {
+                        RuleName = "ClientIP",
+                        Matched = IsMatched(req, "ClientIPMatcher"),
+                        ActualValue = new SimpleActualValue()
+                        {
+                            Value = req.Raw.Request.ClientIP
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.ClientIP),
+                        NoExpectations = expectations.Request?.ClientIP is null
+                    },
+                    new()
+                    {
+                        RuleName = "Method",
+                        Matched = IsMatched(req, "MethodMatcher"),
+                        ActualValue = new SimpleActualValue()
+                        {
+                            Value = req.Raw.Request.Method
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.Methods),
+                        NoExpectations = expectations.Request?.Methods is null
+                    },
+                    new()
+                    {
+                        RuleName = "Url",
+                        Matched = IsMatched(req, "UrlMatcher"),
+                        ActualValue = new SimpleActualValue()
+                        {
+                            Value = req.Raw.Request.Url
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.Url),
+                        NoExpectations = expectations.Request?.Url is null
+                    },
+                    new()
+                    {
+                        RuleName = "Path",
+                        Matched = IsMatched(req, "PathMatcher"),
+                        ActualValue = new SimpleActualValue()
+                        {
+                            Value = req.Raw.Request.Path
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.Path),
+                        NoExpectations = expectations.Request?.Path is null
+                    },
+                    new()
+                    {
+                        RuleName = "Headers",
+                        Matched = IsMatched(req, "HeaderMatcher"),
+                        ActualValue = new KeyValueListActualValue()
+                        {
+                            Items = req.Raw.Request.Headers?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>()
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.Headers),
+                        NoExpectations = expectations.Request?.Headers is null
+                    },
+                    new()
+                    {
+                        RuleName = "Cookies",
+                        Matched = IsMatched(req, "CookieMatcher"),
+                        ActualValue = new KeyValueListActualValue()
+                        {
+                            Items = req.Raw.Request.Cookies?.OrderBy(x=>x.Key).Select(x=>x).ToList() ?? new List<KeyValuePair<string, string>>()
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.Cookies),
+                        NoExpectations = expectations.Request?.Cookies is null
+                    },
+                    new()
+                    {
+                        RuleName = "Query params",
+                        Matched = IsMatched(req, "ParamMatcher"),
+                        ActualValue = new KeyValueListActualValue()
+                        {
+                            Items = req.Raw.Request.Query?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>(),
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.Params),
+                        NoExpectations = expectations.Request?.Params is null
+                    },
+                    new()
+                    {
+                        RuleName = "Body",
+                        Matched = IsMatched(req, "BodyMatcher"),
+                        ActualValue = new MarkdownActualValue()
+                        {
+                            Value = req.Raw.Request.DetectedBodyType switch
+                            {
+                                "String" or "FormUrlEncoded" => req.Raw.Request.Body?? string.Empty,
+                                "Json" => $"```json\r\n{req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty}\r\n```",
+                                "Bytes" => req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty,
+                                "File" => "[FileContent]",
+                                _ => ""
+                            }
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Request?.Body),
+                        NoExpectations = expectations.Request?.Body is null
+                    }
+                }
+            };
+        }
+
+        private async Task<MappingModel> GetExpectations(RequestViewModel req, CancellationToken c)
+        {
+            if (req.MappingId.HasValue)
+            {
+                var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
+                return await api.GetMappingAsync(req.MappingId.Value, c);
+            }
+            return new MappingModel();
+        }
+
+        private static string ExpectationsAsJson(object? data)
+        {
+            if (data == null)
+            {
+                return string.Empty;
+            }
+
             return $"```json\r\n{JsonConvert.SerializeObject(data, Formatting.Indented)}\r\n```";
         }
 
@@ -214,19 +231,13 @@ namespace WireMockAdminUI.ViewModels
         public ReactiveCommand<RequestViewModel, MappingDetails> LoadMatchedMappingCommand { get; }
 
 
-        public MappingDetails RelatedMapping
+        public MappingDetails? RelatedMapping
         {
             get => _relatedMapping;
             set => this.RaiseAndSetIfChanged(ref _relatedMapping, value);
         }
 
-        private MappingDetails _relatedMapping;
-
-
-
-
-
-
+        private MappingDetails? _relatedMapping;
     }
 
     public class MappingDetails:ViewModelBase
@@ -259,75 +270,4 @@ namespace WireMockAdminUI.ViewModels
     }
 
 
-
-
-    public abstract class MatchGeneralViewModel:ViewModelBase
-    {
-        public abstract  string RuleName { get;}
-        public bool Matched { get; set; }
-    }   
-    
-    public abstract class MatchDetailsViewModel:ViewModelBase
-    {
-        public abstract string RuleName { get;}
-        public bool Matched { get; set; }
-        public string Expectations { get; set; }
-    }
-
-    public class BodyMatchDetailsViewModel: MatchDetailsViewModel
-    {
-        public string ActualPayload { get; set; }
-        public string ActualContentType { get; set; }
-
-        public override string RuleName => "Body";
-    }
-
-
-    public class ClientIPMatchDetailsViewModel : MatchDetailsViewModel
-    {
-
-        public string ActualValue { get; set; }
-        public override string RuleName => "ClientIP";
-    }
-
-    public class CookieMatchDetailsViewModel : MatchDetailsViewModel
-    {
-        public List<KeyValuePair<string, string>> ActualValues { get; set; }
-        public override string RuleName => "Cookie";
-    }
-
-    public class HeaderMatchDetailsViewModel : MatchDetailsViewModel
-    {
-        public List<KeyValuePair<string, string>> ActualValues { get; set; }
-        public override string RuleName => "Headers";
-    }
-
-    public class MethodMatchDetailsViewModel : MatchDetailsViewModel
-    {
-        public string ActualValue { get; set; }
-        public override string RuleName => "Method";
-    }
-
-    public class ParamMatchDetailsViewModel : MatchDetailsViewModel
-    {
-        public List<KeyValuePair<string,string>> ActualValues { get; set; }
-        public override string RuleName => "Query Params";
-    }
-
-    public class PathMatchDetailsViewModel : MatchDetailsViewModel
-    {
-        public string ActualValue { get; set; }
-        public override string RuleName => "Path";
-    }
-
-    public class ScenarioMatchDetailsViewModel : MatchDetailsViewModel
-    {
-        public override string RuleName => "Scenario";
-    }
-
-    public class UrlMatchDetailsViewModel : MatchDetailsViewModel
-    {
-        public string ActualValue { get; set; }
-        public override string RuleName => "Url";
-    }
 }
