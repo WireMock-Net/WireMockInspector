@@ -48,12 +48,12 @@ jobs:
       # env:
       #   SignAssembly: true
       #   AssemblyOriginatorKeyFile: ${{ steps.write_sign_key_file.outputs.filePath }}     
-    - name: Generate release note
-      run: |
-        git fetch --prune
-        $commitLog = git log "$(git describe --tags --abbrev=0)..HEAD" --pretty=format:"- %s"
-        $commitLog = if([string]::IsNullOrWhitespace($commitLog)){git log --pretty=format:"- %s"}else{$commitLog}
-        "What's new: `r`n`r`n$([string]::Join("`r`n",$commitLog))" | Out-File release_note.md -Encoding utf8
+    # - name: Generate release note
+    #   run: |
+    #     git fetch --prune
+    #     $commitLog = git log "$(git describe --tags --abbrev=0)..HEAD" --pretty=format:"- %s"
+    #     $commitLog = if([string]::IsNullOrWhitespace($commitLog)){git log --pretty=format:"- %s"}else{$commitLog}
+    #     "What's new: `r`n`r`n$([string]::Join("`r`n",$commitLog))" | Out-File release_note.md -Encoding utf8
     - name: Create Github Release
       id: create_release
       uses: actions/create-release@v1
@@ -62,7 +62,7 @@ jobs:
       with:
         tag_name: ${{ env.Version }}
         release_name:  ${{ env.Version }}
-        body_path: release_note.md
+        #body_path: release_note.md
         draft: false
         prerelease: false
     - name: Upload Release Asset - Nuget
