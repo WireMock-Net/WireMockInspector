@@ -25,4 +25,6 @@ namespace WireMockAdminUI
             return data is ViewModelBase;
         }
     }
+
+    
 }
