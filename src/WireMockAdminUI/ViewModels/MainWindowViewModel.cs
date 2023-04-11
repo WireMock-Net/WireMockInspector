@@ -95,7 +95,43 @@ namespace WireMockAdminUI.ViewModels
             this.WhenAnyValue(x => x.SelectedRequest)
                 .OfType<RequestViewModel>()
                 .InvokeCommand(LoadMatchedMappingCommand);
+
+            this.WhenAnyValue(x => x.RequestSearchTerm, x=>x.Requests,  x=>x.RequestTypeFilter, (term, requests, type) => (term, requests, type))
+                .Throttle(TimeSpan.FromMilliseconds(200))
+                .DistinctUntilChanged()
+                .Select(x =>
+                {
+                    IEnumerable<RequestViewModel> result = x.requests;
+                    if (string.IsNullOrWhiteSpace(x.term) == false)
+                    {
+                        result = result.Where(el =>
+                            el.Path.Contains(x.term, StringComparison.InvariantCultureIgnoreCase));
+                    }
+
+                    return x.type switch
+                    {
+                        1 => result.Where(x=>x.IsMatched),
+                        2 => result.Where(x => x.IsMatched == false),
+                        _ => result,
+                    } ;
+                })
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.FilteredRequests, out _filteredRequests);
         }
+
+        public int RequestTypeFilter
+        {
+            get => _requestTypeFilter;
+            set => this.RaiseAndSetIfChanged(ref _requestTypeFilter, value);
+        }
+
+        private int _requestTypeFilter;
+
+
+
+
+        private readonly ObservableAsPropertyHelper<IEnumerable<RequestViewModel>> _filteredRequests;
+        public IEnumerable<RequestViewModel> FilteredRequests => _filteredRequests.Value;
 
         private static MappingDetails GetMappingDetails(RequestViewModel req, MappingModel expectations)
         {
@@ -201,6 +237,17 @@ namespace WireMockAdminUI.ViewModels
                 }
             };
         }
+
+        public string RequestSearchTerm
+        {
+            get => _requestSearchTerm;
+            set => this.RaiseAndSetIfChanged(ref _requestSearchTerm, value);
+        }
+
+        private string _requestSearchTerm;
+
+
+
 
         private async Task<MappingModel> GetExpectations(RequestViewModel req, CancellationToken c)
         {
