@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+        xmlns:views="clr-namespace:WireMockAdminUI.Views"
         mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
         x:Class="WireMockAdminUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -33,15 +34,18 @@
                 <PathIcon Data="{StaticResource arrow_sync_circle_regular}" ></PathIcon>
             </Button>
         </Grid>
-        <Grid  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch" Grid.Row="1" Margin="0,10">
+        <Grid IsVisible="{Binding Requests.Count}"  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch" Grid.Row="1" Margin="0,10">
        <StackPanel>
            <Grid ColumnDefinitions="Auto, *">
-               <ComboBox Width="150" SelectedIndex="{Binding RequestTypeFilter}">
+               <ComboBox Width="150" SelectedIndex="{Binding RequestTypeFilter}" Margin="0,0,10,0">
                    <ComboBoxItem IsSelected="True">All</ComboBoxItem>
                    <ComboBoxItem>Matched</ComboBoxItem>
                    <ComboBoxItem>Not matched</ComboBoxItem>
                </ComboBox>
-               <TextBox Text="{Binding RequestSearchTerm}" Grid.Column="1" Margin="0,0,25,0"></TextBox>
+               <PathIcon Grid.Column="1" HorizontalAlignment="Left" Data="{StaticResource search_regular}" Margin="10,0,0,0" ></PathIcon>
+               <TextBox  Text="{Binding RequestSearchTerm}" Grid.Column="1" Margin="0,0,25,0">
+                   
+               </TextBox>
            </Grid>
            
            <ListBox SelectedItem="{Binding SelectedRequest}" Items="{Binding FilteredRequests}"   Margin="0 20, 10,0" Background="Transparent">
@@ -77,98 +81,19 @@
          </ListBox>
        </StackPanel>
           <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch"></GridSplitter>
-          <Panel Grid.Column="2"  HorizontalAlignment="Stretch"  Margin="10,25,0,0" >
-              <ScrollViewer HorizontalAlignment="Stretch" >
-                <ItemsControl Items="{Binding RelatedMapping.RequestParts}" HorizontalAlignment="Stretch" Margin="0,0,20,0" >
-                    <ItemsControl.Styles>
-                        <Style Selector="ListBoxItem">
-                            <Setter Property="Padding" Value="0"></Setter>
-                            <Setter Property="Margin" Value="0,0"></Setter>
-                        </Style>
-                        <Style Selector="ListBoxItem > Label">
-                            <Setter Property="Margin" Value="0,0, 5, 0"></Setter>
-                        </Style>
-                        <Style Selector="md|MarkdownScrollViewer">
-                            <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
-                            <Setter Property="Margin" Value="5"></Setter>
-                        </Style>
-                    </ItemsControl.Styles>
-                    <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="vm:MatchDetailsViewModel">
-                      <Expander HorizontalAlignment="Stretch">
-                          <Expander.Styles>
-                              <Style Selector="PathIcon.matched">
-                                  <Setter Property="Data" Value="{StaticResource checkmark_circle_regular}"></Setter>
-                                  <Setter Property="Foreground" Value="green"></Setter>
-                              </Style>
-                              <Style Selector="PathIcon.unmatched">
-                                  <Setter Property="Data" Value="{StaticResource dismiss_circle_regular}"></Setter>
-                                  <Setter Property="Foreground" Value="red"></Setter>
-                              </Style>
-                              <Style Selector="PathIcon.matched.noexpectations">
-                                  <Setter Property="Data" Value="{StaticResource missing_metadata_regular}"></Setter>
-                                  <Setter Property="Foreground" Value="gray"></Setter>
-                              </Style>
-                          </Expander.Styles>
-                          <Expander.Header>
-                          <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
-                            <Panel Margin="5,0,15,0" VerticalAlignment="Center">
-                                <PathIcon 
-                                  Classes.matched="{Binding Matched}" 
-                                  Classes.unmatched="{Binding !Matched}" 
-                                  Classes.noexpectations="{Binding NoExpectations}" 
-                                  ></PathIcon>
-                            </Panel>
-                            <TextBlock Text="{Binding RuleName}"></TextBlock>
-                          </StackPanel>
-                        </Expander.Header>
-
-                          <StackPanel Orientation="Vertical">
-                              <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,0,0,15">
-                                  <Label VerticalAlignment="Center" >Actual value</Label>
-                              </Border>
-                              <ContentControl Content="{Binding ActualValue}">
-                                  <ContentControl.DataTemplates>
-                                      <DataTemplate DataType="{x:Type vm:SimpleActualValue}">
-                                          <SelectableTextBlock Margin="5,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold"></SelectableTextBlock>
-                                      </DataTemplate>
-                                      <DataTemplate DataType="{x:Type vm:MarkdownActualValue}">
-                                          <md:MarkdownScrollViewer Markdown="{Binding Value}"></md:MarkdownScrollViewer>
-                                      </DataTemplate>
-                                      <DataTemplate DataType="{x:Type vm:KeyValueListActualValue}">
-                                          <DataGrid Items="{Binding Items}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
-                                              <DataGrid.Styles>
-                                                  <Style Selector="DataGridColumnHeader">
-                                                      <Setter Property="Background" Value="#505050"></Setter>
-                                                  </Style>
-                                                  <Style Selector="DataGridColumnHeader TextBlock">
-                                                      <Setter Property="Foreground" Value="White"></Setter>
-                                                  </Style>
-                                                  <Style Selector="DataGridCell TextBlock">
-                                                      <Setter Property="FontSize" Value="10"></Setter>
-                                                  </Style>
-                                              </DataGrid.Styles>
-                                              <DataGrid.Columns>
-                                                  <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/>
-                                                  <DataGridTextColumn Header="Value" Binding="{Binding Value}" />
-                                              </DataGrid.Columns>
-                                          </DataGrid>
-                                      </DataTemplate>
-
-                                  </ContentControl.DataTemplates>
-                              </ContentControl>
-                              <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,5">
-                                  <Label VerticalAlignment="Center">Expectations</Label>
-                              </Border>
-                              <md:MarkdownScrollViewer Markdown="{Binding Expectations}" IsVisible="{Binding !NoExpectations}"></md:MarkdownScrollViewer>
-                              <TextBlock FontSize="10" Margin="5,5,0,0" IsVisible="{Binding NoExpectations}">(No Expectations)</TextBlock>
-                          </StackPanel>
-                      </Expander>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </ScrollViewer>
-          </Panel>
+            <TabControl Grid.Column="2" >
+                <TabControl.Styles>
+                    <Style Selector="TabItem">
+                        <Setter Property="FontSize" Value="16"></Setter>
+                    </Style>
+                </TabControl.Styles>
+                <TabItem Header="Request" >
+                    <views:RequestDetails DataContext="{Binding Path=RelatedMapping.RequestParts }" />
+                </TabItem>
+                <TabItem Header="Response">
+                    <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
+                </TabItem>
+            </TabControl>
       </Grid>
     </Grid>
   </Panel>

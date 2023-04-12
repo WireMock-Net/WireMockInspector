@@ -135,9 +135,10 @@ namespace WireMockAdminUI.ViewModels
 
         private static MappingDetails GetMappingDetails(RequestViewModel req, MappingModel expectations)
         {
+            var isPerfectMatch = req.Raw.RequestMatchResult?.IsPerfectMatch == true;
             return new MappingDetails
             {
-                RequestParts = new List<MatchDetailsViewModel>
+                RequestParts = new MatchDetailsList
                 {
                     new()
                     {
@@ -234,6 +235,53 @@ namespace WireMockAdminUI.ViewModels
                         Expectations = ExpectationsAsJson(expectations.Request?.Body),
                         NoExpectations = expectations.Request?.Body is null
                     }
+                },
+                ResponseParts = new MatchDetailsList
+                {
+                    new ()
+                    {
+                        RuleName = "Status code",
+                        Matched = isPerfectMatch,
+                        ActualValue = new SimpleActualValue()
+                        {
+                            Value = req.Raw.Response?.StatusCode?.ToString()?? string.Empty
+                        },
+                        Expectations = expectations.Response?.StatusCode?.ToString()?? string.Empty
+                    },
+                    new ()
+                    {
+                        RuleName = "Headers",
+                        Matched = isPerfectMatch,
+                        ActualValue =  new KeyValueListActualValue()
+                        {
+                            Items = req.Raw.Response?.Headers?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>()
+                        },
+                        Expectations = ExpectationsAsJson(expectations.Response?.Headers)
+                    },
+                    new ()
+                    {
+                        RuleName = "Body",
+                        Matched = isPerfectMatch,
+                        ActualValue = new MarkdownActualValue()
+                        {
+                            Value =  req.Raw.Response?.DetectedBodyType.ToString() switch
+                            {
+                                "String" or "FormUrlEncoded" => req.Raw.Response.Body?? string.Empty,
+                                "Json" => $"```json\r\n{req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty}\r\n```",
+                                "Bytes" => req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty,
+                                "File" => "[FileContent]",
+                                _ => ""
+                            }
+                        },
+                        Expectations = expectations.Response switch
+                        {
+                            {Body: {} bodyResponse} => bodyResponse, 
+                            {BodyAsJson: {} bodyAsJson} => $"```json\r\n{bodyAsJson.ToString() ?? string.Empty}\r\n```",
+                            {BodyAsBytes: {} bodyAsBytes} => bodyAsBytes.ToString()?? string.Empty,
+                            {BodyAsFile: {} bodyAsFile} => bodyAsFile,
+                            _ => ""
+                        }
+                    }
                 }
             };
         }
@@ -245,9 +293,6 @@ namespace WireMockAdminUI.ViewModels
         }
 
         private string _requestSearchTerm;
-
-
-
 
         private async Task<MappingModel> GetExpectations(RequestViewModel req, CancellationToken c)
         {
@@ -289,9 +334,14 @@ namespace WireMockAdminUI.ViewModels
 
     public class MappingDetails:ViewModelBase
     {
-        public List<MatchDetailsViewModel> RequestParts { get; set; }
+        public MatchDetailsList RequestParts { get; set; }
+        public MatchDetailsList ResponseParts { get; set; }
     }
 
+    public class MatchDetailsList: List<MatchDetailsViewModel>
+    {
+        
+    }
     public class RequestViewModel:ViewModelBase
     {
         public string Method { get; set; }

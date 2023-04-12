@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+             xmlns:vm="clr-namespace:WireMockAdminUI.ViewModels"
+             xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="vm:MatchDetailsList"
+             x:Class="WireMockAdminUI.Views.RequestDetails">
+   
+    <Panel HorizontalAlignment="Stretch"  Margin="10,25,0,0" >
+    <ScrollViewer HorizontalAlignment="Stretch" >
+      <ItemsControl Items="{Binding }" HorizontalAlignment="Stretch" Margin="0,0,20,0" >
+        <ItemsControl.Styles>
+          <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0"></Setter>
+            <Setter Property="Margin" Value="0,0"></Setter>
+          </Style>
+          <Style Selector="ListBoxItem > Label">
+            <Setter Property="Margin" Value="0,0, 5, 0"></Setter>
+          </Style>
+          <Style Selector="md|MarkdownScrollViewer">
+            <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+            <Setter Property="Margin" Value="5"></Setter>
+          </Style>
+        </ItemsControl.Styles>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:MatchDetailsViewModel">
+            <Expander HorizontalAlignment="Stretch">
+              <Expander.Styles>
+                <Style Selector="PathIcon.matched">
+                  <Setter Property="Data" Value="{StaticResource checkmark_circle_regular}"></Setter>
+                  <Setter Property="Foreground" Value="green"></Setter>
+                </Style>
+                <Style Selector="PathIcon.unmatched">
+                  <Setter Property="Data" Value="{StaticResource dismiss_circle_regular}"></Setter>
+                  <Setter Property="Foreground" Value="red"></Setter>
+                </Style>
+                <Style Selector="PathIcon.matched.noexpectations">
+                  <Setter Property="Data" Value="{StaticResource missing_metadata_regular}"></Setter>
+                  <Setter Property="Foreground" Value="gray"></Setter>
+                </Style>
+              </Expander.Styles>
+              <Expander.Header>
+                <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
+                  <Panel Margin="5,0,15,0" VerticalAlignment="Center">
+                    <PathIcon
+                      Classes.matched="{Binding Matched}"
+                      Classes.unmatched="{Binding !Matched}"
+                      Classes.noexpectations="{Binding NoExpectations}"
+                                  ></PathIcon>
+                  </Panel>
+                  <TextBlock Text="{Binding RuleName}"></TextBlock>
+                </StackPanel>
+              </Expander.Header>
+
+              <StackPanel Orientation="Vertical">
+                <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,0,0,15">
+                  <Label VerticalAlignment="Center" >Actual value</Label>
+                </Border>
+                <ContentControl Content="{Binding ActualValue}">
+                  <ContentControl.DataTemplates>
+                    <DataTemplate DataType="{x:Type vm:SimpleActualValue}">
+                      <SelectableTextBlock Margin="5,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold"></SelectableTextBlock>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:MarkdownActualValue}">
+                      <md:MarkdownScrollViewer Markdown="{Binding Value}"></md:MarkdownScrollViewer>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type vm:KeyValueListActualValue}">
+                      <DataGrid Items="{Binding Items}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
+                        <DataGrid.Styles>
+                          <Style Selector="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#505050"></Setter>
+                          </Style>
+                          <Style Selector="DataGridColumnHeader TextBlock">
+                            <Setter Property="Foreground" Value="White"></Setter>
+                          </Style>
+                          <Style Selector="DataGridCell TextBlock">
+                            <Setter Property="FontSize" Value="10"></Setter>
+                          </Style>
+                        </DataGrid.Styles>
+                        <DataGrid.Columns>
+                          <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/>
+                          <DataGridTextColumn Header="Value" Binding="{Binding Value}" />
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DataTemplate>
+
+                  </ContentControl.DataTemplates>
+                </ContentControl>
+                <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,5">
+                  <Label VerticalAlignment="Center">Expectations</Label>
+                </Border>
+                <md:MarkdownScrollViewer Markdown="{Binding Expectations}" IsVisible="{Binding !NoExpectations}"></md:MarkdownScrollViewer>
+                <TextBlock FontSize="10" Margin="5,5,0,0" IsVisible="{Binding NoExpectations}">(No Expectations)</TextBlock>
+              </StackPanel>
+            </Expander>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+  </Panel>
+</UserControl>
