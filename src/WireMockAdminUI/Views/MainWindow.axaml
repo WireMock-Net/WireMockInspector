@@ -28,6 +28,14 @@
           </ExperimentalAcrylicBorder.Material>
       </ExperimentalAcrylicBorder>
     <Grid RowDefinitions="Auto,*" Margin="40" >
+        <Grid.Styles>
+            <Style Selector="StackPanel.first">
+                <Setter Property="Grid.ColumnSpan" Value="1"></Setter>
+            </Style>
+            <Style Selector="StackPanel.all">
+                <Setter Property="Grid.ColumnSpan" Value="3"></Setter>
+            </Style>
+        </Grid.Styles>
         <Grid ColumnDefinitions="*, Auto" >
             <TextBox MinWidth="1" Text="{Binding AdminUrl}"></TextBox>
             <Button Grid.Column="1" Command="{Binding LoadRequestsCommand}" Margin="10,0,0,0" ToolTip.Tip="Load requests">
@@ -35,7 +43,7 @@
             </Button>
         </Grid>
         <Grid IsVisible="{Binding Requests.Count}"  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch" Grid.Row="1" Margin="0,10">
-       <StackPanel>
+          <StackPanel Grid.Column="0" Classes.first="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}" Classes.all="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNull}}">
            <Grid ColumnDefinitions="Auto, *">
                <ComboBox Width="150" SelectedIndex="{Binding RequestTypeFilter}" Margin="0,0,10,0">
                    <ComboBoxItem IsSelected="True">All</ComboBoxItem>
@@ -80,8 +88,8 @@
            </ListBox.ItemTemplate>
          </ListBox>
        </StackPanel>
-          <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch"></GridSplitter>
-            <TabControl Grid.Column="2" >
+          <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"></GridSplitter>
+            <TabControl Grid.Column="2" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <TabControl.Styles>
                     <Style Selector="TabItem">
                         <Setter Property="FontSize" Value="16"></Setter>
