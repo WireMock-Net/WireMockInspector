@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:WireMockAdminUI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="viewModels:MainWindowViewModel"
+             x:Class="WireMockAdminUI.Views.RequestListFilters">
+    <Grid ColumnDefinitions="Auto, *">
+        <ComboBox Width="150" SelectedIndex="{Binding RequestTypeFilter}" Margin="0,0,10,0">
+            <ComboBoxItem IsSelected="True">All</ComboBoxItem>
+            <ComboBoxItem>Matched</ComboBoxItem>
+            <ComboBoxItem>Not matched</ComboBoxItem>
+        </ComboBox>
+        <PathIcon Grid.Column="1" HorizontalAlignment="Right" ZIndex="10" Data="{StaticResource search_regular}" Margin="0,0,30,0" ></PathIcon>
+        <TextBox  Text="{Binding RequestSearchTerm}" Grid.Column="1" Margin="0,0,25,0">
+
+        </TextBox>
+    </Grid>
+</UserControl>
