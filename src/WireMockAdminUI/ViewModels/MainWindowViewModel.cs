@@ -66,7 +66,7 @@ namespace WireMockAdminUI.ViewModels
                             Matches = matchModel?.MatchDetails.OfType<JObject>().Select(x =>
                             {
                                 var v = x.ToObject<MatchJOBject>();
-                                return new MatchInfo()
+                                return new MatchInfo
                                 {
                                     Matched = v.Score > 0,
                                     RuleName = v.Name
@@ -137,7 +137,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "ClientIP",
                         Matched = IsMatched(req, "ClientIPMatcher"),
-                        ActualValue = new SimpleActualValue()
+                        ActualValue = new SimpleActualValue
                         {
                             Value = req.Raw.Request.ClientIP
                         },
@@ -148,7 +148,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Method",
                         Matched = IsMatched(req, "MethodMatcher"),
-                        ActualValue = new SimpleActualValue()
+                        ActualValue = new SimpleActualValue
                         {
                             Value = req.Raw.Request.Method
                         },
@@ -159,7 +159,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Url",
                         Matched = IsMatched(req, "UrlMatcher"),
-                        ActualValue = new SimpleActualValue()
+                        ActualValue = new SimpleActualValue
                         {
                             Value = req.Raw.Request.Url
                         },
@@ -170,7 +170,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Path",
                         Matched = IsMatched(req, "PathMatcher"),
-                        ActualValue = new SimpleActualValue()
+                        ActualValue = new SimpleActualValue
                         {
                             Value = req.Raw.Request.Path
                         },
@@ -181,7 +181,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Headers",
                         Matched = IsMatched(req, "HeaderMatcher"),
-                        ActualValue = new KeyValueListActualValue()
+                        ActualValue = new KeyValueListActualValue
                         {
                             Items = req.Raw.Request.Headers?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>()
                         },
@@ -192,7 +192,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Cookies",
                         Matched = IsMatched(req, "CookieMatcher"),
-                        ActualValue = new KeyValueListActualValue()
+                        ActualValue = new KeyValueListActualValue
                         {
                             Items = req.Raw.Request.Cookies?.OrderBy(x=>x.Key).Select(x=>x).ToList() ?? new List<KeyValuePair<string, string>>()
                         },
@@ -203,7 +203,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Query params",
                         Matched = IsMatched(req, "ParamMatcher"),
-                        ActualValue = new KeyValueListActualValue()
+                        ActualValue = new KeyValueListActualValue
                         {
                             Items = req.Raw.Request.Query?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>(),
                         },
@@ -214,12 +214,12 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Body",
                         Matched = IsMatched(req, "BodyMatcher"),
-                        ActualValue = new MarkdownActualValue()
+                        ActualValue = new MarkdownActualValue
                         {
                             Value = req.Raw.Request.DetectedBodyType switch
                             {
-                                "String" or "FormUrlEncoded" => req.Raw.Request.Body?? string.Empty,
-                                "Json" => $"```json\r\n{req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty}\r\n```",
+                                "String" or "FormUrlEncoded" => WrapBodyInMarkdown(req.Raw.Request.Body?? string.Empty),
+                                "Json" => AsMarkdownCode("json", req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty),
                                 "Bytes" => req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty,
                                 "File" => "[FileContent]",
                                 _ => ""
@@ -235,7 +235,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Status code",
                         Matched = isPerfectMatch,
-                        ActualValue = new SimpleActualValue()
+                        ActualValue = new SimpleActualValue
                         {
                             Value = req.Raw.Response?.StatusCode?.ToString()?? string.Empty
                         },
@@ -245,7 +245,7 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Headers",
                         Matched = isPerfectMatch,
-                        ActualValue =  new KeyValueListActualValue()
+                        ActualValue =  new KeyValueListActualValue
                         {
                             Items = req.Raw.Response?.Headers?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>()
                         },
@@ -255,12 +255,12 @@ namespace WireMockAdminUI.ViewModels
                     {
                         RuleName = "Body",
                         Matched = isPerfectMatch,
-                        ActualValue = new MarkdownActualValue()
+                        ActualValue = new MarkdownActualValue
                         {
                             Value =  req.Raw.Response?.DetectedBodyType.ToString() switch
                             {
-                                "String" or "FormUrlEncoded" => req.Raw.Response.Body?? string.Empty,
-                                "Json" => $"```json\r\n{req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty}\r\n```",
+                                "String" or "FormUrlEncoded" => WrapBodyInMarkdown( req.Raw.Response.Body?? string.Empty),
+                                "Json" => AsMarkdownCode("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
                                 "Bytes" => req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty,
                                 "File" => "[FileContent]",
                                 _ => ""
@@ -269,7 +269,7 @@ namespace WireMockAdminUI.ViewModels
                         Expectations = expectations.Response switch
                         {
                             {Body: {} bodyResponse} => WrapBodyInMarkdown(bodyResponse), 
-                            {BodyAsJson: {} bodyAsJson} => $"```json\r\n{bodyAsJson.ToString() ?? string.Empty}\r\n```",
+                            {BodyAsJson: {} bodyAsJson} => AsMarkdownCode("json", bodyAsJson.ToString()!),
                             {BodyAsBytes: {} bodyAsBytes} => bodyAsBytes.ToString()?? string.Empty,
                             {BodyAsFile: {} bodyAsFile} => bodyAsFile,
                             _ => ""
@@ -284,17 +284,18 @@ namespace WireMockAdminUI.ViewModels
             var cleanBody = bodyResponse.Trim();
             if (cleanBody.StartsWith("[") || cleanBody.StartsWith("{"))
             {
-                return $"```json\r\n{bodyResponse}\r\n```";
+                return AsMarkdownCode("json", bodyResponse);
 
             }
             if (cleanBody.StartsWith("<"))
             {
-                return $"```xml\r\n{bodyResponse}\r\n```";
+                return AsMarkdownCode("xml", bodyResponse);
 
             }
-
             return bodyResponse;
         }
+
+        private static string AsMarkdownCode(string lang, string code) => $"```{lang}\r\n{code}\r\n```";
 
         public string RequestSearchTerm
         {
@@ -329,7 +330,7 @@ namespace WireMockAdminUI.ViewModels
                 return string.Empty;
             }
 
-            return $"```json\r\n{JsonConvert.SerializeObject(data, Formatting.Indented)}\r\n```";
+            return AsMarkdownCode("json", JsonConvert.SerializeObject(data, Formatting.Indented));
         }
 
         private static bool? IsMatched(RequestViewModel req, string rule)
