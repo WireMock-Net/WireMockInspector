@@ -5,7 +5,7 @@ namespace WireMockAdminUI.ViewModels;
 public class MatchDetailsViewModel:ViewModelBase
 {
     public string RuleName { get; set; }
-    public bool Matched { get; set; }
+    public bool? Matched { get; set; }
     public bool NoExpectations { get; set; }
 
     public ActualValue ActualValue { get; set; }

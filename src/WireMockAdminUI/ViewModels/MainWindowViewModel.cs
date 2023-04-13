@@ -43,12 +43,11 @@ namespace WireMockAdminUI.ViewModels
             {
                 var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
                 return await api.GetRequestsAsync();
-                
-
             }); 
+
             LoadRequestsCommand
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(x => 
+                .Subscribe(x =>
                 {
                     Requests.Clear();
                     Requests.AddRange(x.Select(r =>
@@ -75,26 +74,23 @@ namespace WireMockAdminUI.ViewModels
                             }).ToList() ?? new List<MatchInfo>()
                         };
                     }).OrderByDescending(x=>x.Timestamp));
-            });
+                    RequestSearchTerm = string.Empty;
+                });
             LoadRequestsCommand.ThrownExceptions.Subscribe(exception =>
             {
 
             });
             AdminUrl = "http://localhost:1080";
-
-            LoadMatchedMappingCommand = ReactiveCommand.CreateFromTask(async (RequestViewModel req, CancellationToken c) =>
-            {
-                var expectations = await GetExpectations(req, c);
-                return GetMappingDetails(req, expectations);
-            });
-
-            LoadMatchedMappingCommand
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(details => RelatedMapping = details);
-
+            
             this.WhenAnyValue(x => x.SelectedRequest)
                 .OfType<RequestViewModel>()
-                .InvokeCommand(LoadMatchedMappingCommand);
+                .SelectMany(async req =>
+                {
+                    var expectations = await GetExpectations(req, default);
+                    return GetMappingDetails(req, expectations);
+                })
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.RelatedMapping, out _relatedMapping);
 
             this.WhenAnyValue(x => x.RequestSearchTerm, x=>x.Requests,  x=>x.RequestTypeFilter, (term, requests, type) => (term, requests, type))
                 .Throttle(TimeSpan.FromMilliseconds(200))
@@ -126,10 +122,7 @@ namespace WireMockAdminUI.ViewModels
         }
 
         private int _requestTypeFilter;
-
-
-
-
+        
         private readonly ObservableAsPropertyHelper<IEnumerable<RequestViewModel>> _filteredRequests;
         public IEnumerable<RequestViewModel> FilteredRequests => _filteredRequests.Value;
 
@@ -275,7 +268,7 @@ namespace WireMockAdminUI.ViewModels
                         },
                         Expectations = expectations.Response switch
                         {
-                            {Body: {} bodyResponse} => bodyResponse, 
+                            {Body: {} bodyResponse} => WrapBodyInMarkdown(bodyResponse), 
                             {BodyAsJson: {} bodyAsJson} => $"```json\r\n{bodyAsJson.ToString() ?? string.Empty}\r\n```",
                             {BodyAsBytes: {} bodyAsBytes} => bodyAsBytes.ToString()?? string.Empty,
                             {BodyAsFile: {} bodyAsFile} => bodyAsFile,
@@ -284,6 +277,23 @@ namespace WireMockAdminUI.ViewModels
                     }
                 }
             };
+        }
+
+        private static string WrapBodyInMarkdown(string bodyResponse)
+        {
+            var cleanBody = bodyResponse.Trim();
+            if (cleanBody.StartsWith("[") || cleanBody.StartsWith("{"))
+            {
+                return $"```json\r\n{bodyResponse}\r\n```";
+
+            }
+            if (cleanBody.StartsWith("<"))
+            {
+                return $"```xml\r\n{bodyResponse}\r\n```";
+
+            }
+
+            return bodyResponse;
         }
 
         public string RequestSearchTerm
@@ -314,22 +324,20 @@ namespace WireMockAdminUI.ViewModels
             return $"```json\r\n{JsonConvert.SerializeObject(data, Formatting.Indented)}\r\n```";
         }
 
-        private static bool IsMatched(RequestViewModel req, string rule)
+        private static bool? IsMatched(RequestViewModel req, string rule)
         {
-            return req.Matches.Where(x=>x.RuleName == rule).All(x=>x.Matched);
+            var candidates = req.Matches.Where(x=>x.RuleName == rule).ToArray();
+            if (candidates.Length == 0)
+            {
+                return null;
+            }
+            return candidates.All(x=>x.Matched);
         }
 
         public ReactiveCommand<Unit, IList<LogEntryModel>>  LoadRequestsCommand { get; }
-        public ReactiveCommand<RequestViewModel, MappingDetails> LoadMatchedMappingCommand { get; }
 
-
-        public MappingDetails? RelatedMapping
-        {
-            get => _relatedMapping;
-            set => this.RaiseAndSetIfChanged(ref _relatedMapping, value);
-        }
-
-        private MappingDetails? _relatedMapping;
+        private readonly ObservableAsPropertyHelper<MappingDetails> _relatedMapping;
+        public MappingDetails RelatedMapping => _relatedMapping.Value;
     }
 
     public class MappingDetails:ViewModelBase
@@ -365,6 +373,4 @@ namespace WireMockAdminUI.ViewModels
         public string RuleName { get; set; }
         public bool Matched { get; set; }
     }
-
-
 }

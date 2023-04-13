@@ -37,7 +37,7 @@
                   <Setter Property="Data" Value="{StaticResource dismiss_circle_regular}"></Setter>
                   <Setter Property="Foreground" Value="red"></Setter>
                 </Style>
-                <Style Selector="PathIcon.matched.noexpectations">
+                <Style Selector="PathIcon.inconclusive">
                   <Setter Property="Data" Value="{StaticResource missing_metadata_regular}"></Setter>
                   <Setter Property="Foreground" Value="gray"></Setter>
                 </Style>
@@ -46,9 +46,9 @@
                 <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
                   <Panel Margin="5,0,15,0" VerticalAlignment="Center">
                     <PathIcon
-                      Classes.matched="{Binding Matched}"
-                      Classes.unmatched="{Binding !Matched}"
-                      Classes.noexpectations="{Binding NoExpectations}"
+                      Classes.matched="{Binding Matched, Converter={x:Static vm:StringMatchConverter.Instance}, ConverterParameter=true}"
+                      Classes.unmatched="{Binding Matched, Converter={x:Static vm:StringMatchConverter.Instance}, ConverterParameter=false}"
+                      Classes.inconclusive="{Binding Matched, Converter={x:Static vm:StringMatchConverter.Instance}, ConverterParameter=null}"
                                   ></PathIcon>
                   </Panel>
                   <TextBlock Text="{Binding RuleName}"></TextBlock>

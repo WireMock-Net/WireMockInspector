@@ -9,7 +9,7 @@
         x:Class="WireMockAdminUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="WireMockAdminUI"
+        Title="WireMockInspector"
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         Width="1250"
@@ -50,7 +50,7 @@
                    <ComboBoxItem>Matched</ComboBoxItem>
                    <ComboBoxItem>Not matched</ComboBoxItem>
                </ComboBox>
-               <PathIcon Grid.Column="1" HorizontalAlignment="Left" Data="{StaticResource search_regular}" Margin="10,0,0,0" ></PathIcon>
+               <PathIcon Grid.Column="1" HorizontalAlignment="Right" ZIndex="10" Data="{StaticResource search_regular}" Margin="0,0,30,0" ></PathIcon>
                <TextBox  Text="{Binding RequestSearchTerm}" Grid.Column="1" Margin="0,0,25,0">
                    
                </TextBox>
