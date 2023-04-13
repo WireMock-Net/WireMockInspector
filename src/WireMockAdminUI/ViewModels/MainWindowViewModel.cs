@@ -308,8 +308,16 @@ namespace WireMockAdminUI.ViewModels
         {
             if (req.MappingId.HasValue)
             {
-                var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
-                return await api.GetMappingAsync(req.MappingId.Value, c);
+                try
+                {
+                    var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
+                    return await api.GetMappingAsync(req.MappingId.Value, c);
+                }
+                catch (Exception e)
+                {
+                    return new MappingModel();
+
+                }
             }
             return new MappingModel();
         }
