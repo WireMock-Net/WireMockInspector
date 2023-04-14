@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
         xmlns:views="clr-namespace:WireMockAdminUI.Views"
+        xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
         mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
         x:Class="WireMockAdminUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -16,6 +17,12 @@
         d:DataContext="{x:Static vm:DesignTimeData.MainViewModel}"
         >
   <Panel>
+      <Panel.Styles>
+          <Style Selector="avaloniaEdit|TextEditor">
+              <Setter Property="ShowLineNumbers" Value="True"></Setter>
+              <Setter Property="Padding" Value="5,5,5,20"></Setter>
+          </Style>
+      </Panel.Styles>
       <ExperimentalAcrylicBorder IsHitTestVisible="False">
           <ExperimentalAcrylicBorder.Material>
               <ExperimentalAcrylicMaterial
@@ -35,7 +42,7 @@
             </Style>
         </Grid.Styles>
         <Grid ColumnDefinitions="*, Auto" >
-            <TextBox MinWidth="1" Text="{Binding AdminUrl}"></TextBox>
+            <TextBox MinWidth="1" Text="{Binding AdminUrl}" Watermark="Admin API URL"></TextBox>
             <Button Grid.Column="1" Command="{Binding LoadRequestsCommand}" Margin="10,0,0,0" ToolTip.Tip="Load requests">
                 <PathIcon Data="{StaticResource arrow_sync_circle_regular}" ></PathIcon>
             </Button>
@@ -46,19 +53,22 @@
                 <views:RequestList></views:RequestList>
             </DockPanel>
             <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"></GridSplitter>
-            <TabControl Grid.Column="2" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <TabControl.Styles>
-                    <Style Selector="TabItem">
-                        <Setter Property="FontSize" Value="16"></Setter>
-                    </Style>
-                </TabControl.Styles>
-                <TabItem Header="Request" >
-                    <views:RequestDetails DataContext="{Binding Path=RelatedMapping.RequestParts }" />
-                </TabItem>
-                <TabItem Header="Response">
-                    <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
-                </TabItem>
-            </TabControl>
+            <Panel Grid.Column="2" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <TabControl >
+
+                    <TabControl.Styles>
+                        <Style Selector="TabItem">
+                            <Setter Property="FontSize" Value="16"></Setter>
+                        </Style>
+                    </TabControl.Styles>
+                    <TabItem Header="Request" >
+                        <views:RequestDetails DataContext="{Binding Path=RelatedMapping.RequestParts }" />
+                    </TabItem>
+                    <TabItem Header="Response">
+                        <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
+                    </TabItem>
+                </TabControl>
+            </Panel>
       </Grid>
     </Grid>
   </Panel>
