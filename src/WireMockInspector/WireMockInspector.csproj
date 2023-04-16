@@ -10,6 +10,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>wiremockinspector</ToolCommandName>
     <RollForward>LatestMajor</RollForward>
+    <ApplicationIcon>Assets/wiremockinspector.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
