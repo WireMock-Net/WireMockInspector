@@ -2,13 +2,14 @@
 
 WireMockInspect is a cross platform UI app that facilitates [WireMock](https://wiremock.org/) troubleshooting.
 
+![](logo.jpg)
 
 ## How to install
 
 WireMockInspector is distributed as `dotnet tool` so it can be easily install on `Windows/MacOS/Linux` with the following command
 
 ```
-dotnet tool install --global WireMockInspector --no-cache --ignore-failed-sources
+dotnet tool install WireMockInspector --global --no-cache --ignore-failed-sources
 ```
 
 After installation you can easily run the app by executing `wiremockinspector` command.
