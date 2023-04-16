@@ -37,8 +37,29 @@ namespace WireMockInspector.ViewModels
 
         private RequestViewModel? _selectedRequest;
 
+
+        
+
+        private readonly ObservableAsPropertyHelper<NewVersionInfoViewModel> _newVersion;
+        public NewVersionInfoViewModel NewVersion => _newVersion.Value;
+
+
+        private GithubUpdater _githubUpdater = new GithubUpdater("cezarypiatek/WireMockDebugPOC");
+
         public MainWindowViewModel()
         {
+            Observable.FromAsync(async () =>
+            {
+                var (isNewVersionAvailable, version) = await _githubUpdater.CheckIsNewerVersionAvailable();
+                return new NewVersionInfoViewModel(_githubUpdater.RepositorySku)
+                {
+                    IsVisible = isNewVersionAvailable,
+                    Version = version
+                };
+            })
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .ToProperty(this, x => x.NewVersion, out _newVersion);
+
             LoadRequestsCommand = ReactiveCommand.CreateFromTask(async () =>
             {
                 var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
