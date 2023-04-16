@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="WireMockInspector.Views.NewVersionInfo"
+             x:DataType="viewModels:NewVersionInfoViewModel"
+             >
+    <StackPanel Height="75"  IsVisible="{Binding IsVisible}" Margin="0,0,0,20">
+        <Border BorderBrush="#FF0000" BorderThickness="1"  >
+            <StackPanel  Orientation="Horizontal" Margin="20" VerticalAlignment="Center">
+                <TextBlock VerticalAlignment="Center" Text="{Binding Version, StringFormat='{} A newer version {0} is available'}"></TextBlock>
+                <Button Margin="20,0,0,0" VerticalAlignment="Center" Command="{Binding  OpenReleaseLog}">Check release log</Button>
+                <Button Margin="20,0,0,0" VerticalAlignment="Center" Command="{Binding DismissNewVersion}">Dismiss</Button>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
