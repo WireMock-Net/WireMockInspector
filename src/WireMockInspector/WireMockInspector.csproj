@@ -11,11 +11,24 @@
     <ToolCommandName>wiremockinspector</ToolCommandName>
     <RollForward>LatestMajor</RollForward>
     <ApplicationIcon>Assets/wiremockinspector.ico</ApplicationIcon>
+    <Authors>Cezary Piątek</Authors>
+    <Description>WireMockInspect is a cross platform UI app that facilitates WireMock troubleshooting.</Description>
+    <PackageProjectUrl>https://github.com/cezarypiatek/WireMockInspector</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>wiremockinspector_128.png</PackageIcon>
+    <RepositoryUrl>https://github.com/cezarypiatek/WireMockInspector</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 
@@ -30,5 +43,13 @@
     <PackageReference Include="Markdown.Avalonia" Version="11.0.0-a9" />
     <PackageReference Include="WireMock.Net.RestClient" Version="1.5.22" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Include="Assets\wiremockinspector_128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>
