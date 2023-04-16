@@ -2,7 +2,7 @@
 using System.Globalization;
 using Avalonia.Data.Converters;
 
-namespace WireMockAdminUI.ViewModels;
+namespace WireMockInspector.ViewModels;
 
 public class StringMatchConverter : IValueConverter
 {

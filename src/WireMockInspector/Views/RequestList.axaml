@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:WireMockAdminUI.ViewModels"
+             xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
-             x:Class="WireMockAdminUI.Views.RequestList">
+             x:Class="WireMockInspector.Views.RequestList">
   <ListBox SelectedItem="{Binding SelectedRequest}" Items="{Binding FilteredRequests}"   Margin="0 20, 10,0" Background="Transparent">
     <ListBox.Styles>
       <Style Selector="ListBoxItem">

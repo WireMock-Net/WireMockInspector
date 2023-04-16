@@ -13,7 +13,7 @@ jobs:
         SourceRevisionId: '${{ github.sha }}'
         VersionSuffix: 'pr-${{github.event.number}}.${{ github.run_number }}'
         Configuration: Release
-        SolutionPath: src\WireMockAdminUI.sln
+        SolutionPath: src\WireMockInspector.sln
         Deterministic: true
         PackageReleaseNotes: 'https://github.com/${{ github.repository }}/releases'
         ContinuousIntegrationBuild: true
@@ -39,5 +39,5 @@ jobs:
     - name: Collect artifacts - nugets
       uses: actions/upload-artifact@v2
       with:
-        name: WireMockAdminUI-Nugets
-        path: '**/WireMockAdminUI*.nupkg'
+        name: WireMockInspector-Nugets
+        path: '**/WireMockInspector*.nupkg'

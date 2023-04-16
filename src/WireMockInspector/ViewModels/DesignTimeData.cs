@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WireMockAdminUI.ViewModels;
+namespace WireMockInspector.ViewModels;
 
 public static class DesignTimeData
 {

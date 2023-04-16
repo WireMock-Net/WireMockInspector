@@ -16,7 +16,7 @@ jobs:
         RepositoryBranch: '${{ github.ref }}'
         SourceRevisionId: '${{ github.sha }}'        
         Configuration: Release
-        SolutionPath: src\WireMockAdminUI.sln
+        SolutionPath: src\WireMockInspector.sln
         Deterministic: true
         PackageReleaseNotes: 'https://github.com/${{ github.repository }}/releases'
         ContinuousIntegrationBuild: true
@@ -62,7 +62,7 @@ jobs:
       with:
         tag_name: ${{ env.Version }}
         release_name:  ${{ env.Version }}
-        #body_path: release_note.md
+        body_path: release_note.md
         draft: false
         prerelease: false
     - name: Upload Release Asset - Nuget
@@ -71,9 +71,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: src\WireMockAdminUI\bin\Release\WireMockAdminUI.${{ env.Version }}.nupkg
-        asset_name: WireMockAdminUI.${{ env.Version }}.nupkg
+        asset_path: src\WireMockInspector\bin\Release\WireMockInspector.${{ env.Version }}.nupkg
+        asset_name: WireMockInspector.${{ env.Version }}.nupkg
         asset_content_type: binary/octet-stream    
     - name: Publish extension to Nuget
       run: |
-        dotnet nuget push src\WireMockAdminUI\bin\Release\WireMockAdminUI.${{ env.Version }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+        dotnet nuget push src\WireMockInspector\bin\Release\WireMockInspector.${{ env.Version }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json

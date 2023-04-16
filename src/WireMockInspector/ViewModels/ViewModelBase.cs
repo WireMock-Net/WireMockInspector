@@ -1,6 +1,6 @@
 ﻿using ReactiveUI;
 
-namespace WireMockAdminUI.ViewModels
+namespace WireMockInspector.ViewModels
 {
     public class ViewModelBase : ReactiveObject
     {

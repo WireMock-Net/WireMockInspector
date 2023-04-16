@@ -1,10 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using WireMockAdminUI.ViewModels;
-using WireMockAdminUI.Views;
+using WireMockInspector.ViewModels;
+using WireMockInspector.Views;
 
-namespace WireMockAdminUI
+namespace WireMockInspector
 {
     public partial class App : Application
     {

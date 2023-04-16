@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace WireMockAdminUI.ViewModels;
+namespace WireMockInspector.ViewModels;
 
 public class MatchDetailsViewModel:ViewModelBase
 {
