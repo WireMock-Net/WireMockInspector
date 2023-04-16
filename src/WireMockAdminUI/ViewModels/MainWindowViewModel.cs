@@ -49,31 +49,9 @@ namespace WireMockAdminUI.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x =>
                 {
+                    var requests = x.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp);
                     Requests.Clear();
-                    Requests.AddRange(x.Select(r =>
-                    {
-                        var matchModel = r.PartialRequestMatchResult ?? r.RequestMatchResult;
-                        var mappingGuid = r.PartialMappingGuid ?? r.MappingGuid;
-                        return new RequestViewModel
-                        {
-                            Raw = r,
-                            Path = r.Request.Url.Substring(AdminUrl.Length),
-                            Timestamp = r.Request.DateTime,
-                            IsMatched = matchModel?.IsPerfectMatch ?? false,
-                            Method = r.Request.Method,
-                            StatusCode = r.Response.StatusCode is int val ? val : 0,
-                            MappingId = mappingGuid,
-                            Matches = matchModel?.MatchDetails.OfType<JObject>().Select(x =>
-                            {
-                                var v = x.ToObject<MatchJOBject>();
-                                return new MatchInfo
-                                {
-                                    Matched = v.Score > 0,
-                                    RuleName = v.Name
-                                };
-                            }).ToList() ?? new List<MatchInfo>()
-                        };
-                    }).OrderByDescending(x=>x.Timestamp));
+                    Requests.AddRange(requests);
                     RequestSearchTerm = string.Empty;
                 });
             LoadRequestsCommand.ThrownExceptions.Subscribe(exception =>
@@ -115,6 +93,44 @@ namespace WireMockAdminUI.ViewModels
                 .ToProperty(this, x => x.FilteredRequests, out _filteredRequests);
         }
 
+        private RequestViewModel? MapRequestData(LogEntryModel r)
+        {
+            try
+            {
+                var matchModel = r.PartialRequestMatchResult ?? r.RequestMatchResult;
+                var mappingGuid = r.PartialMappingGuid ?? r.MappingGuid;
+                return new RequestViewModel
+                {
+                    Raw = r,
+                    MatchingStatus = r switch
+                    {
+                        {RequestMatchResult.IsPerfectMatch: true} => MatchingStatus.PerfectMatch,
+                        {PartialRequestMatchResult: { }} => MatchingStatus.PartialMatch,
+                        _ => MatchingStatus.Unmatched
+                    },
+                    Path = r.Request.Url.Substring(AdminUrl.Length),
+                    Timestamp = r.Request.DateTime,
+                    IsMatched = matchModel?.IsPerfectMatch ?? false,
+                    Method = r.Request.Method,
+                    StatusCode = r.Response.StatusCode is int val ? val : 0,
+                    MappingId = mappingGuid,
+                    Matches = matchModel?.MatchDetails.OfType<JObject>().Select(x =>
+                    {
+                        var v = x.ToObject<MatchJOBject>();
+                        return new MatchInfo
+                        {
+                            Matched = v.Score > 0,
+                            RuleName = v.Name
+                        };
+                    }).ToList() ?? new List<MatchInfo>()
+                };
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
         public int RequestTypeFilter
         {
             get => _requestTypeFilter;
@@ -131,6 +147,14 @@ namespace WireMockAdminUI.ViewModels
             var isPerfectMatch = req.Raw.RequestMatchResult?.IsPerfectMatch == true;
             return new MappingDetails
             {
+                MatchingStatus = req.MatchingStatus,
+                MappingId = req.MappingId?.ToString()??string.Empty,
+                MappingAvailability = req switch
+                {
+                    {MappingId: null} => MappingAvailability.NotProvided,
+                    {MappingId: {}} when expectations.Request == null => MappingAvailability.Missing,
+                    _ => MappingAvailability.Found
+                },
                 RequestParts = new MatchDetailsList
                 {
                     new()
@@ -351,6 +375,9 @@ namespace WireMockAdminUI.ViewModels
 
     public class MappingDetails:ViewModelBase
     {
+        public MatchingStatus MatchingStatus { get; set; }
+        public MappingAvailability MappingAvailability { get; set; }
+        public string MappingId { get; set; }
         public MatchDetailsList RequestParts { get; set; }
         public MatchDetailsList ResponseParts { get; set; }
     }
@@ -361,6 +388,7 @@ namespace WireMockAdminUI.ViewModels
     }
     public class RequestViewModel:ViewModelBase
     {
+        public MatchingStatus MatchingStatus { get; set; }
         public string Method { get; set; }
         public string Path { get; set; }
         public DateTime Timestamp { get; set; }
@@ -381,5 +409,20 @@ namespace WireMockAdminUI.ViewModels
     {
         public string RuleName { get; set; }
         public bool Matched { get; set; }
+    }
+
+
+    public enum MatchingStatus
+    {
+        Unmatched,
+        PartialMatch,
+        PerfectMatch
+    }
+
+    public enum MappingAvailability
+    {
+        NotProvided,
+        Missing,
+        Found
     }
 }

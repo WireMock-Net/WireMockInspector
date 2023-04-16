@@ -9,7 +9,7 @@
              x:DataType="vm:MatchDetailsList"
              x:Class="WireMockAdminUI.Views.RequestDetails">
    
-    <Panel HorizontalAlignment="Stretch"  Margin="10,25,0,0" >
+    <Panel HorizontalAlignment="Stretch"  Margin="0,20,0,0" >
     <ScrollViewer HorizontalAlignment="Stretch" >
       <ItemsControl Items="{Binding }" HorizontalAlignment="Stretch" Margin="0,0,20,0" >
         <ItemsControl.Styles>

@@ -53,21 +53,36 @@
                 <views:RequestList></views:RequestList>
             </DockPanel>
             <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"></GridSplitter>
-            <Panel Grid.Column="2" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <TabControl >
-
+            <Panel Grid.Column="2" IsVisible="{Binding RelatedMapping, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <DockPanel LastChildFill="True" Margin="10,0,0,0">
+                  <StackPanel DockPanel.Dock="Top">
+                      <StackPanel Orientation="Horizontal">
+                          <Label FontWeight="Bold">Matching status:</Label>
+                          <TextBlock Text="{Binding RelatedMapping.MatchingStatus}" VerticalAlignment="Center"></TextBlock>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal">
+                          <Label FontWeight="Bold">Mapping:</Label>
+                          <SelectableTextBlock Text="{Binding RelatedMapping.MappingId}" VerticalAlignment="Center"></SelectableTextBlock>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal">
+                          <Label FontWeight="Bold">Mapping availability:</Label>
+                          <TextBlock Text="{Binding RelatedMapping.MappingAvailability}" VerticalAlignment="Center"></TextBlock>
+                      </StackPanel>
+                  </StackPanel>
+                <TabControl DockPanel.Dock="Bottom">
                     <TabControl.Styles>
                         <Style Selector="TabItem">
                             <Setter Property="FontSize" Value="16"></Setter>
                         </Style>
                     </TabControl.Styles>
                     <TabItem Header="Request" >
-                        <views:RequestDetails DataContext="{Binding Path=RelatedMapping.RequestParts }" />
+                        <views:RequestDetails  DataContext="{Binding Path=RelatedMapping.RequestParts }" />
                     </TabItem>
                     <TabItem Header="Response">
                         <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
                     </TabItem>
                 </TabControl>
+              </DockPanel>
             </Panel>
       </Grid>
     </Grid>
