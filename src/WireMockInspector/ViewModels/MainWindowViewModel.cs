@@ -15,7 +15,7 @@ using WireMock.Admin.Mappings;
 using WireMock.Admin.Requests;
 using WireMock.Client;
 
-namespace WireMockAdminUI.ViewModels
+namespace WireMockInspector.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {

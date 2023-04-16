@@ -3,11 +3,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
-             xmlns:vm="clr-namespace:WireMockAdminUI.ViewModels"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+             xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:DataType="vm:MatchDetailsList"
-             x:Class="WireMockAdminUI.Views.RequestDetails">
+             x:DataType="viewModels:MatchDetailsList"
+             x:Class="WireMockInspector.Views.RequestDetails">
    
     <Panel HorizontalAlignment="Stretch"  Margin="0,20,0,0" >
     <ScrollViewer HorizontalAlignment="Stretch" >
@@ -26,7 +26,7 @@
           </Style>
         </ItemsControl.Styles>
         <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="vm:MatchDetailsViewModel">
+          <DataTemplate x:DataType="viewModels:MatchDetailsViewModel">
             <Expander HorizontalAlignment="Stretch">
               <Expander.Styles>
                 <Style Selector="PathIcon.matched">
@@ -46,9 +46,9 @@
                 <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
                   <Panel Margin="5,0,15,0" VerticalAlignment="Center">
                     <PathIcon
-                      Classes.matched="{Binding Matched, Converter={x:Static vm:StringMatchConverter.Instance}, ConverterParameter=true}"
-                      Classes.unmatched="{Binding Matched, Converter={x:Static vm:StringMatchConverter.Instance}, ConverterParameter=false}"
-                      Classes.inconclusive="{Binding Matched, Converter={x:Static vm:StringMatchConverter.Instance}, ConverterParameter=null}"
+                      Classes.matched="{Binding Matched, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=true}"
+                      Classes.unmatched="{Binding Matched, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=false}"
+                      Classes.inconclusive="{Binding Matched, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=null}"
                                   ></PathIcon>
                   </Panel>
                   <TextBlock Text="{Binding RuleName}"></TextBlock>
@@ -61,13 +61,13 @@
                 </Border>
                 <ContentControl Content="{Binding ActualValue}">
                   <ContentControl.DataTemplates>
-                    <DataTemplate DataType="{x:Type vm:SimpleActualValue}">
+                    <DataTemplate DataType="{x:Type viewModels:SimpleActualValue}">
                       <SelectableTextBlock Margin="5,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold"></SelectableTextBlock>
                     </DataTemplate>
-                    <DataTemplate DataType="{x:Type vm:MarkdownActualValue}">
+                    <DataTemplate DataType="{x:Type viewModels:MarkdownActualValue}">
                       <md:MarkdownScrollViewer Markdown="{Binding Value}"></md:MarkdownScrollViewer>
                     </DataTemplate>
-                    <DataTemplate DataType="{x:Type vm:KeyValueListActualValue}">
+                    <DataTemplate DataType="{x:Type viewModels:KeyValueListActualValue}">
                       <DataGrid Items="{Binding Items}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
                         <DataGrid.Styles>
                           <Style Selector="DataGridColumnHeader">

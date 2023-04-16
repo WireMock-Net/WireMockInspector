@@ -8,7 +8,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>wiremockadminui</ToolCommandName>
+    <ToolCommandName>wiremockinspector</ToolCommandName>
     <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 

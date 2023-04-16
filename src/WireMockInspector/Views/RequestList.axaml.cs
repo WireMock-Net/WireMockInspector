@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace WireMockAdminUI.Views
+namespace WireMockInspector.Views
 {
     public partial class RequestList : UserControl
     {

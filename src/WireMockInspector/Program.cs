@@ -1,8 +1,8 @@
-﻿using Avalonia;
+﻿using System;
+using Avalonia;
 using Avalonia.ReactiveUI;
-using System;
 
-namespace WireMockAdminUI
+namespace WireMockInspector
 {
     internal class Program
     {

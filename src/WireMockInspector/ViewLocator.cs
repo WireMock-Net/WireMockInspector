@@ -1,9 +1,9 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using System;
-using WireMockAdminUI.ViewModels;
+using WireMockInspector.ViewModels;
 
-namespace WireMockAdminUI
+namespace WireMockInspector
 {
     public class ViewLocator : IDataTemplate
     {
