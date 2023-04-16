@@ -44,7 +44,7 @@ namespace WireMockInspector.ViewModels
         public NewVersionInfoViewModel NewVersion => _newVersion.Value;
 
 
-        private GithubUpdater _githubUpdater = new GithubUpdater("cezarypiatek/WireMockDebugPOC");
+        private GithubUpdater _githubUpdater = new GithubUpdater("cezarypiatek/WireMockInspector");
 
         public MainWindowViewModel()
         {
