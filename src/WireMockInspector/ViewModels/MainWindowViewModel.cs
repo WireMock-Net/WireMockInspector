@@ -71,6 +71,7 @@ namespace WireMockInspector.ViewModels
                 .Subscribe(x =>
                 {
                     var requests = x.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp);
+                    SelectedRequest = null;
                     Requests.Clear();
                     Requests.AddRange(requests);
                     RequestSearchTerm = string.Empty;
