@@ -45,6 +45,7 @@ namespace WireMockInspector.ViewModels
 
 
         private GithubUpdater _githubUpdater = new GithubUpdater("cezarypiatek/WireMockInspector");
+        private WireMockInspectorSettingsManager _settingsManager = new();
 
         public MainWindowViewModel()
         {
@@ -76,12 +77,30 @@ namespace WireMockInspector.ViewModels
                     Requests.AddRange(requests);
                     RequestSearchTerm = string.Empty;
                 });
+
+            LoadRequestsCommand
+                .ObserveOn(RxApp.TaskpoolScheduler)
+                .Subscribe( async _ =>
+                {
+                    await _settingsManager.UpdateSettings(settings =>
+                    {
+                        settings.AdminUrl = AdminUrl;
+                    }).ConfigureAwait(false);
+                });
+
+
             LoadRequestsCommand.ThrownExceptions.Subscribe(exception =>
             {
 
             });
-            AdminUrl = "http://localhost:1080";
-            
+
+            Observable.FromAsync(async () => await _settingsManager.LoadSettings().ConfigureAwait(false))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(settings =>
+                {
+                    AdminUrl = settings.AdminUrl;
+                });
+
             this.WhenAnyValue(x => x.SelectedRequest)
                 .OfType<RequestViewModel>()
                 .SelectMany(async req =>
