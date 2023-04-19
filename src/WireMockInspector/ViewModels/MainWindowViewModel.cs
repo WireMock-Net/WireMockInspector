@@ -88,12 +88,6 @@ namespace WireMockInspector.ViewModels
                     }).ConfigureAwait(false);
                 });
 
-
-            LoadRequestsCommand.ThrownExceptions.Subscribe(exception =>
-            {
-
-            });
-
             Observable.FromAsync(async () => await _settingsManager.LoadSettings().ConfigureAwait(false))
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(settings =>
