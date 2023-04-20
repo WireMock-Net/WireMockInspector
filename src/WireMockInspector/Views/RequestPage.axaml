@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:WireMockInspector.Views"
+             xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="viewModels:MainWindowViewModel"
+             x:Class="WireMockInspector.Views.RequestPage">
+  <Grid IsVisible="{Binding Requests.Count}"  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch" Grid.Row="1" Margin="0,10">
+    <DockPanel
+        Grid.Column="0"
+        LastChildFill="True"
+        Classes.first="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"
+        Classes.all="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNull}}"
+              >
+      <views:RequestListFilters DockPanel.Dock="Top"></views:RequestListFilters>
+      <views:RequestList></views:RequestList>
+    </DockPanel>
+    <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"></GridSplitter>
+    <Panel Grid.Column="2" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <DockPanel LastChildFill="True" Margin="10,0,0,0" IsVisible="{Binding RelatedMapping, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel DockPanel.Dock="Top">
+          <StackPanel Orientation="Horizontal">
+            <Label FontWeight="Bold">Matching status:</Label>
+            <TextBlock Text="{Binding RelatedMapping.MatchingStatus}" VerticalAlignment="Center"></TextBlock>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <Label FontWeight="Bold">Mapping:</Label>
+            <SelectableTextBlock Text="{Binding RelatedMapping.MappingId}" VerticalAlignment="Center"></SelectableTextBlock>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <Label FontWeight="Bold">Mapping availability:</Label>
+            <TextBlock Text="{Binding RelatedMapping.MappingAvailability}" VerticalAlignment="Center"></TextBlock>
+          </StackPanel>
+        </StackPanel>
+        <TabControl DockPanel.Dock="Bottom">
+          <TabControl.Styles>
+            <Style Selector="TabItem">
+              <Setter Property="FontSize" Value="16"></Setter>
+            </Style>
+          </TabControl.Styles>
+          <TabItem Header="Request" >
+            <views:RequestDetails  DataContext="{Binding Path=RelatedMapping.RequestParts }" />
+          </TabItem>
+          <TabItem Header="Response">
+            <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
+          </TabItem>
+        </TabControl>
+      </DockPanel>
+    </Panel>
+  </Grid>
+</UserControl>

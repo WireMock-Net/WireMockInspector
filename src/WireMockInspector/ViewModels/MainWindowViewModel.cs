@@ -19,6 +19,18 @@ namespace WireMockInspector.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
+
+        public bool DataLoaded
+        {
+            get => _dataLoaded;
+            set => this.RaiseAndSetIfChanged(ref _dataLoaded, value);
+        }
+
+        private bool _dataLoaded;
+
+
+
+
         public string AdminUrl
         {
             get => _adminUrl;
@@ -26,6 +38,8 @@ namespace WireMockInspector.ViewModels
         }
 
         private string _adminUrl;
+
+        public ObservableCollection<MappingViewModel> Mappings { get;  } = new();
 
         public ObservableCollection<RequestViewModel> Requests { get; } = new();
 
@@ -36,6 +50,15 @@ namespace WireMockInspector.ViewModels
         }
 
         private RequestViewModel? _selectedRequest;
+
+        public MappingViewModel SelectedMapping
+        {
+            get => _selectedMapping;
+            set => this.RaiseAndSetIfChanged(ref _selectedMapping, value);
+        }
+
+        private MappingViewModel _selectedMapping;
+
 
 
         
@@ -64,19 +87,57 @@ namespace WireMockInspector.ViewModels
             LoadRequestsCommand = ReactiveCommand.CreateFromTask(async () =>
             {
                 var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
-                return await api.GetRequestsAsync();
+                var requestsTask = api.GetRequestsAsync();
+                var mappingsTask = api.GetMappingsAsync();
+                await Task.WhenAll(requestsTask, mappingsTask).ConfigureAwait(false);
+                return (requests: requestsTask.Result,mappings: mappingsTask.Result);
             }); 
 
             LoadRequestsCommand
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x =>
                 {
-                    var requests = x.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp);
+                    var requests = x.requests.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp);
                     SelectedRequest = null;
                     Requests.Clear();
                     Requests.AddRange(requests);
                     RequestSearchTerm = string.Empty;
+                    
+                    Mappings.Clear();
+
+                    var hitCalculator = new MappingHitCalculator(x.requests);
+
+                    var mappings = x.mappings.Select(model =>
+                    {
+                        var partialHitCount = hitCalculator.GetPartialHitCount(model.Guid);
+                        var perfectHitCount = hitCalculator.GetPerfectHitCount(model.Guid);
+                        return new MappingViewModel()
+                        {
+                            Raw = model,
+                            Id = model.Guid?.ToString(),
+                            Title = model.Title,
+                            Description = model.Description,
+                            UpdatedOn = model.UpdatedAt,
+                            Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)),
+                            PartialHitCount = partialHitCount,
+                            PerfectHitCount = perfectHitCount,
+                            HitType = (perfectHitCount, partialHitCount) switch
+                            {
+                                ( > 0, _) => MappingHitType.PerfectMatch,
+                                (_, >0) => MappingHitType.OnlyPartialMatch,
+                                _ => MappingHitType.Unmatched
+                            }
+                        };
+                    }).OfType<MappingViewModel>().OrderBy(x=>x.UpdatedOn);
+                    Mappings.AddRange(mappings);
+                    MappingSearchTerm = string.Empty;
+                    DataLoaded = true;
                 });
+
+            LoadRequestsCommand.ThrownExceptions.ObserveOn(RxApp.MainThreadScheduler).Subscribe(ex =>
+            {
+                DataLoaded = false;
+            });
 
             LoadRequestsCommand
                 .ObserveOn(RxApp.TaskpoolScheduler)
@@ -97,9 +158,9 @@ namespace WireMockInspector.ViewModels
 
             this.WhenAnyValue(x => x.SelectedRequest)
                 .OfType<RequestViewModel>()
-                .SelectMany(async req =>
+                .Select( req =>
                 {
-                    var expectations = await GetExpectations(req, default);
+                    var expectations = Mappings.FirstOrDefault(x => x.Raw.Guid == req.MappingId)?.Raw ?? new MappingModel(); ;
                     return GetMappingDetails(req, expectations);
                 })
                 .ObserveOn(RxApp.MainThreadScheduler)
@@ -125,7 +186,33 @@ namespace WireMockInspector.ViewModels
                     } ;
                 })
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .ToProperty(this, x => x.FilteredRequests, out _filteredRequests);
+                .ToProperty(this, x => x.FilteredRequests, out _filteredRequests);  
+            
+            this.WhenAnyValue(x => x.MappingSearchTerm, x=>x.MappingTypeFilter, (term, type) => (term,  type))
+                .Throttle(TimeSpan.FromMilliseconds(200))
+                .DistinctUntilChanged()
+                .Select(x =>
+                {
+                    IEnumerable<MappingViewModel> result = Mappings;
+                    if (string.IsNullOrWhiteSpace(x.term) == false)
+                    {
+                        result = result.Where(el => 
+                            el.Id?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true ||
+                            el.Title?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true ||
+                            el.Description?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true
+                            );
+                    }
+
+                    return x.type switch
+                    {
+                        1 => result.Where(x=>x.PerfectHitCount > 0),
+                        2 => result.Where(x => x.PartialHitCount > 0),
+                        3 => result.Where(x => x.HitType == MappingHitType.Unmatched),
+                        _ => result,
+                    } ;
+                })
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.FilteredMappings, out _filteredMappings);
         }
 
         private RequestViewModel? MapRequestData(LogEntryModel r)
@@ -166,6 +253,23 @@ namespace WireMockInspector.ViewModels
             }
         }
 
+
+        public int MappingTypeFilter
+        {
+            get => _mappingTypeFilter;
+            set => this.RaiseAndSetIfChanged(ref _mappingTypeFilter, value);
+        }
+
+        private int _mappingTypeFilter;
+
+        public string MappingSearchTerm
+        {
+            get => _mappingSearchTerm;
+            set => this.RaiseAndSetIfChanged(ref _mappingSearchTerm, value);
+        }
+
+        private string _mappingSearchTerm;
+
         public int RequestTypeFilter
         {
             get => _requestTypeFilter;
@@ -176,6 +280,9 @@ namespace WireMockInspector.ViewModels
         
         private readonly ObservableAsPropertyHelper<IEnumerable<RequestViewModel>> _filteredRequests;
         public IEnumerable<RequestViewModel> FilteredRequests => _filteredRequests.Value;
+        
+        private readonly ObservableAsPropertyHelper<IEnumerable<MappingViewModel>> _filteredMappings;
+        public IEnumerable<MappingViewModel> FilteredMappings => _filteredMappings.Value;
 
         private static MappingDetails GetMappingDetails(RequestViewModel req, MappingModel expectations)
         {
@@ -364,23 +471,7 @@ namespace WireMockInspector.ViewModels
 
         private string _requestSearchTerm;
 
-        private async Task<MappingModel> GetExpectations(RequestViewModel req, CancellationToken c)
-        {
-            if (req.MappingId.HasValue)
-            {
-                try
-                {
-                    var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
-                    return await api.GetMappingAsync(req.MappingId.Value, c);
-                }
-                catch (Exception e)
-                {
-                    return new MappingModel();
-
-                }
-            }
-            return new MappingModel();
-        }
+        
 
         private static string ExpectationsAsJson(object? data)
         {
@@ -402,7 +493,7 @@ namespace WireMockInspector.ViewModels
             return candidates.All(x=>x.Matched);
         }
 
-        public ReactiveCommand<Unit, IList<LogEntryModel>>  LoadRequestsCommand { get; }
+        public ReactiveCommand<Unit, (IList<LogEntryModel> requests, IList<MappingModel> mappings)>  LoadRequestsCommand { get; }
 
         private readonly ObservableAsPropertyHelper<MappingDetails> _relatedMapping;
         public MappingDetails RelatedMapping => _relatedMapping.Value;
@@ -459,5 +550,27 @@ namespace WireMockInspector.ViewModels
         NotProvided,
         Missing,
         Found
+    }
+
+    public class MappingViewModel: ViewModelBase
+    {
+        public MappingModel Raw { get; set; }
+        public string Id { get; set; }
+        public DateTime? UpdatedOn { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Content { get; set; }
+
+        public int PerfectHitCount { get; set; }
+        public int PartialHitCount { get; set; }
+        public MappingHitType HitType { get; set; }
+    }
+
+
+    public enum MappingHitType
+    {
+        Unmatched,
+        OnlyPartialMatch,
+        PerfectMatch
     }
 }
