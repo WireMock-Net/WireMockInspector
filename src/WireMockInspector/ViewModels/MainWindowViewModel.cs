@@ -90,7 +90,7 @@ namespace WireMockInspector.ViewModels
                 var requestsTask = api.GetRequestsAsync();
                 var mappingsTask = api.GetMappingsAsync();
                 await Task.WhenAll(requestsTask, mappingsTask).ConfigureAwait(false);
-                return (requests: requestsTask.Result,mappings: mappingsTask.Result);
+                return (requests: requestsTask.Result, mappings: mappingsTask.Result);
             }); 
 
             LoadRequestsCommand
@@ -153,7 +153,10 @@ namespace WireMockInspector.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(settings =>
                 {
-                    AdminUrl = settings.AdminUrl;
+                    if (string.IsNullOrWhiteSpace(AdminUrl))
+                    {
+                        AdminUrl = settings.AdminUrl;
+                    }
                 });
 
             this.WhenAnyValue(x => x.SelectedRequest)

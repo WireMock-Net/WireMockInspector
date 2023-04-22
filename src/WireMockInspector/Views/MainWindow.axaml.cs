@@ -5,15 +5,25 @@ using MessageBox.Avalonia.Enums;
 using ReactiveUI;
 using WireMockInspector.ViewModels;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using WireMock.Admin.Mappings;
+using WireMock.Admin.Requests;
 
 
 namespace WireMockInspector.Views
 {
     public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
+        private string? _mainTitle;
+
+        public StartupSettings? Settings { get; set; }
+
         public MainWindow()
         {
+            
             InitializeComponent();
             this.WhenActivated((disposables) =>
             {
@@ -27,8 +37,26 @@ namespace WireMockInspector.Views
                             MessageBox.Avalonia.Enums.Icon.Error, WindowStartupLocation.CenterOwner);
                         msg.ShowDialog(this);
                     }).DisposeWith(disposables);
-            });
 
+
+                if (Settings != null)
+                {
+                    ViewModel.AdminUrl = Settings.AdminUrl;
+                    if (Settings.AutoLoad)
+                    {
+                      ViewModel.LoadRequestsCommand.Execute().Subscribe().DisposeWith(disposables);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(Settings.InstanceName) == false)
+                    {
+                        SetInstanceName(Settings.InstanceName);
+                    }
+                }
+            });
+            _mainTitle = $"WireMockInspector v{Assembly.GetEntryAssembly()!.GetName().Version}";
+            Title = _mainTitle;
         }
+
+        public void SetInstanceName(string instanceName) => Title = $"{_mainTitle} - {instanceName}";
     }
 }
