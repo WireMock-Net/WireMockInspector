@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.RequestPage">
-  <Grid IsVisible="{Binding Requests.Count}"  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch" Grid.Row="1" Margin="0,10">
+  <Grid IsVisible="{Binding Requests.Count}"  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch">
     <DockPanel
         Grid.Column="0"
         LastChildFill="True"
@@ -34,13 +34,8 @@
             <TextBlock Text="{Binding RelatedMapping.MappingAvailability}" VerticalAlignment="Center"></TextBlock>
           </StackPanel>
         </StackPanel>
-        <TabControl DockPanel.Dock="Bottom">
-          <TabControl.Styles>
-            <Style Selector="TabItem">
-              <Setter Property="FontSize" Value="16"></Setter>
-            </Style>
-          </TabControl.Styles>
-          <TabItem Header="Request" >
+        <TabControl DockPanel.Dock="Bottom" Classes="minor">
+            <TabItem Header="Request" >
             <views:RequestDetails  DataContext="{Binding Path=RelatedMapping.RequestParts }" />
           </TabItem>
           <TabItem Header="Response">
