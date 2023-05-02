@@ -14,6 +14,7 @@ using RestEase;
 using WireMock.Admin.Mappings;
 using WireMock.Admin.Requests;
 using WireMock.Client;
+using WireMock.Types;
 
 namespace WireMockInspector.ViewModels
 {
@@ -216,6 +217,26 @@ namespace WireMockInspector.ViewModels
                 })
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.FilteredMappings, out _filteredMappings);
+
+            this.WhenAnyValue(x => x.SelectedMapping)
+                .Where(x=> x?.Raw?.Guid != null)
+                .SelectMany(async sm =>
+                {
+                    try
+                    {
+                        var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
+                        return await api.GetMappingCodeAsync(sm.Raw.Guid!.Value, MappingConverterType.Server);
+                    }
+                    catch (Exception e)
+                    {
+                        return "Code definition unavailable";
+                    }
+                })
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(code =>
+                {
+                    SelectedMapping.Code = AsMarkdownCode("cs", code);
+                });
         }
 
         private RequestViewModel? MapRequestData(LogEntryModel r)
@@ -567,6 +588,15 @@ namespace WireMockInspector.ViewModels
         public int PerfectHitCount { get; set; }
         public int PartialHitCount { get; set; }
         public MappingHitType HitType { get; set; }
+
+        public string Code
+        {
+            get => _code;
+            set => this.RaiseAndSetIfChanged(ref _code, value);
+        }
+
+        private string _code;
+        
     }
 
 

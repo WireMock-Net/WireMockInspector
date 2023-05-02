@@ -52,7 +52,7 @@
             </Grid>
         </StackPanel>
         <Image Source="../Assets/wiremockinspector.png"  IsVisible="{Binding !DataLoaded}"  Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="300" Opacity="0.2"></Image>
-      <TabControl Grid.Row="1" IsVisible="{Binding DataLoaded}">
+      <TabControl Grid.Row="1" IsVisible="{Binding DataLoaded}" Padding="0,10">
         <TabItem Header="Requests">
             <views:RequestPage></views:RequestPage>
         </TabItem>
@@ -135,7 +135,14 @@
                    </DockPanel>
                 </views:ContentWithSidebar.Main>
                 <views:ContentWithSidebar.Sidebar>
-                    <md:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Content }"></md:MarkdownScrollViewer>
+                    <TabControl Classes="minor">
+                        <TabItem Header="Definition">
+                            <md:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Content }"></md:MarkdownScrollViewer>
+                        </TabItem>
+                        <TabItem Header="Code">
+                            <md:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Code }"></md:MarkdownScrollViewer>
+                        </TabItem>
+                    </TabControl>
                 </views:ContentWithSidebar.Sidebar>
             </views:ContentWithSidebar>
         </TabItem>
