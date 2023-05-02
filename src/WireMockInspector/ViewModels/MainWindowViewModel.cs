@@ -117,7 +117,7 @@ namespace WireMockInspector.ViewModels
                             Raw = model,
                             Id = model.Guid?.ToString(),
                             Title = model.Title,
-                            Description = model.Description,
+                            Description = model.Title != model.Description? model.Description: null,
                             UpdatedOn = model.UpdatedAt,
                             Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)),
                             PartialHitCount = partialHitCount,
@@ -253,6 +253,12 @@ namespace WireMockInspector.ViewModels
                         {RequestMatchResult.IsPerfectMatch: true} => MatchingStatus.PerfectMatch,
                         {PartialRequestMatchResult: { }} => MatchingStatus.PartialMatch,
                         _ => MatchingStatus.Unmatched
+                    },
+                    Title = r switch
+                    {
+                        {RequestMatchResult.IsPerfectMatch: true} => r.MappingTitle,
+                        {PartialRequestMatchResult: { }} => r.PartialMappingTitle,
+                        _ => null
                     },
                     Path = r.Request.Url.Substring(AdminUrl.Length),
                     Timestamp = r.Request.DateTime,
@@ -547,6 +553,7 @@ namespace WireMockInspector.ViewModels
         public List<MatchInfo> Matches { get; set; }
         public Guid? MappingId { get; set; }
         public LogEntryModel Raw { get; set; }
+        public string? Title { get; set; }
     }
 
     public class MatchJOBject
@@ -581,8 +588,8 @@ namespace WireMockInspector.ViewModels
         public MappingModel Raw { get; set; }
         public string Id { get; set; }
         public DateTime? UpdatedOn { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
         public string Content { get; set; }
 
         public int PerfectHitCount { get; set; }
