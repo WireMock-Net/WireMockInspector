@@ -186,6 +186,7 @@ namespace WireMockInspector.ViewModels
                     {
                         1 => result.Where(x=>x.IsMatched),
                         2 => result.Where(x => x.IsMatched == false),
+                        3 => result.Where(x => x.Title?.Contains("Proxy Mapping on") == true),
                         _ => result,
                     } ;
                 })
@@ -212,6 +213,7 @@ namespace WireMockInspector.ViewModels
                         1 => result.Where(x=>x.PerfectHitCount > 0),
                         2 => result.Where(x => x.PartialHitCount > 0),
                         3 => result.Where(x => x.HitType == MappingHitType.Unmatched),
+                        4 => result.Where(x => x.Title?.Contains("Proxy Mapping for") == true),
                         _ => result,
                     } ;
                 })
