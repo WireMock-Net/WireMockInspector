@@ -123,8 +123,8 @@
                                           </StackPanel>
                                       </Grid>
                                         <StackPanel  Orientation="Vertical">
-                                            <TextBlock  Text="{Binding Title}" IsVisible="{Binding Title, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="10,0"></TextBlock>
-                                            <TextBlock  Text="{Binding Description}" IsVisible="{Binding Description, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="10,0"></TextBlock>
+                                            <TextBlock   Text="{Binding Title}" IsVisible="{Binding Title, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></TextBlock>
+                                            <TextBlock  Text="{Binding Description}" IsVisible="{Binding Description, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></TextBlock>
                                         </StackPanel>
                                     </StackPanel>
                                     
