@@ -149,63 +149,68 @@
           </views:ContentWithSidebar>
         </TabItem>
         <TabItem Header="Settings">
-          <DataGrid Items="{Binding Settings}"
-                    CanUserReorderColumns="False"
-                    CanUserResizeColumns="True"
-                    AutoGenerateColumns="False"
-                    GridLinesVisibility="All"
-                    HeadersVisibility="Column">
-            <DataGrid.DataTemplates>
-              <viewModels:SettingsWrapperTemplateSelector>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="bool">
-                  <CheckBox IsChecked="{Binding Value}" HorizontalAlignment="Center"></CheckBox>
-                </DataTemplate>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="bool?">
-                  <CheckBox IsThreeState="True" IsChecked="{Binding Value}" HorizontalAlignment="Center"></CheckBox>
-                </DataTemplate>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="string">
-                  <TextBox Text="{Binding Value}" VerticalAlignment="Center"></TextBox>
-                </DataTemplate>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="int">
-                  <NumericUpDown Value="{Binding  Value}" HorizontalContentAlignment="Right"  ShowButtonSpinner="False" VerticalAlignment="Center"  ParsingNumberStyle="Number" Increment="1"></NumericUpDown>
-                </DataTemplate>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="int?">
-                  <NumericUpDown  Value="{Binding Value}" HorizontalContentAlignment="Right" ShowButtonSpinner="False"  VerticalAlignment="Center"  ParsingNumberStyle="Number" Increment="1"></NumericUpDown>
-                </DataTemplate>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="Enum">
-                  <ComboBox SelectedItem="{Binding Path=Value}" ItemsSource="{Binding Path=Type, Converter={x:Static viewModels:EnumItemsConverter.Instance}}" HorizontalAlignment="Stretch">
-                  </ComboBox>
-                </DataTemplate>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="object">
-                  <TextBlock Text="{Binding Value}" VerticalAlignment="Center" Foreground="Red"></TextBlock>
-                </DataTemplate>
-                <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="stringlist">
-                  <TextBox Text="{Binding Value, Converter={x:Static viewModels:StringListConverter.Instance}}" VerticalAlignment="Center" Foreground="Red"></TextBox>
-                </DataTemplate>
-              </viewModels:SettingsWrapperTemplateSelector>
-            </DataGrid.DataTemplates>
-            <DataGrid.Styles>
-              <Style Selector="DataGridColumnHeader">
-                <Setter Property="Background" Value="#505050"></Setter>
-              </Style>
-              <Style Selector="DataGridColumnHeader TextBlock">
-                <Setter Property="Foreground" Value="White"></Setter>
-              </Style>
-              <Style Selector="DataGridCell TextBlock">
-                <Setter Property="FontSize" Value="12"></Setter>
-              </Style>
-            </DataGrid.Styles>
-            <DataGrid.Columns>
-              <DataGridTextColumn Header="Attribute" SortMemberPath="Name" Binding="{Binding Name}"  IsReadOnly="True" />
-              <DataGridTemplateColumn Header="Value" IsReadOnly="False" Width="400">
-                <DataGridTemplateColumn.CellTemplate>
-                  <DataTemplate x:DataType="viewModels:SettingsWrapper">
-                    <ContentControl Content="{Binding}"></ContentControl>
+          <Grid RowDefinitions="*, Auto">
+            <DataGrid Items="{Binding Settings}"
+                  CanUserReorderColumns="False"
+                  CanUserResizeColumns="True"
+                  AutoGenerateColumns="False"
+                  GridLinesVisibility="All"
+                  HeadersVisibility="Column">
+              <DataGrid.DataTemplates>
+                <viewModels:SettingsWrapperTemplateSelector>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="bool">
+                    <CheckBox IsChecked="{Binding Value}" HorizontalAlignment="Center"></CheckBox>
                   </DataTemplate>
-                </DataGridTemplateColumn.CellTemplate>
-              </DataGridTemplateColumn>
-            </DataGrid.Columns>
-          </DataGrid>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="bool?">
+                    <CheckBox IsThreeState="True" IsChecked="{Binding Value}" HorizontalAlignment="Center"></CheckBox>
+                  </DataTemplate>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="string">
+                    <TextBox Text="{Binding Value}" VerticalAlignment="Center"></TextBox>
+                  </DataTemplate>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="int">
+                    <NumericUpDown Value="{Binding  Value}" HorizontalContentAlignment="Right"  ShowButtonSpinner="False" VerticalAlignment="Center"  ParsingNumberStyle="Number" Increment="1"></NumericUpDown>
+                  </DataTemplate>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="int?">
+                    <NumericUpDown  Value="{Binding Value}" HorizontalContentAlignment="Right" ShowButtonSpinner="False"  VerticalAlignment="Center"  ParsingNumberStyle="Number" Increment="1"></NumericUpDown>
+                  </DataTemplate>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="Enum">
+                    <ComboBox SelectedItem="{Binding Path=Value}" ItemsSource="{Binding Path=Type, Converter={x:Static viewModels:EnumItemsConverter.Instance}}" HorizontalAlignment="Stretch">
+                    </ComboBox>
+                  </DataTemplate>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="object">
+                    <TextBlock Text="{Binding Value}" VerticalAlignment="Center" Foreground="Red"></TextBlock>
+                  </DataTemplate>
+                  <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="stringlist">
+                    <TextBox Text="{Binding Value, Converter={x:Static viewModels:StringListConverter.Instance}}" VerticalAlignment="Center" Foreground="Red"></TextBox>
+                  </DataTemplate>
+                </viewModels:SettingsWrapperTemplateSelector>
+              </DataGrid.DataTemplates>
+              <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                  <Setter Property="Background" Value="#505050"></Setter>
+                </Style>
+                <Style Selector="DataGridColumnHeader TextBlock">
+                  <Setter Property="Foreground" Value="White"></Setter>
+                </Style>
+                <Style Selector="DataGridCell TextBlock">
+                  <Setter Property="FontSize" Value="12"></Setter>
+                </Style>
+              </DataGrid.Styles>
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Attribute" SortMemberPath="Name" Binding="{Binding Name}"  IsReadOnly="True" />
+                <DataGridTemplateColumn Header="Value" IsReadOnly="False" Width="400">
+                  <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate x:DataType="viewModels:SettingsWrapper">
+                      <ContentControl Content="{Binding}"></ContentControl>
+                    </DataTemplate>
+                  </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+              </DataGrid.Columns>
+            </DataGrid>
+              <DockPanel Grid.Row="1" HorizontalAlignment="Stretch">
+                  <Button Command="{Binding SaveServerSettings}" DockPanel.Dock="Right" HorizontalAlignment="Right" Margin="0,10, 10, 10">Save settings</Button>
+              </DockPanel>
+          </Grid>
         </TabItem>
       </TabControl>
 
