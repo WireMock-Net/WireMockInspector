@@ -75,7 +75,7 @@
                   </TextBox>
                 </Grid>
 
-                <ListBox  Items="{Binding FilteredMappings}" SelectedItem="{Binding SelectedMapping}"   Margin="0 20, 10,0" Background="Transparent">
+                <ListBox ItemsSource="{Binding FilteredMappings}" SelectedItem="{Binding SelectedMapping}"   Margin="0 20, 10,0" Background="Transparent">
                   <ListBox.Styles>
                     <Style Selector="ListBoxItem">
                       <Setter Property="Padding" Value="0"></Setter>
@@ -173,7 +173,7 @@
                   <NumericUpDown  Value="{Binding Value}" HorizontalContentAlignment="Right" ShowButtonSpinner="False"  VerticalAlignment="Center"  ParsingNumberStyle="Number" Increment="1"></NumericUpDown>
                 </DataTemplate>
                 <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="Enum">
-                  <ComboBox SelectedItem="{Binding Path=Value}" Items="{Binding Path=Type, Converter={x:Static viewModels:EnumItemsConverter.Instance}}" HorizontalAlignment="Stretch">
+                  <ComboBox SelectedItem="{Binding Path=Value}" ItemsSource="{Binding Path=Type, Converter={x:Static viewModels:EnumItemsConverter.Instance}}" HorizontalAlignment="Stretch">
                   </ComboBox>
                 </DataTemplate>
                 <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="object">
