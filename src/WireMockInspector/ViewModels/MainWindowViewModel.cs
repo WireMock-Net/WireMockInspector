@@ -141,6 +141,12 @@ namespace WireMockInspector.ViewModels
             .ObserveOn(RxApp.MainThreadScheduler)
             .ToProperty(this, x => x.NewVersion, out _newVersion);
 
+            SaveServerSettings = ReactiveCommand.CreateFromTask(async () =>
+            {
+                var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
+                await api.PutSettingsAsync(serverSettings);
+            });
+
             LoadRequestsCommand = ReactiveCommand.CreateFromTask(async () =>
             {
                 var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
@@ -158,9 +164,10 @@ namespace WireMockInspector.ViewModels
                 {
                     
                     Settings.Clear();
-                    var serverSettings = x.settings;
+                    serverSettings = x.settings;
                     serverSettings.ProxyAndRecordSettings ??= new ProxyAndRecordSettingsModel();
                     serverSettings.ProxyAndRecordSettings.WebProxySettings ??= new WebProxySettingsModel();
+                    serverSettings.ProxyAndRecordSettings.ReplaceSettings ??= new ProxyUrlReplaceSettingsModel();
                     Settings.AddRange(MapToSettingsWrappers(serverSettings));
 
 
@@ -306,6 +313,8 @@ namespace WireMockInspector.ViewModels
                     SelectedMapping.Code = AsMarkdownCode("cs", code);
                 });
         }
+
+        public ReactiveCommand<Unit, Unit> SaveServerSettings { get; set; }
 
         private static IEnumerable<SettingsWrapper> MapToSettingsWrappers(object serverSettings, string? namePrefix = null)
         {
@@ -614,6 +623,7 @@ namespace WireMockInspector.ViewModels
         public ReactiveCommand<Unit, (IList<LogEntryModel> requests, IList<MappingModel> mappings, SettingsModel settings)>  LoadRequestsCommand { get; }
 
         private readonly ObservableAsPropertyHelper<MappingDetails> _relatedMapping;
+        private SettingsModel serverSettings;
         public MappingDetails RelatedMapping => _relatedMapping.Value;
     }
 

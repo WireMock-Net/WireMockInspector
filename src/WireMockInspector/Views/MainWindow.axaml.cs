@@ -38,6 +38,16 @@ namespace WireMockInspector.Views
                         msg.ShowDialog(this);
                     }).DisposeWith(disposables);
 
+                ViewModel.SaveServerSettings
+                    .ThrownExceptions
+                    .ObserveOn(RxApp.MainThreadScheduler)
+                    .Subscribe(ex =>
+                    {
+                        var msg = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Error",
+                            $"Cannot save server settings.\r\n\r\n {ex.Message}", ButtonEnum.Ok,
+                            MessageBox.Avalonia.Enums.Icon.Error, WindowStartupLocation.CenterOwner);
+                        msg.ShowDialog(this);
+                    }).DisposeWith(disposables);
 
                 if (Settings != null)
                 {
