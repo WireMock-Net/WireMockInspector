@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.RequestList">
-  <ListBox SelectedItem="{Binding SelectedRequest}" Items="{Binding FilteredRequests}"   Margin="0 20, 10,0" Background="Transparent">
+  <ListBox SelectedItem="{Binding SelectedRequest}" ItemsSource="{Binding FilteredRequests}"   Margin="0 20, 10,0" Background="Transparent">
     <ListBox.Styles>
       <Style Selector="ListBoxItem">
         <Setter Property="Padding" Value="0"></Setter>

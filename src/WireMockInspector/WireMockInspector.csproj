@@ -33,18 +33,18 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.0-preview5" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.0-preview5" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview5" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-preview5" />
+    <PackageReference Include="Avalonia" Version="11.0.0-preview6" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.0-preview6" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview6" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-preview6" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview5" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.0-preview5" />
-    <PackageReference Include="Markdown.Avalonia" Version="11.0.0-a9" />
-    <PackageReference Include="MessageBox.Avalonia" Version="2.3.1-prev5" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview6" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.0-preview6" />
+    <PackageReference Include="Markdown.Avalonia" Version="11.0.0-b1" />
+    <PackageReference Include="MessageBox.Avalonia" Version="2.3.1-prev6" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-    <PackageReference Include="WireMock.Net.RestClient" Version="1.5.22" />
-    <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
+    <PackageReference Include="WireMock.Net.RestClient" Version="1.5.23" />
+    <!--<PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />-->
   </ItemGroup>
 
 
