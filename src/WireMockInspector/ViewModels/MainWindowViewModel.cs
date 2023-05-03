@@ -4,8 +4,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Data;
+using Avalonia.Data.Converters;
+using Avalonia.Data.Core;
 using DynamicData;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -13,11 +17,61 @@ using ReactiveUI;
 using RestEase;
 using WireMock.Admin.Mappings;
 using WireMock.Admin.Requests;
+using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
 
 namespace WireMockInspector.ViewModels
 {
+    public class SettingsWrapper: ViewModelBase
+    {
+        private readonly object _obj;
+        private readonly PropertyInfo _property;
+
+        public SettingsWrapper(object obj, PropertyInfo property, string? namePrefix = null)
+        {
+            _obj = obj;
+            _property = property;
+            Name = $"{namePrefix}.{property.Name}".Trim('.');
+        }
+
+        public string Name { get; set; }
+
+
+        public Type Type => _property.PropertyType;
+
+        public object Value
+        {
+            get => _property.GetValue(_obj);
+            set
+            {
+                if (value == null)
+                {
+                    _property.SetValue(_obj, null);
+                    this.RaisePropertyChanged();
+                    return;
+                }
+
+                try
+                {
+                    var t = Type;
+                    if (Type.Name == "Nullable`1")
+                    {
+                        t = Type.GenericTypeArguments[0];
+                    }
+
+                    var res = Convert.ChangeType(value, t);
+                    _property.SetValue(_obj, res);
+                    this.RaisePropertyChanged();
+                }
+                catch
+                {
+                    throw new DataValidationException("Invalid value");
+                }
+            }
+        }
+    }
+
     public class MainWindowViewModel : ViewModelBase
     {
 
@@ -42,7 +96,7 @@ namespace WireMockInspector.ViewModels
 
         public ObservableCollection<MappingViewModel> Mappings { get;  } = new();
 
-        public ObservableCollection<RequestViewModel> Requests { get; } = new();
+       public ObservableCollection<RequestViewModel> Requests { get; } = new();
 
         public RequestViewModel? SelectedRequest
         {
@@ -71,6 +125,8 @@ namespace WireMockInspector.ViewModels
         private GithubUpdater _githubUpdater = new GithubUpdater("cezarypiatek/WireMockInspector");
         private WireMockInspectorSettingsManager _settingsManager = new();
 
+        public ObservableCollection<SettingsWrapper> Settings { get; set; } = new();
+
         public MainWindowViewModel()
         {
             Observable.FromAsync(async () =>
@@ -90,14 +146,24 @@ namespace WireMockInspector.ViewModels
                 var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
                 var requestsTask = api.GetRequestsAsync();
                 var mappingsTask = api.GetMappingsAsync();
-                await Task.WhenAll(requestsTask, mappingsTask).ConfigureAwait(false);
-                return (requests: requestsTask.Result, mappings: mappingsTask.Result);
+                var settingsTask = api.GetSettingsAsync();
+               
+                await Task.WhenAll(requestsTask, mappingsTask, settingsTask).ConfigureAwait(false);
+                return (requests: requestsTask.Result, mappings: mappingsTask.Result, settings: settingsTask.Result);
             }); 
 
             LoadRequestsCommand
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x =>
                 {
+                    
+                    Settings.Clear();
+                    var serverSettings = x.settings;
+                    serverSettings.ProxyAndRecordSettings ??= new ProxyAndRecordSettingsModel();
+                    serverSettings.ProxyAndRecordSettings.WebProxySettings ??= new WebProxySettingsModel();
+                    Settings.AddRange(MapToSettingsWrappers(serverSettings));
+
+
                     var requests = x.requests.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp);
                     SelectedRequest = null;
                     Requests.Clear();
@@ -239,6 +305,26 @@ namespace WireMockInspector.ViewModels
                 {
                     SelectedMapping.Code = AsMarkdownCode("cs", code);
                 });
+        }
+
+        private static IEnumerable<SettingsWrapper> MapToSettingsWrappers(object serverSettings, string? namePrefix = null)
+        {
+            foreach (var propertyInfo in serverSettings.GetType().GetProperties().OrderBy(x => x.Name))
+            {
+                var property = propertyInfo;
+                if ((property.PropertyType.IsPrimitive ==false) && property.PropertyType.IsEnum == false && property.PropertyType.Namespace?.StartsWith("System") == false && property.GetValue(serverSettings) is {} obj)
+                {
+                    foreach (var wrapper in MapToSettingsWrappers(obj, namePrefix: $"{namePrefix}.{property.Name}".Trim('.')))
+                    {
+                        yield return wrapper;
+                    }
+                    continue;
+                }
+
+                yield return new SettingsWrapper(serverSettings, property, namePrefix);
+            }
+
+            
         }
 
         private RequestViewModel? MapRequestData(LogEntryModel r)
@@ -525,7 +611,7 @@ namespace WireMockInspector.ViewModels
             return candidates.All(x=>x.Matched);
         }
 
-        public ReactiveCommand<Unit, (IList<LogEntryModel> requests, IList<MappingModel> mappings)>  LoadRequestsCommand { get; }
+        public ReactiveCommand<Unit, (IList<LogEntryModel> requests, IList<MappingModel> mappings, SettingsModel settings)>  LoadRequestsCommand { get; }
 
         private readonly ObservableAsPropertyHelper<MappingDetails> _relatedMapping;
         public MappingDetails RelatedMapping => _relatedMapping.Value;
