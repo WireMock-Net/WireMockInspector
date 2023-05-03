@@ -33,12 +33,29 @@ namespace WireMockInspector.ViewModels
             _obj = obj;
             _property = property;
             Name = $"{namePrefix}.{property.Name}".Trim('.');
+            TypeDescription = property.PropertyType switch
+            {
+                { IsEnum: true } => "enumeration",
+                { Name: "Nullable`1" } n when n.GenericTypeArguments[0].IsEnum => "enumeration, optional",
+                var x => x.ToString() switch
+                {
+                    "System.String" => "string",
+                    "System.Boolean" => "bool",
+                    "System.Nullable`1[System.Boolean]" => "bool, optional",
+                    "System.Int32" => "int",
+                    "System.Nullable`1[System.Int32]" => "int, optional",
+                    "System.String[]" => "coma separated list of strings",
+                    _ => "unknown"
+                }
+            };
         }
 
         public string Name { get; set; }
 
 
         public Type Type => _property.PropertyType;
+
+        public string TypeDescription { get; set; }
 
         public object Value
         {
@@ -143,8 +160,21 @@ namespace WireMockInspector.ViewModels
 
             SaveServerSettings = ReactiveCommand.CreateFromTask(async () =>
             {
-                var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
-                await api.PutSettingsAsync(serverSettings);
+                if (serverSettings.ProxyAndRecordSettings.ReplaceSettings is { OldValue: null })
+                {
+                    serverSettings.ProxyAndRecordSettings.ReplaceSettings = null;
+                }
+
+                try
+                {
+                    var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
+                    await api.PutSettingsAsync(serverSettings);
+                }
+                finally
+                {
+                    serverSettings.ProxyAndRecordSettings.ReplaceSettings ??= new();
+                }
+                
             });
 
             LoadRequestsCommand = ReactiveCommand.CreateFromTask(async () =>
