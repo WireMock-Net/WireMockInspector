@@ -1,0 +1,53 @@
+
+// {{ Title }}
+wireMock
+    .Given(
+      Request.Create()
+       .UsingMethod("{{Request.Methods | join: ', '}}")
+       .WithPath("{{ Request.Path.Matchers[0].Pattern}}")
+      {%- if Request.Url %}
+       .WithUrl("{{ Request.Url.Matchers[0].Pattern}}")
+      {% endif %}
+      {%- if Request.ClientIP %}
+       .WithClientIP("{{ Request.ClientIP.Matchers[0].Pattern}}")
+      {% endif %}
+      {%- for header in Request.Headers %}
+       .WithHeader("{{ header.Name}}", "{{ header.Matchers[0].Pattern | replace: '"', '\\"'}}")
+      {%- endfor %}
+      {%- for cookie in Request.Cookies %}
+       .WithCookie("{{ cookie.Name}}", "{{ cookie.Matchers[0].Pattern | replace: '"', '\\"' }}")
+      {%- endfor %}
+      {%- for param in Request.Params %}
+       .WithParam("{{ param.Name}}", "{{ param.Matchers[0].Pattern | replace: '"', '\\"' }}")
+      {%- endfor %}
+      {%- if Request.Body %}
+       .WithBody("{{ Request.Body.Matchers[0].Pattern | replace: '"', '\\"'}}")
+      {% endif %}
+      )
+    .WithGuid("{{Guid}}")
+    {%- if Probability %}
+    .WithProbability({{Probability}})
+    {% endif %}
+    .RespondWith(
+      Response.Create()
+       .WithStatusCode({{Response.StatusCode}})
+       {%- for header in Response.Headers %}
+       .WithHeader("{{ header[0]}}", {% for h in header[1] -%} "{{ h | replace: '"', '\\"'}}" {%- unless forloop.last %}, {% endunless -%} {% endfor %})
+       {%- endfor -%}
+       {%- if Response.BodyAsJson %}
+       .WithBody(@"{{Response.BodyAsJson | json | replace: '"', '""'   }}")      
+       .WithBodyAsJson({{Response.BodyAsJson | toAnonymousObject }})      
+       {% endif %}      
+       {%- if Response.Body %}
+       .WithBody(@"{{Response.Body | replace: '"', '""'   }}")
+       {% endif %}
+       {%- if Response.BodyAsBytes %}
+       .WithBody(@"{{Response.BodyAsBytes }}")
+       {% endif %}
+       {%- if Response.Delay %}
+        .WithDelay({{Response.Delay}})
+       {% endif %}
+       {%- if Response.MinimumDelayMilliseconds > 0 and Response.MaximumDelayMilliseconds > 0 %}
+        .WithRandomDelay({{Response.MinimumDelayMilliseconds}}, {{Response.MaximumDelayMilliseconds}})
+       {%- endif %}
+      );

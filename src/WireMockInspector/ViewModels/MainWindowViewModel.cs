@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Data.Core;
+using ColorTextBlock.Avalonia;
 using DynamicData;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -20,6 +22,7 @@ using WireMock.Admin.Requests;
 using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
+using WireMockInspector.Templates;
 
 namespace WireMockInspector.ViewModels
 {
@@ -143,6 +146,19 @@ namespace WireMockInspector.ViewModels
         private WireMockInspectorSettingsManager _settingsManager = new();
 
         public ObservableCollection<SettingsWrapper> Settings { get; set; } = new();
+        public ObservableCollection<Template> Templates { get; set; } = new();
+
+        public Template SelectedTemplate
+        {
+            get => _selectedTemplate;
+            set => this.RaiseAndSetIfChanged(ref _selectedTemplate, value);
+        }
+
+        private Template _selectedTemplate;
+
+        private readonly ObservableAsPropertyHelper<string> _generatedCode;
+        public string GeneratedCode => _generatedCode.Value;
+
 
         public MainWindowViewModel()
         {
@@ -157,6 +173,31 @@ namespace WireMockInspector.ViewModels
             })
             .ObserveOn(RxApp.MainThreadScheduler)
             .ToProperty(this, x => x.NewVersion, out _newVersion);
+
+
+            ReloadTemplate = ReactiveCommand.Create<Template, string>(selectedTemplate =>
+            {
+                if (File.Exists(selectedTemplate.FilePath))
+                {
+                    
+                    selectedTemplate.Content = File.ReadAllText(selectedTemplate.FilePath);
+                    var engine = new FluidTemplateEngine();
+                    var jsonReader = new JsonDataSourceReader();
+                    var data = jsonReader.Read(new Source()
+                    {
+                        Content = JsonConvert.SerializeObject(SelectedMapping.Raw)
+                    });
+                    var code = engine.Transform(selectedTemplate, data);
+                    return AsMarkdownCode("cs", code);
+                }
+                return AsMarkdownCode("cs", "");
+            }, canExecute: this.WhenAnyValue(x=>x.SelectedTemplate).Select(x=> x!=null));
+
+            this.WhenAnyValue(x => x.SelectedTemplate)
+                .InvokeCommand(ReloadTemplate);
+
+            ReloadTemplate.ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.GeneratedCode, out _generatedCode);
 
             SaveServerSettings = ReactiveCommand.CreateFromTask(async () =>
             {
@@ -263,6 +304,14 @@ namespace WireMockInspector.ViewModels
                     }
                 });
 
+            Observable.FromAsync(async () => await _settingsManager.LoadTemplates())
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(list =>
+                {
+                    Templates.Clear();
+                    Templates.AddRange(list);
+                });
+
             this.WhenAnyValue(x => x.SelectedRequest)
                 .OfType<RequestViewModel>()
                 .Select( req =>
@@ -343,6 +392,9 @@ namespace WireMockInspector.ViewModels
                     SelectedMapping.Code = AsMarkdownCode("cs", code);
                 });
         }
+
+        public ReactiveCommand<Template, string> ReloadTemplate { get; set; }
+
 
         public ReactiveCommand<Unit, Unit> SaveServerSettings { get; set; }
 

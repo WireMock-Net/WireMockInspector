@@ -7,6 +7,7 @@
         xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
         xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
         xmlns:views1="clr-namespace:WireMockInspector.Views"
+        xmlns:templating="clr-namespace:WireMockInspector.Templates"
         xmlns:system="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
         x:Class="WireMockInspector.Views.MainWindow"
@@ -143,6 +144,22 @@
                 </TabItem>
                 <TabItem Header="Code">
                   <md:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Code }"></md:MarkdownScrollViewer>
+                </TabItem>
+                <TabItem Header="Code generator">
+                    <Grid RowDefinitions="Auto, *">
+                        <StackPanel Margin="5" Orientation="Horizontal">
+                            <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="templating:Template">
+                                        <TextBlock Text="{Binding FileName}"></TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <Button Margin="5" Command="{Binding ReloadTemplate}" CommandParameter="{Binding SelectedTemplate}">Refresh</Button>
+                        </StackPanel>
+                        <md:MarkdownScrollViewer Grid.Row="1" Markdown="{Binding GeneratedCode }"></md:MarkdownScrollViewer>
+                    </Grid>
+                    
                 </TabItem>
               </TabControl>
             </views:ContentWithSidebar.Sidebar>
