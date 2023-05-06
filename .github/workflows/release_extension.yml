@@ -4,50 +4,41 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
-      - '!src/.editorconfig'
+      - 'src/WireMock.Net.Extensions.WireMockInspector/**'
 jobs:
   build-extension:
     runs-on: windows-latest
-    env: 
+    env:
         DOTNET_NOLOGO: true
         DOTNET_CLI_TELEMETRY_OPTOUT: true
         RepositoryUrl: 'https://github.com/${{ github.repository }}'
         RepositoryBranch: '${{ github.ref }}'
-        SourceRevisionId: '${{ github.sha }}'        
+        SourceRevisionId: '${{ github.sha }}'
         Configuration: Release
         SolutionPath: src\WireMockInspector.sln
         Deterministic: true
         PackageReleaseNotes: 'https://github.com/${{ github.repository }}/releases'
         ContinuousIntegrationBuild: true
     steps:
-    - uses: actions/checkout@v2   
+    - uses: actions/checkout@v2
     - name: Setup .NET Core 6
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '6.0'   
+        dotnet-version: '6.0'
     - name: Calculate next version
       uses: cezarypiatek/NextVersionGeneratorAction@0.4
       with:
         patch-pattern: '.*'
         minor-pattern: '^(?!(Fix|Tech))/i'
         major-pattern: 'BREAKING CHANGES'
-        output-to-env-variable: 'Version'    
-    # - name: Materialize Signing Key
-    #   id: write_sign_key_file
-    #   uses: timheuer/base64-to-file@v1
-    #   with:
-    #     fileName: 'Key.snk'
-    #     encodedString: ${{ secrets.SIGNING_KEY }}
+        output-to-env-variable: 'Version'
+        version-tag-prefix: 'release/extension/v'
     - name: Restore dependencies
       run: |
         dotnet nuget locals all --clear
-        dotnet restore $env:SolutionPath         
+        dotnet restore $env:SolutionPath
     - name: Build extension
-      run: dotnet build $env:SolutionPath 
-      # env:
-      #   SignAssembly: true
-      #   AssemblyOriginatorKeyFile: ${{ steps.write_sign_key_file.outputs.filePath }}     
+      run: dotnet build $env:SolutionPath
     - name: Generate release note
       run: |
         git fetch --prune
@@ -60,20 +51,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ env.Version }}
-        release_name:  ${{ env.Version }}
+        tag_name: 'release/extension/v${{ env.Version }}'
+        release_name: 'Extension ${{ env.Version }}'
         body_path: release_note.md
         draft: false
         prerelease: false
-    - name: Upload Release Asset - Nuget
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: src\WireMockInspector\bin\Release\WireMockInspector.${{ env.Version }}.nupkg
-        asset_name: WireMockInspector.${{ env.Version }}.nupkg
-        asset_content_type: binary/octet-stream    
     - name: Publish extension to Nuget
       run: |
-        dotnet nuget push src\WireMockInspector\bin\Release\WireMockInspector.${{ env.Version }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+        dotnet nuget push src\WireMock.Net.Extensions.WireMockInspector\bin\Release\WireMock.Net.Extensions.WireMockInspector.${{ env.Version }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json

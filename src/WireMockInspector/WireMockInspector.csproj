@@ -13,10 +13,10 @@
     <ApplicationIcon>Assets/wiremockinspector.ico</ApplicationIcon>
     <Authors>Cezary Piątek</Authors>
     <Description>WireMockInspect is a cross platform UI app that facilitates WireMock troubleshooting.</Description>
-    <PackageProjectUrl>https://github.com/cezarypiatek/WireMockInspector</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/WireMock-Net/WireMockInspector</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>wiremockinspector_128.png</PackageIcon>
-    <RepositoryUrl>https://github.com/cezarypiatek/WireMockInspector</RepositoryUrl>
+    <RepositoryUrl>https://github.com/WireMock-Net/WireMockInspector</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
