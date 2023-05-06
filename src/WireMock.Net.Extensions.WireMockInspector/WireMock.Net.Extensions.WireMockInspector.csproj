@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <Description>WureMock.Net extension that allows to run WireMockInspector tool and attach it to the current WireMock server</Description>
+    <PackageProjectUrl>https://github.com/WireMock-Net/WireMockInspector</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>wiremockinspector_128.png</PackageIcon>
+    <RepositoryUrl>https://github.com/WireMock-Net/WireMockInspector</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>wiremockinspector_128.png</PackageIcon>
+    <Authors>Cezary Piątek</Authors>
+    <LangVersion>10</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\WireMockInspector\Assets\wiremockinspector_128.png" Link="wiremockinspector_128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </Content>
+    <Content Include="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="WireMock.Net.Abstractions" Version="1.5.23" />
+  </ItemGroup>
+</Project>
