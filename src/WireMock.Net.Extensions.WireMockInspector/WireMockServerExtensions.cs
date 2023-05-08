@@ -18,13 +18,30 @@ public static class WireMockServerExtensions
         if (wireMock.IsStarted == false)
             throw new InvalidOperationException("WireMock server is not started");
 
-        var inspectorProcess = Process.Start(new ProcessStartInfo
-        {
-            FileName = "wiremockinspector",
-            Arguments = $"attach --adminUrl {wireMock.Url} --autoLoad --instanceName {callerMethodName}",
-            UseShellExecute = false
-        });
+        if (wireMock.IsStartedWithAdminInterface == false)
+            throw new InvalidOperationException("WireMock service is not started with Admin interface");
 
-        inspectorProcess?.WaitForExit();
+        try
+        {
+            var inspectorProcess = Process.Start(new ProcessStartInfo
+            {
+                FileName = "wiremockinspector",
+                Arguments = $"attach --adminUrl {wireMock.Url} --autoLoad --instanceName {callerMethodName}",
+                UseShellExecute = false
+            });
+
+            inspectorProcess?.WaitForExit();
+        }
+        catch (Exception e)
+        {
+            throw new InvalidOperationException
+            (
+                message: @"Cannot find installation of WireMockInspector.
+Execute the following command to install WireMockInspector dotnet tool:
+> dotnet tool install WireMockInspector --global --no-cache --ignore-failed-sources
+To get more info please visit https://github.com/WireMock-Net/WireMockInspector",
+                innerException: e
+            );
+        }
     }
 }
