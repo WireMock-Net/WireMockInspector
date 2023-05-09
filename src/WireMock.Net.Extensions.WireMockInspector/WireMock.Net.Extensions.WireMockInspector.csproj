@@ -13,6 +13,7 @@
     <PackageIcon>wiremockinspector_128.png</PackageIcon>
     <Authors>Cezary Piątek</Authors>
     <LangVersion>10</LangVersion>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>

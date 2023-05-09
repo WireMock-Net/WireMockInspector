@@ -17,6 +17,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>wiremockinspector_128.png</PackageIcon>
     <RepositoryUrl>https://github.com/WireMock-Net/WireMockInspector</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
