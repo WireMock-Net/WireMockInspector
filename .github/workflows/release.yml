@@ -1,10 +1,10 @@
-name: release
+name: release_
 on:
   push:
     branches:
       - main
     paths:
-      - 'src/WireMock.Net.Extensions.WireMockInspector/**'
+      - 'src/WireMockInspector/**'
 jobs:
   build-extension:
     runs-on: windows-latest
@@ -32,7 +32,6 @@ jobs:
         minor-pattern: '^(?!(Fix|Tech))/i'
         major-pattern: 'BREAKING CHANGES'
         output-to-env-variable: 'Version'
-        version-tag-prefix: 'release/extension/v'
     - name: Restore dependencies
       run: |
         dotnet nuget locals all --clear
@@ -45,17 +44,21 @@ jobs:
         $commitLog = git log "$(git describe --tags --abbrev=0)..HEAD" --pretty=format:"- %s"
         $commitLog = if([string]::IsNullOrWhitespace($commitLog)){git log --pretty=format:"- %s"}else{$commitLog}
         "What's new: `r`n`r`n$([string]::Join("`r`n",$commitLog))" | Out-File release_note.md -Encoding utf8
+    - name: Publish Nuget Packages
+      run: |
+        dotnet nuget push src\WireMockInspector\bin\Release\WireMockInspector.${{ env.Version }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+        if(@(git log "$(git describe --tags --abbrev=0)..HEAD" --pretty=format:"- %s" -- .\src\WireMock.Net.Extensions.WireMockInspector\).Length -gt 0)
+        {
+          dotnet nuget push src\WireMock.Net.Extensions.WireMockInspector\bin\Release\WireMock.Net.Extensions.WireMockInspector.${{ env.Version }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+        }
     - name: Create Github Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: 'release/extension/v${{ env.Version }}'
-        release_name: 'Extension ${{ env.Version }}'
+        tag_name: ${{ env.Version }}
+        release_name:  'Tool ${{ env.Version }}'
         body_path: release_note.md
         draft: false
         prerelease: false
-    - name: Publish extension to Nuget
-      run: |
-        dotnet nuget push src\WireMock.Net.Extensions.WireMockInspector\bin\Release\WireMock.Net.Extensions.WireMockInspector.${{ env.Version }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
