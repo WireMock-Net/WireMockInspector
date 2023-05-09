@@ -1,10 +1,10 @@
-name: release_
+name: release
 on:
   push:
     branches:
       - main
     paths:
-      - 'src/WireMockInspector/**'
+      - 'src/**'
 jobs:
   build-extension:
     runs-on: windows-latest
