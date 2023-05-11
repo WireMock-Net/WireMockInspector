@@ -18,6 +18,8 @@ After installation you can easily run the app by executing `wiremockinspector` c
 - Presents a list of requests received by `WireMock` server.
 - Combines request data with associated mapping.
 - Presents a list of all available mappings with the definition
+- Generate C# code for defining selected mappings
+- WireMockServer settings editor
 
 ![](wiremock_basic_features.gif)
 
