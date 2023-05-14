@@ -4,12 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Data;
-using Avalonia.Data.Converters;
-using Avalonia.Data.Core;
 using DynamicData;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -23,72 +18,6 @@ using WireMock.Types;
 
 namespace WireMockInspector.ViewModels
 {
-    public class SettingsWrapper: ViewModelBase
-    {
-        private readonly object _obj;
-        private readonly PropertyInfo _property;
-
-        public SettingsWrapper(object obj, PropertyInfo property, string? namePrefix = null)
-        {
-            _obj = obj;
-            _property = property;
-            Name = $"{namePrefix}.{property.Name}".Trim('.');
-            TypeDescription = property.PropertyType switch
-            {
-                { IsEnum: true } => "enumeration",
-                { Name: "Nullable`1" } n when n.GenericTypeArguments[0].IsEnum => "enumeration, optional",
-                var x => x.ToString() switch
-                {
-                    "System.String" => "string",
-                    "System.Boolean" => "bool",
-                    "System.Nullable`1[System.Boolean]" => "bool, optional",
-                    "System.Int32" => "int",
-                    "System.Nullable`1[System.Int32]" => "int, optional",
-                    "System.String[]" => "coma separated list of strings",
-                    _ => "unknown"
-                }
-            };
-        }
-
-        public string Name { get; set; }
-
-
-        public Type Type => _property.PropertyType;
-
-        public string TypeDescription { get; set; }
-
-        public object Value
-        {
-            get => _property.GetValue(_obj);
-            set
-            {
-                if (value == null)
-                {
-                    _property.SetValue(_obj, null);
-                    this.RaisePropertyChanged();
-                    return;
-                }
-
-                try
-                {
-                    var t = Type;
-                    if (Type.Name == "Nullable`1")
-                    {
-                        t = Type.GenericTypeArguments[0];
-                    }
-
-                    var res = Convert.ChangeType(value, t);
-                    _property.SetValue(_obj, res);
-                    this.RaisePropertyChanged();
-                }
-                catch
-                {
-                    throw new DataValidationException("Invalid value");
-                }
-            }
-        }
-    }
-
     public class MainWindowViewModel : ViewModelBase
     {
 
@@ -133,7 +62,7 @@ namespace WireMockInspector.ViewModels
 
 
 
-        
+        private SearchHelper _requestSearcher = new ();
 
         private readonly ObservableAsPropertyHelper<NewVersionInfoViewModel> _newVersion;
         public NewVersionInfoViewModel NewVersion => _newVersion.Value;
@@ -201,12 +130,12 @@ namespace WireMockInspector.ViewModels
                     Settings.AddRange(MapToSettingsWrappers(serverSettings));
 
 
-                    var requests = x.requests.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp);
+                    var requests = x.requests.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp).ToList();
                     SelectedRequest = null;
                     Requests.Clear();
                     Requests.AddRange(requests);
                     RequestSearchTerm = string.Empty;
-                    
+                    _requestSearcher.Load(requests);
                     Mappings.Clear();
 
                     var hitCalculator = new MappingHitCalculator(x.requests);
@@ -281,17 +210,32 @@ namespace WireMockInspector.ViewModels
                     IEnumerable<RequestViewModel> result = x.requests;
                     if (string.IsNullOrWhiteSpace(x.term) == false)
                     {
-                        result = result.Where(el =>
-                            el.Path.Contains(x.term, StringComparison.InvariantCultureIgnoreCase));
+                        try
+                        {
+                            var foundIds = _requestSearcher.Search(x.term);
+                            if (foundIds.Any())
+                            {
+                                result = result.Where(x => foundIds.Contains(x.Raw.Guid.ToString()));
+                            }
+                            else
+                            {
+                                result = result.Where(el => el.Path.Contains(x.term, StringComparison.InvariantCultureIgnoreCase));
+                            }
+
+                        }
+                        catch (Exception e)
+                        {
+                            result = result.Where(el => el.Path.Contains(x.term, StringComparison.InvariantCultureIgnoreCase));
+                        }
                     }
 
                     return x.type switch
                     {
-                        1 => result.Where(x=>x.IsMatched),
+                        1 => result.Where(x => x.IsMatched),
                         2 => result.Where(x => x.IsMatched == false),
                         3 => result.Where(x => x.Title?.Contains("Proxy Mapping on") == true),
                         _ => result,
-                    } ;
+                    };
                 })
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.FilteredRequests, out _filteredRequests);  

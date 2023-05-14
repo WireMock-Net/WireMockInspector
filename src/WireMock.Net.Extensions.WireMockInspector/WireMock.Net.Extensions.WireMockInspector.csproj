@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Nullable>enable</Nullable>
-    <Description>WureMock.Net extension that allows to run WireMockInspector tool and attach it to the current WireMock server</Description>
+    <Description>WireMock.Net extension that allows to run WireMockInspector tool and attach it to the current WireMock server</Description>
     <PackageProjectUrl>https://github.com/WireMock-Net/WireMockInspector</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>wiremockinspector_128.png</PackageIcon>
