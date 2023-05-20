@@ -13,7 +13,7 @@ public static class WireMockServerExtensions
     /// <remarks>
     ///     The current thread will be blocked until WireMockInspector process exits.
     /// </remarks>
-    public static void Inspect(this IWireMockServer wireMock, [CallerMemberName] string callerMethodName = "")
+    public static void Inspect(this IWireMockServer wireMock, [CallerMemberName] string title = "")
     {
         if (wireMock.IsStarted == false)
             throw new InvalidOperationException("WireMock server is not started");
@@ -21,12 +21,20 @@ public static class WireMockServerExtensions
         if (wireMock.IsStartedWithAdminInterface == false)
             throw new InvalidOperationException("WireMock service is not started with Admin interface");
 
+        Inspect(wireMock.Url!, title);
+    }
+
+    /// <summary>
+    ///     Run WireMockInspector dotnet tool and attach it to existing WireMockServer listening under given url
+    /// </summary>
+    public static void Inspect(string wireMockUrl, [CallerMemberName] string title = "")
+    {
         try
         {
             var inspectorProcess = Process.Start(new ProcessStartInfo
             {
                 FileName = "wiremockinspector",
-                Arguments = $"attach --adminUrl {wireMock.Url} --autoLoad --instanceName {callerMethodName}",
+                Arguments = $"attach --adminUrl {wireMockUrl} --autoLoad --instanceName {title}",
                 UseShellExecute = false
             });
 
