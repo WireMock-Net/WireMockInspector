@@ -151,7 +151,7 @@ namespace WireMockInspector.ViewModels
                             Title = model.Title,
                             Description = model.Title != model.Description? model.Description: null,
                             UpdatedOn = model.UpdatedAt,
-                            Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)),
+                            Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)).AsMarkdownSyntax(),
                             PartialHitCount = partialHitCount,
                             PerfectHitCount = perfectHitCount,
                             HitType = (perfectHitCount, partialHitCount) switch
@@ -284,7 +284,7 @@ namespace WireMockInspector.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(code =>
                 {
-                    SelectedMapping.Code = AsMarkdownCode("cs", code);
+                    SelectedMapping.Code = AsMarkdownCode("cs", code).AsMarkdownSyntax();
                 });
         }
 
@@ -487,9 +487,9 @@ namespace WireMockInspector.ViewModels
                             {
                                 "String" or "FormUrlEncoded" => WrapBodyInMarkdown(req.Raw.Request.Body?? string.Empty),
                                 "Json" => AsMarkdownCode("json", req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty),
-                                "Bytes" => req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty,
-                                "File" => "[FileContent]",
-                                _ => ""
+                                "Bytes" => new Markdown("plaintext", req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty),
+                                "File" => new Markdown("plaintext","[FileContent]"),
+                                _ => new Markdown("plaintext", "")
                             }
                         },
                         Expectations = ExpectationsAsJson(expectations.Request?.Body),
@@ -506,7 +506,7 @@ namespace WireMockInspector.ViewModels
                         {
                             Value = req.Raw.Response?.StatusCode?.ToString()?? string.Empty
                         },
-                        Expectations = expectations.Response?.StatusCode?.ToString()?? string.Empty
+                        Expectations = ExpectationsAsJson(expectations.Response?.StatusCode?.ToString())
                     },
                     new ()
                     {
@@ -527,42 +527,42 @@ namespace WireMockInspector.ViewModels
                             Value =  req.Raw.Response?.DetectedBodyType.ToString() switch
                             {
                                 "String" or "FormUrlEncoded" => WrapBodyInMarkdown( req.Raw.Response.Body?? string.Empty),
-                                "Json" => AsMarkdownCode("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
-                                "Bytes" => req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty,
-                                "File" => "[FileContent]",
-                                _ => ""
+                                "Json" => new Markdown("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
+                                "Bytes" => new Markdown("plaintext", req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty),
+                                "File" => new Markdown("plaintext","[FileContent]"),
+                                _ => new Markdown("plaintext","[FileContent]"),
                             }
                         },
                         Expectations = expectations.Response switch
                         {
                             {Body: {} bodyResponse} => WrapBodyInMarkdown(bodyResponse), 
-                            {BodyAsJson: {} bodyAsJson} => AsMarkdownCode("json", bodyAsJson.ToString()!),
-                            {BodyAsBytes: {} bodyAsBytes} => bodyAsBytes.ToString()?? string.Empty,
-                            {BodyAsFile: {} bodyAsFile} => bodyAsFile,
-                            _ => ""
+                            {BodyAsJson: {} bodyAsJson} => new Markdown("json", bodyAsJson.ToString()!),
+                            {BodyAsBytes: {} bodyAsBytes} =>  new Markdown("plaintext", bodyAsBytes.ToString()?? string.Empty),
+                            {BodyAsFile: {} bodyAsFile} =>  new Markdown("plaintext",bodyAsFile),
+                            _ => new Markdown("plaintext","[FileContent]")
                         }
                     }
                 }
             };
         }
 
-        private static string WrapBodyInMarkdown(string bodyResponse)
+        private static Markdown WrapBodyInMarkdown(string bodyResponse)
         {
             var cleanBody = bodyResponse.Trim();
             if (cleanBody.StartsWith("[") || cleanBody.StartsWith("{"))
             {
-                return AsMarkdownCode("json", bodyResponse);
+                return new Markdown("json", bodyResponse);
 
             }
             if (cleanBody.StartsWith("<"))
             {
-                return AsMarkdownCode("xml", bodyResponse);
+                return new Markdown("xml", bodyResponse);
 
             }
-            return bodyResponse;
+            return new Markdown("plaintext", bodyResponse);
         }
 
-        private static string AsMarkdownCode(string lang, string code) => $"```{lang}\r\n{code}\r\n```";
+        public static Markdown AsMarkdownCode(string lang, string code) => new Markdown(lang, code);
 
         public string RequestSearchTerm
         {
@@ -574,11 +574,11 @@ namespace WireMockInspector.ViewModels
 
         
 
-        private static string ExpectationsAsJson(object? data)
+        private static Markdown ExpectationsAsJson(object? data)
         {
             if (data == null)
             {
-                return string.Empty;
+                return  new Markdown("plaintext", string.Empty);
             }
 
             return AsMarkdownCode("json", JsonConvert.SerializeObject(data, Formatting.Indented));
