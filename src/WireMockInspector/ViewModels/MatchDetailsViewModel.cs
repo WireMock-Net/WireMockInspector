@@ -133,7 +133,12 @@ public record Markdown(string lang, string rawValue)
 {
     public string AsMarkdownSyntax()
     {
-        return $"```{lang}\r\n{rawValue}\r\n```";
+        if (string.IsNullOrWhiteSpace(rawValue) == false)
+        {
+            return $"```{lang}\r\n{rawValue}\r\n```";    
+        }
+
+        return string.Empty;
     }
 
     public override string ToString() => AsMarkdownSyntax();

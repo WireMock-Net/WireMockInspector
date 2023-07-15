@@ -574,14 +574,7 @@ namespace WireMockInspector.ViewModels
                         Matched = isPerfectMatch,
                         ActualValue = new MarkdownActualValue
                         {
-                            Value =  req.Raw.Response?.DetectedBodyType.ToString() switch
-                            {
-                                "String" or "FormUrlEncoded" => WrapBodyInMarkdown( req.Raw.Response.Body?? string.Empty),
-                                "Json" => new Markdown("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
-                                "Bytes" => new Markdown("plaintext", req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty),
-                                "File" => new Markdown("plaintext","[FileContent]"),
-                                _ => new Markdown("plaintext","[FileContent]"),
-                            }
+                            Value =  GetActualForRequestBody(req)
                         },
                         Expectations = expectations.Response switch
                         {
@@ -589,10 +582,21 @@ namespace WireMockInspector.ViewModels
                             {BodyAsJson: {} bodyAsJson} => new Markdown("json", bodyAsJson.ToString()!),
                             {BodyAsBytes: {} bodyAsBytes} =>  new Markdown("plaintext", bodyAsBytes.ToString()?? string.Empty),
                             {BodyAsFile: {} bodyAsFile} =>  new Markdown("plaintext",bodyAsFile),
-                            _ => new Markdown("plaintext","[FileContent]")
+                            _ => new Markdown("plaintext",string.Empty)
                         }
                     }
                 }
+            };
+        }
+
+        private static Markdown GetActualForRequestBody(RequestViewModel req)
+        {
+            return req.Raw.Response?.DetectedBodyType.ToString() switch
+            {
+                "Json" => new Markdown("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
+                "Bytes" => new Markdown("plaintext", req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty),
+                "File" => new Markdown("plaintext",req.Raw.Response.BodyAsFile?.ToString() ?? string.Empty),
+                _ => WrapBodyInMarkdown( req.Raw.Response?.Body?? string.Empty),
             };
         }
 
