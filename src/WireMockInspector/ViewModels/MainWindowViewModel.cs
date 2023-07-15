@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DynamicData;
 using Newtonsoft.Json;
@@ -149,6 +150,7 @@ namespace WireMockInspector.ViewModels
                             Raw = model,
                             Id = model.Guid?.ToString(),
                             Title = model.Title,
+                            DescriptiveName = GetDescriptiveName(model),
                             Description = model.Title != model.Description? model.Description: null,
                             UpdatedOn = model.UpdatedAt,
                             Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)).AsMarkdownSyntax(),
@@ -286,6 +288,54 @@ namespace WireMockInspector.ViewModels
                 {
                     SelectedMapping.Code = AsMarkdownCode("cs", code).AsMarkdownSyntax();
                 });
+        }
+
+        private string GetDescriptiveName(MappingModel model)
+        {
+            var sb = new StringBuilder();
+           
+            if (model.Request.Methods is {Length: > 0} methods)
+            {
+                sb.Append(string.Join(" | ", methods));
+                
+            }
+            else
+            {
+                sb.Append("<any method>");
+            }
+            sb.Append(": ");
+            
+            var pathDefined = false;
+            
+            {
+                if (model.Request.Url is JObject jo)
+                {
+                    if (jo.TryGetValue("Matchers", out var matchers) && matchers is JArray arr)
+                    {
+                        var patterns = arr.OfType<JObject>().Select(x => x.TryGetValue("Pattern", out var p) ? p.ToString() : null)
+                            .OfType<string>();
+                        sb.Append(string.Join(" | ", patterns));
+                        pathDefined = true;
+                    }
+                }
+            }
+            {
+                if (model.Request.Path is JObject jo)
+                {
+                    if (jo.TryGetValue("Matchers", out var matchers) && matchers is JArray arr)
+                    {
+                        var patterns = arr.OfType<JObject>().Select(x => x.TryGetValue("Pattern", out var p) ? p.ToString() : null)
+                            .OfType<string>();
+                        sb.Append(string.Join(" | ", patterns));
+                        pathDefined = true;
+                    }
+                }
+            }
+            if (pathDefined == false)
+            {
+                sb.Append("<any path>");
+            }
+            return sb.ToString();
         }
 
         public ReactiveCommand<Unit, Unit> SaveServerSettings { get; set; }
@@ -659,6 +709,7 @@ namespace WireMockInspector.ViewModels
     {
         public MappingModel Raw { get; set; }
         public string Id { get; set; }
+        public string DescriptiveName { get; set; }
         public DateTime? UpdatedOn { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
