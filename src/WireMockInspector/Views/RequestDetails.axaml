@@ -57,7 +57,18 @@
 
               <StackPanel Orientation="Vertical">
                 <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,0,0,15">
-                  <Label VerticalAlignment="Center" >Actual value</Label>
+                  <DockPanel HorizontalAlignment="Stretch">
+                    <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Actual value</Label>
+                    <SplitButton HorizontalAlignment="Right" Margin="0,0,5,5" Padding="0">
+                      <PathIcon Data="{StaticResource settings_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
+                      <SplitButton.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                          <MenuItem Header="Reformat" Command="{Binding ReformatActualValue}"  />
+                          <MenuItem Header="Copy" Command="{Binding CopyActualValue  }"  />
+                        </MenuFlyout>
+                      </SplitButton.Flyout>
+                    </SplitButton>
+                  </DockPanel>
                 </Border>
                 <ContentControl Content="{Binding ActualValue}">
                   <ContentControl.DataTemplates>
@@ -68,7 +79,7 @@
                       <md:MarkdownScrollViewer Markdown="{Binding Value}"></md:MarkdownScrollViewer>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type viewModels:KeyValueListActualValue}">
-                      <DataGrid Items="{Binding Items}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
+                      <DataGrid Items="{Binding Items}" SelectedItem="{Binding SelectedActualValueGridItem}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
                         <DataGrid.Styles>
                           <Style Selector="DataGridColumnHeader">
                             <Setter Property="Background" Value="#505050"></Setter>
@@ -90,7 +101,18 @@
                   </ContentControl.DataTemplates>
                 </ContentControl>
                 <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,5">
-                  <Label VerticalAlignment="Center">Expectations</Label>
+                  <DockPanel HorizontalAlignment="Stretch">
+                    <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Expectations</Label>
+                    <SplitButton HorizontalAlignment="Right" Margin="0,0,5,5" Padding="0">
+                      <PathIcon Data="{StaticResource settings_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
+                      <SplitButton.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                          <MenuItem Header="Reformat" Command="{Binding ReformatExpectations}"  />
+                          <MenuItem Header="Copy" Command="{Binding CopyExpectations}"  />
+                        </MenuFlyout>
+                      </SplitButton.Flyout>
+                    </SplitButton>
+                  </DockPanel>
                 </Border>
                 <md:MarkdownScrollViewer Markdown="{Binding Expectations}" IsVisible="{Binding !NoExpectations}"></md:MarkdownScrollViewer>
                 <TextBlock FontSize="10" Margin="5,5,0,0" IsVisible="{Binding NoExpectations}">(No Expectations)</TextBlock>
