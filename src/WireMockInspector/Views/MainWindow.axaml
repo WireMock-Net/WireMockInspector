@@ -145,6 +145,29 @@
                 <TabItem Header="Code">
                   <md:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Code }"></md:MarkdownScrollViewer>
                 </TabItem>
+                <TabItem Header="Scenario" IsVisible="{Binding SelectedMapping.Scenario, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <Grid Background="#404040">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto"></RowDefinition>
+                      <RowDefinition Height="*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Vertical" Margin="5">
+                      <StackPanel Orientation="Horizontal">
+                        <Label>Scenario Name:</Label>
+                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" FontWeight="Bold" Text="{Binding SelectedMapping.Scenario.ScenarioName}"></TextBlock>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal">
+                        <Label>Current State:</Label>
+                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" FontWeight="Bold" Text="{Binding SelectedMapping.Scenario.CurrentState}" Foreground="#0078d7"></TextBlock>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal">
+                        <Label>This mapping transition:</Label>
+                        <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" FontWeight="Bold" Text="{Binding SelectedMapping.Scenario.ThisMappingTransition}" Foreground="Orange"></TextBlock>
+                      </StackPanel>
+                    </StackPanel>
+                    <Image Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedMapping.Scenario, Converter={x:Static  viewModels:GraphConverter.Instance}}"></Image>
+                  </Grid>
+                </TabItem>
               </TabControl>
             </views:ContentWithSidebar.Sidebar>
           </views:ContentWithSidebar>

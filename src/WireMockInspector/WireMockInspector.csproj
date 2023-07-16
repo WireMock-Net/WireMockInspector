@@ -38,9 +38,12 @@
 
 
   <ItemGroup>
+    <PackageReference Include="AutomaticGraphLayout" Version="1.1.12" />
+    <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageReference Include="Avalonia" Version="11.0.0-preview6" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.0-preview6" />
     <PackageReference Include="Avalonia.Desktop" Version="11.0.0-preview6" />
+    <PackageReference Include="Avalonia.Svg" Version="11.0.0-preview6" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.0-preview6" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview6" />

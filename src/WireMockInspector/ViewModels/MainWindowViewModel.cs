@@ -13,6 +13,7 @@ using ReactiveUI;
 using RestEase;
 using WireMock.Admin.Mappings;
 using WireMock.Admin.Requests;
+using WireMock.Admin.Scenarios;
 using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
@@ -74,6 +75,15 @@ namespace WireMockInspector.ViewModels
 
         public ObservableCollection<SettingsWrapper> Settings { get; set; } = new();
 
+        public class Node
+        {
+            public string Id { get; set; }
+            public double X { get; set; }
+            public double Y { get; set; }
+            public double Width { get; set; }
+            public double Height { get; set; }
+        }
+
         public MainWindowViewModel()
         {
             Observable.FromAsync(async () =>
@@ -113,9 +123,10 @@ namespace WireMockInspector.ViewModels
                 var requestsTask = api.GetRequestsAsync();
                 var mappingsTask = api.GetMappingsAsync();
                 var settingsTask = api.GetSettingsAsync();
+                var scenariosTask = api.GetScenariosAsync();
                
-                await Task.WhenAll(requestsTask, mappingsTask, settingsTask).ConfigureAwait(false);
-                return (requests: requestsTask.Result, mappings: mappingsTask.Result, settings: settingsTask.Result);
+                await Task.WhenAll(requestsTask, mappingsTask, settingsTask, scenariosTask).ConfigureAwait(false);
+                return (requests: requestsTask.Result, mappings: mappingsTask.Result, settings: settingsTask.Result, scenarios: scenariosTask.Result);
             }); 
 
             LoadRequestsCommand
@@ -140,15 +151,69 @@ namespace WireMockInspector.ViewModels
                     Mappings.Clear();
 
                     var hitCalculator = new MappingHitCalculator(x.requests);
+                    var scenarios = x.scenarios.GroupBy(x => x.Name).ToDictionary(x => x.Key, x => x.FirstOrDefault());
+                    
+                    var enrichedScenarios = x.mappings.Where(m => string.IsNullOrWhiteSpace(m.Scenario) == false)
+                        .GroupBy(n => n.Scenario)
+                        .ToDictionary(m => m.Key, mappingsFromScenario =>
+                            {
+                                scenarios.TryGetValue(mappingsFromScenario.Key, out var state);
+                                DateTime? lastHitEntryPointDate = null;
+                                if (state is {Started: true})
+                                {
+                                    var entryPoints = mappingsFromScenario.Where(x => x.WhenStateIs == null);
+                                    if (entryPoints.OrderByDescending(x => hitCalculator.GetLastPerfectHit(x.Guid)).FirstOrDefault() is { } latestEntryPoint)
+                                    {
+                                        lastHitEntryPointDate = hitCalculator.GetLastPerfectHit(latestEntryPoint.Guid);
+                                    }
+                                    
+                                }
+                                
+                                
+                                var transitions = mappingsFromScenario.Select(m =>
+                                {
+                                    var hit = hitCalculator.HasPerfectHitCountAfter(m.Guid, lastHitEntryPointDate);
+                                    var fromNode = m.WhenStateIs is null
+                                        ? new ScenarioEdgeNode(Guid.NewGuid().ToString(), state?.Started == false || (state is {Started: true, NextState: null, Counter: > 0, Finished: false} && hit), hit)
+                                        : new ScenarioNode(m.WhenStateIs);
+                                    
+                                    var toNode = m.SetStateTo is null
+                                        ? new ScenarioEdgeNode(Guid.NewGuid().ToString(), state?.Finished == true && hit, false)
+                                        : new ScenarioNode(m.SetStateTo);
+                                    
+                                    return new ScenarioTransition
+                                    (
+                                        Id: m.Guid.ToString(),
+                                        From: fromNode,
+                                        To: toNode,
+                                        Hit: hit
+                                    );
+                                }).ToList();
+                                return new Scenario
+                                ( 
+                                    CurrentTransitionId: "", 
+                                    Transitions: transitions, mappingsFromScenario.Key, 
+                                    CurrentState:  state switch
+                                    {
+                                        {Started: false} => "[Not Started]",
+                                        {Finished: true} => "[Finished]",
+                                        {Started: true, NextState: null, Counter: > 0} => "[Started]",
+                                        not null => state.NextState,
+                                        _ => ""
+                                    },
+                                    ThisMappingTransition: ""
+                                ); 
+                            });
 
                     var mappings = x.mappings.Select(model =>
                     {
                         var partialHitCount = hitCalculator.GetPartialHitCount(model.Guid);
                         var perfectHitCount = hitCalculator.GetPerfectHitCount(model.Guid);
+                        var mappingId = model.Guid?.ToString();
                         return new MappingViewModel()
                         {
                             Raw = model,
-                            Id = model.Guid?.ToString(),
+                            Id = mappingId,
                             Title = model.Title,
                             DescriptiveName = GetDescriptiveName(model),
                             Description = model.Title != model.Description? model.Description: null,
@@ -161,7 +226,8 @@ namespace WireMockInspector.ViewModels
                                 ( > 0, _) => MappingHitType.PerfectMatch,
                                 (_, >0) => MappingHitType.OnlyPartialMatch,
                                 _ => MappingHitType.Unmatched
-                            }
+                            },
+                            Scenario = enrichedScenarios.TryGetValue(model.Scenario, out var scenario)? scenario with {CurrentTransitionId = mappingId, ThisMappingTransition = $"[{model.WhenStateIs}] -> [{model.SetStateTo}]"}: null
                         };
                     }).OfType<MappingViewModel>().OrderBy(x=>x.UpdatedOn);
                     Mappings.AddRange(mappings);
@@ -641,6 +707,7 @@ namespace WireMockInspector.ViewModels
         private static bool? IsMatched(RequestViewModel req, string rule)
         {
             var candidates = req.Matches.Where(x=>x.RuleName == rule).ToArray();
+            
             if (candidates.Length == 0)
             {
                 return null;
@@ -648,12 +715,17 @@ namespace WireMockInspector.ViewModels
             return candidates.All(x=>x.Matched);
         }
 
-        public ReactiveCommand<Unit, (IList<LogEntryModel> requests, IList<MappingModel> mappings, SettingsModel settings)>  LoadRequestsCommand { get; }
+        public ReactiveCommand<Unit, (IList<LogEntryModel> requests, IList<MappingModel> mappings, SettingsModel settings, IList<ScenarioStateModel> scenarios)> LoadRequestsCommand { get; }
 
         private readonly ObservableAsPropertyHelper<MappingDetails> _relatedMapping;
         private SettingsModel serverSettings;
         public MappingDetails RelatedMapping => _relatedMapping.Value;
     }
+
+    public record ScenarioNode(string Id);
+    public record ScenarioEdgeNode(string Id, bool Current, bool Hit):ScenarioNode(Id);
+
+    public record ScenarioTransition(string Id, ScenarioNode From, ScenarioNode To, bool Hit);
 
     public class MappingDetails:ViewModelBase
     {
@@ -730,9 +802,13 @@ namespace WireMockInspector.ViewModels
         }
 
         private string _code;
+
+        public Scenario Scenario { get; set; }
         
     }
 
+    public record Scenario(string CurrentTransitionId, IReadOnlyList<ScenarioTransition> Transitions, string ScenarioName, string? CurrentState, string ThisMappingTransition);
+    
 
     public enum MappingHitType
     {

@@ -7,29 +7,44 @@ namespace WireMockInspector.ViewModels;
 
 public class MappingHitCalculator
 {
-    private readonly Dictionary<Guid, int> _perfectMatchMappings;
-    private readonly Dictionary<Guid, int> _partialMatchMappings;
+    private readonly Dictionary<Guid, List<LogEntryModel>> _perfectMatchMappings;
+    private readonly Dictionary<Guid, List<LogEntryModel>> _partialMatchMappings;
 
     public MappingHitCalculator(IList<LogEntryModel> requests) 
     {
-        _perfectMatchMappings = requests.Select(x => x.MappingGuid).Where(x => x.HasValue).GroupBy(x => x.Value).ToDictionary(x => x.Key, x => x.Count());
+        _perfectMatchMappings = requests.Where(x => x.MappingGuid.HasValue)
+            .GroupBy(x => x.MappingGuid.Value)
+            .ToDictionary(x => x.Key, x => x.OrderByDescending(x=>x.Request.DateTime).ToList());
         _partialMatchMappings = requests.Where(x => x.PartialMappingGuid.HasValue && x.MappingGuid != x.PartialMappingGuid)
-            .Select(x => x.PartialMappingGuid)
-            .GroupBy(x => x.Value)
-            .ToDictionary(x => x.Key, x => x.Count());
+            .GroupBy(x => x.PartialMappingGuid.Value)
+            .ToDictionary(x => x.Key, x => x.OrderByDescending(x=>x.Request.DateTime).ToList());
     }
 
     public int GetPerfectHitCount(Guid? mappingId)
     {
-        if(mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var count))
-            return count;
+        if(mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
+            return requests.Count;
         return 0;
+    }
+    
+    public bool HasPerfectHitCountAfter(Guid? mappingId, DateTime? after)
+    {
+        if(after.HasValue && mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
+            return requests.Any(x=>x.Request.DateTime >= after);
+        return false;
+    }
+    
+    public DateTime? GetLastPerfectHit(Guid? mappingId)
+    {
+        if(mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
+            return requests.FirstOrDefault()?.Request.DateTime;
+        return null;
     }
             
     public int GetPartialHitCount(Guid? mappingId)
     {
-        if(mappingId.HasValue && _partialMatchMappings.TryGetValue(mappingId.Value, out var count))
-            return count;
+        if(mappingId.HasValue && _partialMatchMappings.TryGetValue(mappingId.Value, out var requests))
+            return requests.Count;
         return 0;
     }
 }
