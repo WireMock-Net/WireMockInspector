@@ -43,6 +43,38 @@ namespace WireMockInspector.ViewModels
         private string _adminUrl;
 
         public ObservableCollection<MappingViewModel> Mappings { get;  } = new();
+        public ObservableCollection<Scenario> Scenarios { get;  } = new();
+
+        public Scenario SelectedScenario
+        {
+            get => _selectedScenario;
+            set => this.RaiseAndSetIfChanged(ref _selectedScenario, value);
+        }
+
+        private Scenario _selectedScenario;
+
+        
+        private readonly ObservableAsPropertyHelper<IEnumerable<Scenario>> _filteredScenarios;
+        public IEnumerable<Scenario> FilteredScenarios => _filteredScenarios.Value;
+
+        public string ScenarioTermFilter
+        {
+            get => _scenarioTermFilter;
+            set => this.RaiseAndSetIfChanged(ref _scenarioTermFilter, value);
+        }
+
+        public int ScenarioTypeFilter
+        {
+            get => _scenarioTypeFilter;
+            set => this.RaiseAndSetIfChanged(ref _scenarioTypeFilter, value);
+        }
+
+        private int _scenarioTypeFilter;
+
+
+
+
+        private string _scenarioTermFilter;
 
        public ObservableCollection<RequestViewModel> Requests { get; } = new();
 
@@ -202,9 +234,22 @@ namespace WireMockInspector.ViewModels
                                         _ => ""
                                     },
                                     ThisMappingTransition: ""
-                                ); 
+                                )
+                                {
+                                    
+                                    Status = (state?.Started, state?.Finished) switch
+                                    {
+                                        (_, true) => ScenarioStatus.Finished,    
+                                        (true, false) => ScenarioStatus.Started,
+                                        _ => ScenarioStatus.NotStarted
+                                    }
+                                    
+                                }; 
                             });
-
+                    Scenarios.Clear();
+                    Scenarios.AddRange(enrichedScenarios.Values);
+                    SelectedScenario = null;
+                    
                     var mappings = x.mappings.Select(model =>
                     {
                         var partialHitCount = hitCalculator.GetPartialHitCount(model.Guid);
@@ -308,6 +353,7 @@ namespace WireMockInspector.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.FilteredRequests, out _filteredRequests);  
             
+            
             this.WhenAnyValue(x => x.MappingSearchTerm, x=>x.MappingTypeFilter, (term, type) => (term,  type))
                 .Throttle(TimeSpan.FromMilliseconds(200))
                 .DistinctUntilChanged()
@@ -334,6 +380,28 @@ namespace WireMockInspector.ViewModels
                 })
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .ToProperty(this, x => x.FilteredMappings, out _filteredMappings);
+            
+            this.WhenAnyValue(x => x.ScenarioTermFilter, x=>x.ScenarioTypeFilter, (term, type) => (term,  type))
+                .Throttle(TimeSpan.FromMilliseconds(200))
+                .DistinctUntilChanged()
+                .Select(x =>
+                {
+                    IEnumerable<Scenario> result = Scenarios;
+                    if (string.IsNullOrWhiteSpace(x.term) == false)
+                    {
+                        result = result.Where(el => el.ScenarioName.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true);
+                    }
+
+                    return x.type switch
+                    {
+                        1 => result.Where(x=>x.Status == ScenarioStatus.NotStarted),
+                        2 => result.Where(x => x.Status == ScenarioStatus.Started),
+                        3 => result.Where(x => x.Status == ScenarioStatus.Finished),
+                        _ => result,
+                    } ;
+                })
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .ToProperty(this, x => x.FilteredScenarios, out _filteredScenarios);
 
             this.WhenAnyValue(x => x.SelectedMapping)
                 .Where(x=> x?.Raw?.Guid != null)
@@ -807,8 +875,18 @@ namespace WireMockInspector.ViewModels
         
     }
 
-    public record Scenario(string CurrentTransitionId, IReadOnlyList<ScenarioTransition> Transitions, string ScenarioName, string? CurrentState, string ThisMappingTransition);
-    
+    public record Scenario(string CurrentTransitionId, IReadOnlyList<ScenarioTransition> Transitions,
+        string ScenarioName, string? CurrentState, string ThisMappingTransition)
+    {
+        public ScenarioStatus Status { get; set; }
+    };
+
+    public enum ScenarioStatus
+    {
+        NotStarted,
+        Started,
+        Finished
+    }
 
     public enum MappingHitType
     {
