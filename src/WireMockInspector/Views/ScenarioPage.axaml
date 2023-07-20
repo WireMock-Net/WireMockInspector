@@ -91,6 +91,58 @@
                     <Image Margin="5" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedScenario, Converter={x:Static  viewModels:GraphConverter.Instance}}"></Image>
                   </Grid>
                 </TabItem>
+                <TabItem Header="Transitions" >
+                  <ScrollViewer HorizontalAlignment="Stretch" >
+                  <ItemsControl Items="{Binding SelectedScenario.Transitions}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Expander HorizontalAlignment="Stretch">
+                          <Expander.Header>
+                            <StackPanel Orientation="Horizontal" Classes.Hit="{Binding Hit}" >
+                              <StackPanel.Styles>
+                                <Style Selector=".Hit TextBlock">
+                                  <Setter Property="Foreground" Value="Green"></Setter>
+                                </Style>
+                              </StackPanel.Styles>
+                              <TextBlock Text="{Binding Description}"></TextBlock>
+                            </StackPanel>
+                            
+                          </Expander.Header>
+                          <TabControl Classes="minor">
+                            <TabItem Header="Definition">
+                              <avalonia:MarkdownScrollViewer Markdown="{Binding MappingDefinition}"></avalonia:MarkdownScrollViewer>
+                            </TabItem>
+                            <TabItem Header="Triggered by">
+                              <ItemsControl Items="{Binding TriggeredBy}">
+                                <ItemsControl.ItemTemplate>
+                                  <DataTemplate>
+                                    <Expander HorizontalAlignment="Stretch">
+                                      <Expander.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                          <TextBlock VerticalAlignment="Center" Text="{Binding Timestamp}"></TextBlock>
+                                          <TextBlock Margin="10,0" VerticalAlignment="Center" Text="{Binding Description}"></TextBlock>
+                                        </StackPanel>
+                                      </Expander.Header>
+                                      <TabControl Classes="minor">
+                                        <TabItem Header="Request">
+                                          <avalonia:MarkdownScrollViewer Markdown="{Binding RequestDefinition}"></avalonia:MarkdownScrollViewer>
+                                        </TabItem>
+                                        <TabItem Header="Response">
+                                          <avalonia:MarkdownScrollViewer Markdown="{Binding ResponseDefinition}"></avalonia:MarkdownScrollViewer>
+                                        </TabItem>
+                                      </TabControl>
+                                    </Expander>
+                                  </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                              </ItemsControl>
+                            </TabItem>
+                          </TabControl>
+                        </Expander>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                 </ScrollViewer>
+                </TabItem>
               </TabControl>
             </views:ContentWithSidebar.Sidebar>
           </views:ContentWithSidebar>
