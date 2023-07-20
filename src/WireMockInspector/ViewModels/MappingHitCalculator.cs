@@ -27,17 +27,37 @@ public class MappingHitCalculator
         return 0;
     }
     
-    public bool HasPerfectHitCountAfter(Guid? mappingId, DateTime? after)
+    public bool HasPerfectHitAfter(Guid? mappingId, DateTime? after)
     {
         if(after.HasValue && mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
             return requests.Any(x=>x.Request.DateTime >= after);
         return false;
     }
     
-    public DateTime? GetLastPerfectHit(Guid? mappingId)
+    public IEnumerable<LogEntryModel> GetPerfectHitCountAfter(Guid? mappingId, DateTime? after)
+    {
+        if(after.HasValue && mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
+            return requests.Where(x=>x.Request.DateTime >= after);
+        return Array.Empty<LogEntryModel>();
+    }
+    
+    public DateTime? GetLastPerfectHitDate(Guid? mappingId)
     {
         if(mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
             return requests.FirstOrDefault()?.Request.DateTime;
+        return null;
+    }
+    
+    public IEnumerable<DateTime> GetLPerfectHitDates(Guid? mappingId)
+    {
+        if(mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
+            return requests.Select(x=>x.Request.DateTime);
+        return Array.Empty<DateTime>();
+    }
+    public DateTime? GetFirstPerfectHitDateAfter(Guid? mappingId, DateTime after)
+    {
+        if(mappingId.HasValue && _perfectMatchMappings.TryGetValue(mappingId.Value, out var requests))
+            return requests.LastOrDefault(x => x.Request.DateTime >= after)?.Request.DateTime;
         return null;
     }
             

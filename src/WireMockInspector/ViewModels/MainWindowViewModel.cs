@@ -190,21 +190,12 @@ namespace WireMockInspector.ViewModels
                         .ToDictionary(m => m.Key, mappingsFromScenario =>
                             {
                                 scenarios.TryGetValue(mappingsFromScenario.Key, out var state);
-                                DateTime? lastHitEntryPointDate = null;
-                                if (state is {Started: true})
-                                {
-                                    var entryPoints = mappingsFromScenario.Where(x => x.WhenStateIs == null);
-                                    if (entryPoints.OrderByDescending(x => hitCalculator.GetLastPerfectHit(x.Guid)).FirstOrDefault() is { } latestEntryPoint)
-                                    {
-                                        lastHitEntryPointDate = hitCalculator.GetLastPerfectHit(latestEntryPoint.Guid);
-                                    }
-                                    
-                                }
-                                
-                                
+                                var estimatedScenarioStateDate = CalculateEstimatedScenarioStateDate(state, mappingsFromScenario, hitCalculator);
+
+
                                 var transitions = mappingsFromScenario.Select(m =>
                                 {
-                                    var hit = hitCalculator.HasPerfectHitCountAfter(m.Guid, lastHitEntryPointDate);
+                                    var hit = hitCalculator.HasPerfectHitAfter(m.Guid, estimatedScenarioStateDate);
                                     var fromNode = m.WhenStateIs is null
                                         ? new ScenarioEdgeNode(Guid.NewGuid().ToString(), state?.Started == false || (state is {Started: true, NextState: null, Counter: > 0, Finished: false} && hit), hit)
                                         : new ScenarioNode(m.WhenStateIs);
@@ -219,8 +210,23 @@ namespace WireMockInspector.ViewModels
                                         From: fromNode,
                                         To: toNode,
                                         Hit: hit
-                                    );
-                                }).ToList();
+                                    )
+                                    {
+                                        LastHit = hitCalculator.GetFirstPerfectHitDateAfter(m.Guid, estimatedScenarioStateDate ?? DateTime.MinValue),
+                                        Description = $"[{m.WhenStateIs}] -> [{m.SetStateTo}]",
+                                        MappingDefinition =AsMarkdownCode("json", JsonConvert.SerializeObject(m, Formatting.Indented)).AsMarkdownSyntax(),
+                                        TriggeredBy = hitCalculator.GetPerfectHitCountAfter(m.Guid, estimatedScenarioStateDate)
+                                            .OrderBy(x=>x.Request.DateTime)
+                                            .Select(l=> new ScenarioTransitionLogEntry
+                                            {
+                                                Timestamp = l.Request.DateTime,
+                                                Description = $"{l.Request.Method} {l.Request.Path}",
+                                                RequestDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Request, Formatting.Indented)),
+                                                ResponseDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Response, Formatting.Indented)),
+                                            }  )
+                                            .ToList()
+                                    };
+                                }).OrderBy(x=> x.LastHit??DateTime.MaxValue).ToList();
                                 return new Scenario
                                 ( 
                                     CurrentTransitionId: "", 
@@ -243,7 +249,6 @@ namespace WireMockInspector.ViewModels
                                         (true, false) => ScenarioStatus.Started,
                                         _ => ScenarioStatus.NotStarted
                                     }
-                                    
                                 }; 
                             });
                     Scenarios.Clear();
@@ -422,6 +427,64 @@ namespace WireMockInspector.ViewModels
                 {
                     SelectedMapping.Code = AsMarkdownCode("cs", code).AsMarkdownSyntax();
                 });
+        }
+
+        private static DateTime? CalculateEstimatedScenarioStateDate(ScenarioStateModel? state, IGrouping<string?, MappingModel> mappingsFromScenario, MappingHitCalculator hitCalculator)
+        {
+            DateTime? estimatedScenarioStateDate = null;
+            DateTime? lastHitExitPointDate = null;
+            if (state is {Started: true})
+            {
+                var lastHits =  mappingsFromScenario.SelectMany(x=> hitCalculator.GetLPerfectHitDates(x.Guid).Select(d=>
+                        new {id = x.Guid, date = d})).OrderByDescending(x=>x.date)
+                    .ToList();
+               var entryPoints = mappingsFromScenario.Where(x => x.WhenStateIs == null);
+            
+               if (entryPoints.MaxBy(x => hitCalculator.GetLastPerfectHitDate(x.Guid)) is { } latestEntryPoint)
+               {
+                   var lastEntryDate = hitCalculator.GetLastPerfectHitDate(latestEntryPoint.Guid);
+                   var lastHitsEnumerator = lastHits.AsEnumerable();
+                   var lastBeforeLastEntry = new {id = (Guid?) null, date = DateTime.MinValue};
+                   var counterForEntryRequests = 0;
+                   foreach (var lt in lastHitsEnumerator)
+                   {
+                       if (lt.date >= lastEntryDate && lt.id != latestEntryPoint.Guid)
+                       {
+                           continue;
+                       }
+
+                       if (lt.id == latestEntryPoint.Guid)
+                       {
+                           counterForEntryRequests++;
+                           lastBeforeLastEntry = lt;
+                           //INFO: In case when scenario was previously reset on the first step. This won't work correctly when current state is after entry point.
+                           //       It would be better if the state could have ScenarioStartDate.
+                           if (state.NextState == null && state.Finished == false)
+                           {
+                               if (counterForEntryRequests == state.Counter)
+                               {
+                                   break;
+                               }
+                           }
+                       }
+                       else
+                       {
+                           break;
+                       }
+                   }
+                   
+                   if (lastBeforeLastEntry.id != null)
+                   {
+                       estimatedScenarioStateDate = hitCalculator.GetFirstPerfectHitDateAfter(latestEntryPoint.Guid, lastBeforeLastEntry.date);
+                   }
+                   else
+                   {
+                       estimatedScenarioStateDate = hitCalculator.GetFirstPerfectHitDateAfter(latestEntryPoint.Guid, DateTime.MinValue);
+                   }
+               }
+            }
+
+            return estimatedScenarioStateDate;
         }
 
         private string GetDescriptiveName(MappingModel model)
@@ -790,10 +853,24 @@ namespace WireMockInspector.ViewModels
         public MappingDetails RelatedMapping => _relatedMapping.Value;
     }
 
+    public class ScenarioTransitionLogEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public string Description { get; set; }
+        public Markdown RequestDefinition { get; set; }
+        public Markdown ResponseDefinition { get; set; }
+    }
+
     public record ScenarioNode(string Id);
     public record ScenarioEdgeNode(string Id, bool Current, bool Hit):ScenarioNode(Id);
 
-    public record ScenarioTransition(string Id, ScenarioNode From, ScenarioNode To, bool Hit);
+    public record ScenarioTransition(string Id, ScenarioNode From, ScenarioNode To, bool Hit)
+    {
+        public string Description { get; set; }
+        public string MappingDefinition { get; set; }
+        public List<ScenarioTransitionLogEntry> TriggeredBy { get; set; }
+        public DateTime? LastHit { get; set; }
+    };
 
     public class MappingDetails:ViewModelBase
     {
