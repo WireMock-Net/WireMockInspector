@@ -57,7 +57,7 @@
 
                         </Border.Styles>
                         <StackPanel Margin="10" Orientation="Vertical">
-                          <Grid ColumnDefinitions="30,500,Auto"   >
+                          <Grid ColumnDefinitions="30,0.7*,0.3*"   >
                             <PathIcon
                               Margin="5,0, 15,0"
                               VerticalAlignment="Center"
