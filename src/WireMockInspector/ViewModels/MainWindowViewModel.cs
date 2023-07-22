@@ -271,7 +271,8 @@ namespace WireMockInspector.ViewModels
                             Raw = model,
                             Id = mappingId,
                             Title = model.Title,
-                            DescriptiveName = GetDescriptiveName(model),
+                            ExpectedMethods = model.Request.Methods ?? Array.Empty<string>(),
+                            ExpectedPaths = GetExpectedPathsDescription(model),
                             Description = model.Title != model.Description? model.Description: null,
                             UpdatedOn = model.UpdatedAt,
                             Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)).AsMarkdownSyntax(),
@@ -494,21 +495,9 @@ namespace WireMockInspector.ViewModels
             return estimatedScenarioStateDate;
         }
 
-        private string GetDescriptiveName(MappingModel model)
+        private string GetExpectedPathsDescription(MappingModel model)
         {
             var sb = new StringBuilder();
-           
-            if (model.Request.Methods is {Length: > 0} methods)
-            {
-                sb.Append(string.Join(" | ", methods));
-                
-            }
-            else
-            {
-                sb.Append("<any method>");
-            }
-            sb.Append(": ");
-            
             var pathDefined = false;
             
             {
@@ -939,7 +928,8 @@ namespace WireMockInspector.ViewModels
     {
         public MappingModel Raw { get; set; }
         public string Id { get; set; }
-        public string DescriptiveName { get; set; }
+        public IReadOnlyList<string> ExpectedMethods { get; set; }
+        public string ExpectedPaths { get; set; }
         public DateTime? UpdatedOn { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
