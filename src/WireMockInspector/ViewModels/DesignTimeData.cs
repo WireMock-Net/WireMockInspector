@@ -14,7 +14,7 @@ public static class DesignTimeData
                 IsMatched = true,
                 Path = "/api/v1.0/weather?lat=10.99&lon=44.34",
                 Method = "POST",
-                StatusCode = 200
+                StatusCode = "200"
             },
             new RequestViewModel()
             {
@@ -22,7 +22,7 @@ public static class DesignTimeData
                 IsMatched = false,
                 Path = "/api/v1.0/weather?lat=10.99&lon=44.34",
                 Method = "GET",
-                StatusCode = 404
+                StatusCode = "404"
             },
         }
     };
