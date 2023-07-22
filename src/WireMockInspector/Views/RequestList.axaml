@@ -29,7 +29,7 @@
                       <PathIcon Data="{StaticResource checkmark_circle_regular}" Foreground="green" IsVisible="{Binding IsMatched}" ></PathIcon>
                   </Panel>
                   <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat={}{0:s}}" Foreground="white" VerticalAlignment="Center" ></TextBlock>
-                  <Border Grid.Column="2"  BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="green">
+                  <Border Grid.Column="2"  BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding Method, Converter={x:Static viewModels:RequestMethodToColorConverter.Instance}}">
                       <TextBlock TextAlignment="Center"  Text="{Binding Method}" Margin="5" Foreground="white"></TextBlock>
                   </Border>
                   <TextBlock Grid.Column="3" Text="{Binding Path}" Foreground="white" VerticalAlignment="Center" Margin="10,0"></TextBlock>
