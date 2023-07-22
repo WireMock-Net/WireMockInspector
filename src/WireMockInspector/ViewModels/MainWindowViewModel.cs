@@ -376,7 +376,8 @@ namespace WireMockInspector.ViewModels
                         result = result.Where(el => 
                             el.Id?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true ||
                             el.Title?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true ||
-                            el.Description?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true
+                            el.Description?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true ||
+                            el.ExpectedPaths?.Contains(x.term, StringComparison.InvariantCultureIgnoreCase) == true 
                             );
                     }
 
