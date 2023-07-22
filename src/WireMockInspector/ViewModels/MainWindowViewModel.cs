@@ -158,6 +158,12 @@ namespace WireMockInspector.ViewModels
                 var scenariosTask = api.GetScenariosAsync();
                
                 await Task.WhenAll(requestsTask, mappingsTask, settingsTask, scenariosTask).ConfigureAwait(false);
+
+                foreach (var request in requestsTask.Result)
+                {
+                    request.Response.StatusCode ??= 200;
+                }
+                
                 return (requests: requestsTask.Result, mappings: mappingsTask.Result, settings: settingsTask.Result, scenarios: scenariosTask.Result);
             }); 
 
@@ -582,7 +588,7 @@ namespace WireMockInspector.ViewModels
                     Timestamp = r.Request.DateTime,
                     IsMatched = matchModel?.IsPerfectMatch ?? false,
                     Method = r.Request.Method,
-                    StatusCode = r.Response.StatusCode is int val ? val : 0,
+                    StatusCode = r.Response.StatusCode?.ToString() ?? "200" ,
                     MappingId = mappingGuid,
                     Matches = matchModel?.MatchDetails.OfType<JObject>().Select(x =>
                     {
@@ -892,7 +898,7 @@ namespace WireMockInspector.ViewModels
         public string Path { get; set; }
         public DateTime Timestamp { get; set; }
         public bool IsMatched { get; set; }
-        public int StatusCode { get; set; }
+        public string StatusCode { get; set; }
         public List<MatchInfo> Matches { get; set; }
         public Guid? MappingId { get; set; }
         public LogEntryModel Raw { get; set; }

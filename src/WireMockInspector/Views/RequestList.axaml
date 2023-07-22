@@ -23,7 +23,7 @@
       <DataTemplate x:DataType="viewModels:RequestViewModel">
         <Border CornerRadius="10" ClipToBounds="True" BorderBrush="gray" BorderThickness="2" Margin="0">
           <StackPanel Orientation="Vertical" Margin="10">
-              <Grid ColumnDefinitions="Auto,160,60,*">
+              <Grid ColumnDefinitions="Auto,160,60,*,Auto">
                   <Panel Margin="5,0,15,0" VerticalAlignment="Center">
                       <PathIcon Data="{StaticResource dismiss_circle_regular}" Foreground="red" IsVisible="{Binding !IsMatched}" ></PathIcon>
                       <PathIcon Data="{StaticResource checkmark_circle_regular}" Foreground="green" IsVisible="{Binding IsMatched}" ></PathIcon>
@@ -33,6 +33,9 @@
                       <TextBlock TextAlignment="Center"  Text="{Binding Method}" Margin="5" Foreground="white"></TextBlock>
                   </Border>
                   <TextBlock Grid.Column="3" Text="{Binding Path}" Foreground="white" VerticalAlignment="Center" Margin="10,0"></TextBlock>
+                  <Border Grid.Column="4"  BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding StatusCode, Converter={x:Static viewModels:ResponseCodeToColorConverter.Instance}}">
+                    <TextBlock TextAlignment="Center"  Text="{Binding StatusCode}" Margin="5" Foreground="white"></TextBlock>
+                  </Border>
               </Grid>
               <TextBlock Text="{Binding Title}" IsVisible="{Binding Title, Converter={x:Static ObjectConverters.IsNotNull}}" Margin="5,5,0,0"></TextBlock>
           </StackPanel>
