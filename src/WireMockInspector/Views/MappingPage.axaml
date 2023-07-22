@@ -108,8 +108,19 @@
                 <TabItem Header="Definition">
                   <avalonia:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Content }"></avalonia:MarkdownScrollViewer>
                 </TabItem>
-                <TabItem Header="Code">
-                  <avalonia:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Code }"></avalonia:MarkdownScrollViewer>
+                <TabItem Header="Matches">
+                  <ScrollViewer>
+                    <StackPanel Orientation="Vertical">
+                      <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,0,0,15">
+                        <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Perfect matches</Label>
+                      </Border>
+                      <views:RequestLogs DataContext="{Binding SelectedMapping.PerfectMatches}"></views:RequestLogs>
+                      <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,15">
+                        <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Partial matches</Label>
+                      </Border>
+                      <views:RequestLogs DataContext="{Binding SelectedMapping.PartialMatches}"></views:RequestLogs>
+                    </StackPanel>
+                  </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Scenario" IsVisible="{Binding SelectedMapping.Scenario, Converter={x:Static ObjectConverters.IsNotNull}}">
                   <Grid Background="#404040">
@@ -133,6 +144,9 @@
                     </StackPanel>
                     <Image Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedMapping.Scenario, Converter={x:Static  viewModels:GraphConverter.Instance}}"></Image>
                   </Grid>
+                </TabItem>
+                <TabItem Header="Code">
+                  <avalonia:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Code }"></avalonia:MarkdownScrollViewer>
                 </TabItem>
               </TabControl>
             </views:ContentWithSidebar.Sidebar>

@@ -221,16 +221,10 @@ namespace WireMockInspector.ViewModels
                                         LastHit = hitCalculator.GetFirstPerfectHitDateAfter(m.Guid, estimatedScenarioStateDate ?? DateTime.MinValue),
                                         Description = $"[{m.WhenStateIs}] -> [{m.SetStateTo}]",
                                         MappingDefinition =AsMarkdownCode("json", JsonConvert.SerializeObject(m, Formatting.Indented)).AsMarkdownSyntax(),
-                                        TriggeredBy = hitCalculator.GetPerfectHitCountAfter(m.Guid, estimatedScenarioStateDate)
-                                            .OrderBy(x=>x.Request.DateTime)
-                                            .Select(l=> new ScenarioTransitionLogEntry
-                                            {
-                                                Timestamp = l.Request.DateTime,
-                                                Description = $"{l.Request.Method} {l.Request.Path}",
-                                                RequestDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Request, Formatting.Indented)),
-                                                ResponseDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Response, Formatting.Indented)),
-                                            }  )
-                                            .ToList()
+                                        TriggeredBy = new RequestLogViewModel()
+                                        {
+                                            MapToLogEntries(hitCalculator.GetPerfectHitCountAfter(m.Guid, estimatedScenarioStateDate))
+                                        }
                                     };
                                 }).OrderBy(x=> x.LastHit??DateTime.MaxValue).ToList();
                                 return new Scenario
@@ -278,6 +272,14 @@ namespace WireMockInspector.ViewModels
                             Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)).AsMarkdownSyntax(),
                             PartialHitCount = partialHitCount,
                             PerfectHitCount = perfectHitCount,
+                            PerfectMatches = new RequestLogViewModel()
+                            {
+                                MapToLogEntries(x.requests.Where(x=>x.MappingGuid == model.Guid).OrderByDescending(x=>x.Request.DateTime))
+                            },
+                            PartialMatches = new RequestLogViewModel()
+                            {
+                                MapToLogEntries(x.requests.Where(x=>x.PartialMappingGuid == model.Guid && x.MappingGuid != model.Guid).OrderByDescending(x=>x.Request.DateTime))
+                            },
                             HitType = (perfectHitCount, partialHitCount) switch
                             {
                                 ( > 0, _) => MappingHitType.PerfectMatch,
@@ -435,6 +437,22 @@ namespace WireMockInspector.ViewModels
                 {
                     SelectedMapping.Code = AsMarkdownCode("cs", code).AsMarkdownSyntax();
                 });
+        }
+
+        private static List<RequestLogEntry> MapToLogEntries(IEnumerable<LogEntryModel> logs)
+        {
+            return logs
+                .OrderBy(x=>x.Request.DateTime)
+                .Select(l=> new RequestLogEntry
+                {
+                    Timestamp = l.Request.DateTime,
+                    Method = l.Request.Method,
+                    Path =  l.Request.Path,
+                    RequestDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Request, Formatting.Indented)),
+                    ResponseDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Response, Formatting.Indented)),
+                    StatusCode = l.Response.StatusCode?.ToString()
+                }  )
+                .ToList();
         }
 
         private static DateTime? CalculateEstimatedScenarioStateDate(ScenarioStateModel? state, IGrouping<string?, MappingModel> mappingsFromScenario, MappingHitCalculator hitCalculator)
@@ -851,12 +869,14 @@ namespace WireMockInspector.ViewModels
         public MappingDetails RelatedMapping => _relatedMapping.Value;
     }
 
-    public class ScenarioTransitionLogEntry
+    public class RequestLogEntry
     {
         public DateTime Timestamp { get; set; }
-        public string Description { get; set; }
+        public string Method { get; set; }
+        public string Path { get; set; }
         public Markdown RequestDefinition { get; set; }
         public Markdown ResponseDefinition { get; set; }
+        public string StatusCode { get; set; }
     }
 
     public record ScenarioNode(string Id);
@@ -866,10 +886,15 @@ namespace WireMockInspector.ViewModels
     {
         public string Description { get; set; }
         public string MappingDefinition { get; set; }
-        public List<ScenarioTransitionLogEntry> TriggeredBy { get; set; }
+        public RequestLogViewModel TriggeredBy { get; set; }
         public DateTime? LastHit { get; set; }
     };
 
+    public class RequestLogViewModel:List<RequestLogEntry>
+    {
+        
+    }
+    
     public class MappingDetails:ViewModelBase
     {
         public MatchingStatus MatchingStatus { get; set; }
@@ -948,7 +973,8 @@ namespace WireMockInspector.ViewModels
         private string _code;
 
         public Scenario Scenario { get; set; }
-        
+        public RequestLogViewModel PerfectMatches { get; set; }
+        public RequestLogViewModel PartialMatches { get; set; }
     }
 
     public record Scenario(string CurrentTransitionId, IReadOnlyList<ScenarioTransition> Transitions,

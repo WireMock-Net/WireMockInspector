@@ -1,0 +1,38 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="WireMockInspector.Views.RequestLogs"
+             x:DataType="viewModels:RequestLogViewModel">
+  <ItemsControl Items="{Binding }">
+    <ItemsControl.ItemTemplate>
+      <DataTemplate>
+        <Expander HorizontalAlignment="Stretch">
+          <Expander.Header>
+            <DockPanel  HorizontalAlignment="Stretch">
+              <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Text="{Binding Timestamp, StringFormat={}{0:s}}"></TextBlock>
+              <Border Width="100" BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding Method, Converter={x:Static viewModels:RequestMethodToColorConverter.Instance}}">
+                <TextBlock TextAlignment="Center"  Text="{Binding Method}" Margin="5" Foreground="white"></TextBlock>
+              </Border>
+              <TextBlock Margin="10,0" VerticalAlignment="Center" Text="{Binding Path}"></TextBlock>
+              <Border HorizontalAlignment="Right" DockPanel.Dock="Right" ToolTip.Tip="{Binding StatusCode, Converter={x:Static viewModels:HttpStatusCodeToDescriptionConverter.Instance}}" Grid.Column="4"  BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding StatusCode, Converter={x:Static viewModels:ResponseCodeToColorConverter.Instance}}">
+                <TextBlock TextAlignment="Center"  Text="{Binding StatusCode}" Margin="5" Foreground="white"></TextBlock>
+              </Border>
+            </DockPanel>
+          </Expander.Header>
+          <TabControl Classes="minor">
+            <TabItem Header="Request">
+              <avalonia:MarkdownScrollViewer Markdown="{Binding RequestDefinition}"></avalonia:MarkdownScrollViewer>
+            </TabItem>
+            <TabItem Header="Response">
+              <avalonia:MarkdownScrollViewer Markdown="{Binding ResponseDefinition}"></avalonia:MarkdownScrollViewer>
+            </TabItem>
+          </TabControl>
+        </Expander>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>    
+</UserControl>
