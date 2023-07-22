@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.RequestListFilters">
-    <Grid ColumnDefinitions="Auto, *, Auto">
+    <Grid ColumnDefinitions="Auto, *, Auto" >
         <ComboBox Width="150" SelectedIndex="{Binding RequestTypeFilter}" Margin="0,0,10,0">
             <ComboBoxItem IsSelected="True">All</ComboBoxItem>
             <ComboBoxItem>Matched</ComboBoxItem>
@@ -18,7 +18,7 @@
         <TextBox  Text="{Binding RequestSearchTerm}" Grid.Column="1" Margin="0,0,10,0">
 
         </TextBox>
-        <Button Grid.Column="2" Width="30">
+        <Button Grid.Column="2" Width="30" Margin="0,0,10,0">
             <Button.Styles>
                 <Style Selector="FlyoutPresenter">
                     <Setter Property="MinWidth" Value="700"></Setter>

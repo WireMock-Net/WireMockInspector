@@ -7,18 +7,20 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.RequestPage">
-  <Grid IsVisible="{Binding Requests.Count}"  DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto, 420" VerticalAlignment="Stretch">
-    <DockPanel
+  
+  <views:ContentWithSidebar IsSidebarOpen="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
+    <views:ContentWithSidebar.Main>
+      <DockPanel
         Grid.Column="0"
         LastChildFill="True"
         Classes.first="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"
         Classes.all="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNull}}"
-              >
-      <views:RequestListFilters DockPanel.Dock="Top"></views:RequestListFilters>
-      <views:RequestList></views:RequestList>
-    </DockPanel>
-    <GridSplitter Grid.Column="1" Width="3" MinWidth="1" BorderThickness="0" VerticalAlignment="Stretch" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}"></GridSplitter>
-    <Panel Grid.Column="2" IsVisible="{Binding SelectedRequest, Converter={x:Static ObjectConverters.IsNotNull}}">
+      >
+        <views:RequestListFilters DockPanel.Dock="Top"></views:RequestListFilters>
+        <views:RequestList></views:RequestList>
+      </DockPanel>
+    </views:ContentWithSidebar.Main>
+    <views:ContentWithSidebar.Sidebar>
       <DockPanel LastChildFill="True" Margin="10,0,0,0" IsVisible="{Binding RelatedMapping, Converter={x:Static ObjectConverters.IsNotNull}}">
         <StackPanel DockPanel.Dock="Top">
           <StackPanel Orientation="Horizontal">
@@ -35,7 +37,7 @@
           </StackPanel>
         </StackPanel>
         <TabControl DockPanel.Dock="Bottom" Classes="minor">
-            <TabItem Header="Request" >
+          <TabItem Header="Request" >
             <views:RequestDetails  DataContext="{Binding Path=RelatedMapping.RequestParts }" />
           </TabItem>
           <TabItem Header="Response">
@@ -43,6 +45,6 @@
           </TabItem>
         </TabControl>
       </DockPanel>
-    </Panel>
-  </Grid>
+    </views:ContentWithSidebar.Sidebar>
+  </views:ContentWithSidebar>
 </UserControl>

@@ -641,6 +641,8 @@ namespace WireMockInspector.ViewModels
         private static MappingDetails GetMappingDetails(RequestViewModel req, MappingModel expectations)
         {
             var isPerfectMatch = req.Raw.RequestMatchResult?.IsPerfectMatch == true;
+            var statusCode = req.Raw.Response?.StatusCode?.ToString()?? string.Empty;
+            var statusCodeFormatted = $"{statusCode} ({HttpStatusCodeToDescriptionConverter.TranslateStatusCode(statusCode)})";
             return new MappingDetails
             {
                 MatchingStatus = req.MatchingStatus,
@@ -757,7 +759,7 @@ namespace WireMockInspector.ViewModels
                         Matched = isPerfectMatch,
                         ActualValue = new SimpleActualValue
                         {
-                            Value = req.Raw.Response?.StatusCode?.ToString()?? string.Empty
+                            Value = statusCodeFormatted
                         },
                         Expectations = ExpectationsAsJson(expectations.Response?.StatusCode?.ToString())
                     },
