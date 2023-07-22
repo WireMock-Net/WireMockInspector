@@ -66,7 +66,7 @@
                                 Classes.unmatched="{Binding HitType, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=Unmatched}"
                                             ></PathIcon>
                             <TextBlock Grid.Column="1" Text="{Binding UpdatedOn, StringFormat={}{0:s}}" Foreground="white" VerticalAlignment="Center" ></TextBlock>
-                            <TextBlock Grid.Column="2"  Text="{Binding Id}" Width="300" Foreground="white" VerticalAlignment="Center" Margin="10,0"></TextBlock>
+                            <SelectableTextBlock Grid.Column="2"  Text="{Binding Id}" Width="300" Foreground="white" VerticalAlignment="Center" Margin="10,0"></SelectableTextBlock>
                             <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                               <Label>Perfect matches:</Label>
                               <TextBlock Text="{Binding PerfectHitCount}" Margin="5,0" VerticalAlignment="Center"></TextBlock>
@@ -75,7 +75,7 @@
                             </StackPanel>
                           </Grid>
                           <StackPanel  Orientation="Vertical">
-                            <TextBlock   Text="{Binding Title}" IsVisible="{Binding Title, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></TextBlock>
+                            <SelectableTextBlock   Text="{Binding Title}" IsVisible="{Binding Title, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></SelectableTextBlock>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                               <ItemsControl Items="{Binding ExpectedMethods}">
                                 <ItemsControl.ItemsPanel>
@@ -91,9 +91,9 @@
                                   </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                               </ItemsControl>
-                              <TextBlock   Text="{Binding ExpectedPaths}" IsVisible="{Binding ExpectedPaths, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></TextBlock>
+                              <SelectableTextBlock Text="{Binding ExpectedPaths}"  IsVisible="{Binding ExpectedPaths, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></SelectableTextBlock>
                             </StackPanel>
-                            <TextBlock  Text="{Binding Description}" IsVisible="{Binding Description, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></TextBlock>
+                            <SelectableTextBlock  Text="{Binding Description}" IsVisible="{Binding Description, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></SelectableTextBlock>
                           </StackPanel>
                         </StackPanel>
 
