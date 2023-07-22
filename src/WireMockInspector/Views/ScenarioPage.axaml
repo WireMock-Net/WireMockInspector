@@ -113,28 +113,7 @@
                               <avalonia:MarkdownScrollViewer Markdown="{Binding MappingDefinition}"></avalonia:MarkdownScrollViewer>
                             </TabItem>
                             <TabItem Header="Triggered by">
-                              <ItemsControl Items="{Binding TriggeredBy}">
-                                <ItemsControl.ItemTemplate>
-                                  <DataTemplate>
-                                    <Expander HorizontalAlignment="Stretch">
-                                      <Expander.Header>
-                                        <StackPanel Orientation="Horizontal">
-                                          <TextBlock VerticalAlignment="Center" Text="{Binding Timestamp}"></TextBlock>
-                                          <TextBlock Margin="10,0" VerticalAlignment="Center" Text="{Binding Description}"></TextBlock>
-                                        </StackPanel>
-                                      </Expander.Header>
-                                      <TabControl Classes="minor">
-                                        <TabItem Header="Request">
-                                          <avalonia:MarkdownScrollViewer Markdown="{Binding RequestDefinition}"></avalonia:MarkdownScrollViewer>
-                                        </TabItem>
-                                        <TabItem Header="Response">
-                                          <avalonia:MarkdownScrollViewer Markdown="{Binding ResponseDefinition}"></avalonia:MarkdownScrollViewer>
-                                        </TabItem>
-                                      </TabControl>
-                                    </Expander>
-                                  </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                              </ItemsControl>
+                              <views:RequestLogs DataContext="{Binding TriggeredBy}"></views:RequestLogs>
                             </TabItem>
                           </TabControl>
                         </Expander>
