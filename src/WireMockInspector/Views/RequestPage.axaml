@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:WireMockInspector.Views"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.RequestPage">
@@ -42,6 +43,49 @@
           </TabItem>
           <TabItem Header="Response">
             <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
+          </TabItem>
+          <TabItem Header="Code">
+          <ScrollViewer>
+            <StackPanel>
+            <ToggleButton IsChecked="{Binding #CodeGeneratorOptions.IsPaneOpen }">Show options</ToggleButton>
+            <SplitView Margin="0,5,0,0" DataContext="{Binding CodeGenerator}" OpenPaneLength="180" Name="CodeGeneratorOptions" DisplayMode="Inline">
+              <SplitView.Pane>
+                <StackPanel  Margin="10,5"  DataContext="{Binding Config }">
+
+                  <CheckBox Content="DateTime" IsChecked="{Binding IncludeDateTime}" />
+                  <CheckBox Content="ClientIP" IsChecked="{Binding IncludeClientIP}" />
+                  <CheckBox Content="Method" IsChecked="{Binding IncludeMethod}" />
+                  <CheckBox Content="Path" IsChecked="{Binding IncludePath}" />
+
+                  <CheckBox Content="AbsolutePath" IsChecked="{Binding IncludeAbsolutePath}" />
+
+                  <CheckBox Content="Url" IsChecked="{Binding IncludeUrl}" />
+
+                  <CheckBox Content="AbsoluteUrl" IsChecked="{Binding IncludeAbsoluteUrl}" />
+
+                  <CheckBox Content="ProxyUrl" IsChecked="{Binding IncludeProxyUrl}" />
+
+                  <CheckBox Content="Query" IsChecked="{Binding IncludeQuery}" />
+
+                  <CheckBox Content="Request Headers" IsChecked="{Binding IncludeHeaders}" />
+
+                  <CheckBox Content="Cookies" IsChecked="{Binding IncludeCookies}" />
+
+                  <CheckBox Content="Request Body" IsChecked="{Binding IncludeBody}" />
+
+                  <CheckBox Content="StatusCode" IsChecked="{Binding IncludeStatusCode}" />
+
+                  <CheckBox Content="Response Headers" IsChecked="{Binding IncludeHeadersResponse}" />
+
+                  <CheckBox Content="Response Body" IsChecked="{Binding IncludeBodyResponse}" />
+                
+                </StackPanel>
+              </SplitView.Pane>
+              <avalonia:MarkdownScrollViewer Grid.Column="1"  Markdown="{Binding OutputCode}"></avalonia:MarkdownScrollViewer>
+
+            </SplitView>
+          </StackPanel>
+          </ScrollViewer>
           </TabItem>
         </TabControl>
       </DockPanel>
