@@ -437,7 +437,39 @@ namespace WireMockInspector.ViewModels
                 {
                     SelectedMapping.Code = AsMarkdownCode("cs", code).AsMarkdownSyntax();
                 });
+
+            this.WhenAnyValue(x => x.SelectedRequest)
+                .Where(x=>x is not null)
+                .Select(model =>
+                {
+                    return new MappingCodeGeneratorViewModel()
+                    {
+                        Request = model.Raw.Request,
+                        Response = model.Raw.Response,
+                        Config = 
+                        {
+                            IncludeClientIP = false,
+                            IncludeDateTime = false,
+                            IncludePath = true,
+                            IncludeAbsolutePath = false,
+                            IncludeUrl = false,
+                            IncludeAbsoluteUrl = false,
+                            IncludeProxyUrl = false,
+                            IncludeQuery = true,
+                            IncludeMethod = true,
+                            IncludeHeaders = true,
+                            IncludeCookies = true,
+                            IncludeBody = true,
+                            IncludeStatusCode = true,
+                            IncludeHeadersResponse = true,
+                            IncludeBodyResponse = true
+                        }
+                    };
+                }).ToProperty(this, x=>x.CodeGenerator, out _codeGenerator);
         }
+        
+        private readonly ObservableAsPropertyHelper<MappingCodeGeneratorViewModel> _codeGenerator;
+        public  MappingCodeGeneratorViewModel CodeGenerator => _codeGenerator.Value;
 
         private static List<RequestLogEntry> MapToLogEntries(IEnumerable<LogEntryModel> logs)
         {
@@ -920,6 +952,7 @@ namespace WireMockInspector.ViewModels
         public Guid? MappingId { get; set; }
         public LogEntryModel Raw { get; set; }
         public string? Title { get; set; }
+        
     }
 
     public class MatchJOBject
