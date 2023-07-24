@@ -286,7 +286,7 @@ namespace WireMockInspector.ViewModels
                                 (_, >0) => MappingHitType.OnlyPartialMatch,
                                 _ => MappingHitType.Unmatched
                             },
-                            Scenario = enrichedScenarios.TryGetValue(model.Scenario, out var scenario)? scenario with {CurrentTransitionId = mappingId, ThisMappingTransition = $"[{model.WhenStateIs}] -> [{model.SetStateTo}]"}: null
+                            Scenario = model.Scenario is {} scenarioName && enrichedScenarios.TryGetValue(scenarioName, out var scenario)? scenario with {CurrentTransitionId = mappingId, ThisMappingTransition = $"[{model.WhenStateIs}] -> [{model.SetStateTo}]"}: null
                         };
                     }).OfType<MappingViewModel>().OrderBy(x=>x.UpdatedOn);
                     Mappings.AddRange(mappings);
