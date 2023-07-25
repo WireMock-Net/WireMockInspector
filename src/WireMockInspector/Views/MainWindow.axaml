@@ -45,7 +45,7 @@
       <StackPanel>
         <views:NewVersionInfo DataContext="{Binding NewVersion}" IsVisible="{Binding IsVisible}"></views:NewVersionInfo>
         <Grid ColumnDefinitions="*, Auto" >
-          <TextBox MinWidth="1" Text="{Binding AdminUrl, Mode=TwoWay}" Watermark="Admin API URL"></TextBox>
+          <TextBox MinWidth="1" Text="{Binding AdminUrl, Mode=TwoWay}" Watermark="Admin API URL" Name="AdminUrlCtr" ></TextBox>
           <Button Grid.Column="1" Command="{Binding LoadRequestsCommand}" Margin="10,0,0,0"  ToolTip.Tip="Load requests">
             <PathIcon Data="{StaticResource arrow_sync_circle_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
           </Button>
@@ -64,7 +64,7 @@
         </TabItem>
         <TabItem Header="Settings">
           <Grid RowDefinitions="*, Auto">
-            <DataGrid Items="{Binding Settings}"
+            <DataGrid ItemsSource="{Binding Settings}"
                   CanUserReorderColumns="False"
                   CanUserResizeColumns="True"
                   AutoGenerateColumns="False"
