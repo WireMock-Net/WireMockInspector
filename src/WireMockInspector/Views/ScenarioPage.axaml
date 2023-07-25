@@ -93,7 +93,7 @@
                 </TabItem>
                 <TabItem Header="Transitions" >
                   <ScrollViewer HorizontalAlignment="Stretch" >
-                  <ItemsControl Items="{Binding SelectedScenario.Transitions}">
+                  <ItemsControl ItemsSource="{Binding SelectedScenario.Transitions}">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <Expander HorizontalAlignment="Stretch">

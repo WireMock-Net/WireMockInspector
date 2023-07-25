@@ -79,7 +79,7 @@
                       <md:MarkdownScrollViewer Markdown="{Binding Value}"></md:MarkdownScrollViewer>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type viewModels:KeyValueListActualValue}">
-                      <DataGrid Items="{Binding Items}" SelectedItem="{Binding SelectedActualValueGridItem}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
+                      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedActualValueGridItem}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
                         <DataGrid.Styles>
                           <Style Selector="DataGridColumnHeader">
                             <Setter Property="Background" Value="#505050"></Setter>

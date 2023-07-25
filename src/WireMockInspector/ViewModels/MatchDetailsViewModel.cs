@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
@@ -41,25 +43,33 @@ public class MatchDetailsViewModel:ViewModelBase
     {
         CopyActualValue = ReactiveCommand.Create(async () =>
         {
-            if (ActualValue is MarkdownActualValue {Value: {rawValue: var raw}})
+            if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                await Application.Current!.Clipboard.SetTextAsync(raw);
+                if (ActualValue is MarkdownActualValue {Value: {rawValue: var raw}})
+                {
+                    await desktop.MainWindow.Clipboard.SetTextAsync(raw);
+                }
+                else if (ActualValue is SimpleActualValue {Value: var simpleValue} )
+                {
+                    await desktop.MainWindow.Clipboard.SetTextAsync(simpleValue);
+                }
+                else if(ActualValue is KeyValueListActualValue{SelectedActualValueGridItem: {} selectedRow})
+                {
+                    await desktop.MainWindow.Clipboard.SetTextAsync($"{selectedRow.Key}:{selectedRow.Value}");
+                }    
             }
-            else if (ActualValue is SimpleActualValue {Value: var simpleValue} )
-            {
-                await Application.Current!.Clipboard.SetTextAsync(simpleValue);
-            }
-            else if(ActualValue is KeyValueListActualValue{SelectedActualValueGridItem: {} selectedRow})
-            {
-                await Application.Current!.Clipboard.SetTextAsync($"{selectedRow.Key}:{selectedRow.Value}");
-            }
+            
+            
         });
         
         CopyExpectations = ReactiveCommand.Create(async () =>
         {
             if (Expectations is Markdown{rawValue: var value})
             {
-                await Application.Current!.Clipboard.SetTextAsync(value);
+                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    await desktop.MainWindow!.Clipboard.SetTextAsync(value);
+                }
             }
         });
         

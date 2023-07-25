@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="WireMockInspector.Views.RequestLogs"
              x:DataType="viewModels:RequestLogViewModel">
-  <ItemsControl Items="{Binding }">
+  <ItemsControl ItemsSource="{Binding }">
     <ItemsControl.ItemTemplate>
       <DataTemplate>
         <Expander HorizontalAlignment="Stretch">
