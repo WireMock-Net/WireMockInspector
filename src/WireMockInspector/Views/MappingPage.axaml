@@ -77,7 +77,7 @@
                           <StackPanel  Orientation="Vertical">
                             <SelectableTextBlock   Text="{Binding Title}" IsVisible="{Binding Title, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></SelectableTextBlock>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                              <ItemsControl Items="{Binding ExpectedMethods}">
+                              <ItemsControl ItemsSource="{Binding ExpectedMethods}">
                                 <ItemsControl.ItemsPanel>
                                   <ItemsPanelTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left"></StackPanel>
