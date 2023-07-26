@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
              xmlns:views="clr-namespace:WireMockInspector.Views"
-             xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.MappingPage">
@@ -106,7 +106,7 @@
             <views:ContentWithSidebar.Sidebar>
               <TabControl Classes="minor">
                 <TabItem Header="Definition">
-                  <avalonia:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Content }"></avalonia:MarkdownScrollViewer>
+                  <views:CodeBlockViewer Code="{Binding SelectedMapping.Content}" />
                 </TabItem>
                 <TabItem Header="Matches">
                   <ScrollViewer>
@@ -146,7 +146,7 @@
                   </Grid>
                 </TabItem>
                 <TabItem Header="Code">
-                  <avalonia:MarkdownScrollViewer Markdown="{Binding SelectedMapping.Code }"></avalonia:MarkdownScrollViewer>
+                  <views:CodeBlockViewer Code="{Binding SelectedMapping.Code}" />
                 </TabItem>
               </TabControl>
             </views:ContentWithSidebar.Sidebar>

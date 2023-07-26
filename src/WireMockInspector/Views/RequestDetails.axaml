@@ -5,6 +5,7 @@
              xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             xmlns:views="clr-namespace:WireMockInspector.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MatchDetailsList"
              x:Class="WireMockInspector.Views.RequestDetails">
@@ -76,7 +77,7 @@
                       <SelectableTextBlock Margin="5,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold"></SelectableTextBlock>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type viewModels:MarkdownActualValue}">
-                      <md:MarkdownScrollViewer Markdown="{Binding Value}"></md:MarkdownScrollViewer>
+                      <views:CodeBlockViewer Code="{Binding Value}" />
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type viewModels:KeyValueListActualValue}">
                       <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedActualValueGridItem}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
@@ -114,7 +115,7 @@
                     </SplitButton>
                   </DockPanel>
                 </Border>
-                <md:MarkdownScrollViewer Markdown="{Binding Expectations}" IsVisible="{Binding !NoExpectations}"></md:MarkdownScrollViewer>
+                <views:CodeBlockViewer Code="{Binding Expectations}" IsVisible="{Binding !NoExpectations}"/>
                 <TextBlock FontSize="10" Margin="5,5,0,0" IsVisible="{Binding NoExpectations}">(No Expectations)</TextBlock>
               </StackPanel>
             </Expander>
