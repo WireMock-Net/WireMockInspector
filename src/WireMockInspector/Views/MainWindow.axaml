@@ -15,9 +15,13 @@
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         Width="1250"
+        ExtendClientAreaToDecorationsHint="True"
         d:DataContext="{x:Static viewModels:DesignTimeData.MainViewModel}"
+        Name="MW"
         >
-  <Panel>
+<Border  BorderThickness="1,1,1,1"
+         BorderBrush="#3baced">
+          <Panel>
     <Panel.Styles>
       <Style Selector="avaloniaEdit|TextEditor">
         <Setter Property="ShowLineNumbers" Value="True"></Setter>
@@ -33,6 +37,7 @@
             MaterialOpacity="0.65" />
       </ExperimentalAcrylicBorder.Material>
     </ExperimentalAcrylicBorder>
+            <TextBlock Margin="10" HorizontalAlignment="Center" IsHitTestVisible="False" Text="{Binding Path=#MW.Title}"></TextBlock>
     <Grid RowDefinitions="Auto,*" Margin="40" >
       <Grid.Styles>
         <Style Selector="DockPanel.first">
@@ -133,4 +138,5 @@
     </Grid>
   </Panel>
 
+</Border>
 </Window>
