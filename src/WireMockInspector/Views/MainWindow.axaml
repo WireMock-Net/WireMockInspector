@@ -23,10 +23,6 @@
          BorderBrush="#3baced">
           <Panel>
     <Panel.Styles>
-      <Style Selector="avaloniaEdit|TextEditor">
-        <Setter Property="ShowLineNumbers" Value="True"></Setter>
-        <Setter Property="Padding" Value="5,5,5,20"></Setter>
-      </Style>
     </Panel.Styles>
     <ExperimentalAcrylicBorder IsHitTestVisible="False">
       <ExperimentalAcrylicBorder.Material>

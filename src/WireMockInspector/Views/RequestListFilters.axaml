@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
-             xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.RequestListFilters">
@@ -27,7 +27,7 @@
             </Button.Styles>
             <Button.Flyout>
               <Flyout >
-                  <avalonia:MarkdownScrollViewer Width="650" Height="700"   Margin="10" Source="avares://WireMockInspector/Assets/request_search.md" />
+                  <md:MarkdownScrollViewer Width="650" Height="700"   Margin="10" Source="avares://WireMockInspector/Assets/request_search.md" />
               </Flyout>
             </Button.Flyout>
             <PathIcon  Data="{StaticResource question_circle_regular}">

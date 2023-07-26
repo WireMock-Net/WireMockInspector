@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:WireMockInspector.Views"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
-             xmlns:avalonia="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.RequestPage">
@@ -81,8 +82,7 @@
                 
                 </StackPanel>
               </SplitView.Pane>
-              <avalonia:MarkdownScrollViewer Grid.Column="1"  Markdown="{Binding OutputCode}"></avalonia:MarkdownScrollViewer>
-
+              <views:CodeBlockViewer Code="{Binding OutputCode}" />
             </SplitView>
           </StackPanel>
           </ScrollViewer>
