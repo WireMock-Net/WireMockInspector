@@ -37,8 +37,8 @@ public class MappingCodeGeneratorViewModel : ViewModelBase
         private set;
     } = new MappingCodeGeneratorConfigViewModel();
 
-    private readonly ObservableAsPropertyHelper<Markdown> _outputCode;
-    public Markdown OutputCode => _outputCode.Value;
+    private readonly ObservableAsPropertyHelper<MarkdownCode> _outputCode;
+    public MarkdownCode OutputCode => _outputCode.Value;
 
 
     public MappingCodeGeneratorViewModel()
@@ -49,7 +49,7 @@ public class MappingCodeGeneratorViewModel : ViewModelBase
             .Select(x =>
             {
                 var code = CodeGenerator.GenerateCSharpCode(Request, Response, x);
-                return new Markdown("cs", code);
+                return new MarkdownCode("cs", code);
             }).ToProperty(this, x => x.OutputCode, out _outputCode);
     }
 }

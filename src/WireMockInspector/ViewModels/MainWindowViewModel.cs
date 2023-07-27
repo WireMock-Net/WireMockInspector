@@ -782,9 +782,9 @@ namespace WireMockInspector.ViewModels
                             {
                                 "String" or "FormUrlEncoded" => WrapBodyInMarkdown(req.Raw.Request.Body?? string.Empty),
                                 "Json" => AsMarkdownCode("json", req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty),
-                                "Bytes" => new Markdown("plaintext", req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty),
-                                "File" => new Markdown("plaintext","[FileContent]"),
-                                _ => new Markdown("plaintext", "")
+                                "Bytes" => new MarkdownCode("plaintext", req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty),
+                                "File" => new MarkdownCode("plaintext","[FileContent]"),
+                                _ => new MarkdownCode("plaintext", "")
                             }
                         },
                         Expectations = ExpectationsAsJson(expectations.Request?.Body),
@@ -824,44 +824,44 @@ namespace WireMockInspector.ViewModels
                         Expectations = expectations.Response switch
                         {
                             {Body: {} bodyResponse} => WrapBodyInMarkdown(bodyResponse), 
-                            {BodyAsJson: {} bodyAsJson} => new Markdown("json", bodyAsJson.ToString()!),
-                            {BodyAsBytes: {} bodyAsBytes} =>  new Markdown("plaintext", bodyAsBytes.ToString()?? string.Empty),
-                            {BodyAsFile: {} bodyAsFile} =>  new Markdown("plaintext",bodyAsFile),
-                            _ => new Markdown("plaintext",string.Empty)
+                            {BodyAsJson: {} bodyAsJson} => new MarkdownCode("json", bodyAsJson.ToString()!),
+                            {BodyAsBytes: {} bodyAsBytes} =>  new MarkdownCode("plaintext", bodyAsBytes.ToString()?? string.Empty),
+                            {BodyAsFile: {} bodyAsFile} =>  new MarkdownCode("plaintext",bodyAsFile),
+                            _ => new MarkdownCode("plaintext",string.Empty)
                         }
                     }
                 }
             };
         }
 
-        private static Markdown GetActualForRequestBody(RequestViewModel req)
+        private static MarkdownCode GetActualForRequestBody(RequestViewModel req)
         {
             return req.Raw.Response?.DetectedBodyType.ToString() switch
             {
-                "Json" => new Markdown("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
-                "Bytes" => new Markdown("plaintext", req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty),
-                "File" => new Markdown("plaintext",req.Raw.Response.BodyAsFile?.ToString() ?? string.Empty),
+                "Json" => new MarkdownCode("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
+                "Bytes" => new MarkdownCode("plaintext", req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty),
+                "File" => new MarkdownCode("plaintext",req.Raw.Response.BodyAsFile?.ToString() ?? string.Empty),
                 _ => WrapBodyInMarkdown( req.Raw.Response?.Body?? string.Empty),
             };
         }
 
-        private static Markdown WrapBodyInMarkdown(string bodyResponse)
+        private static MarkdownCode WrapBodyInMarkdown(string bodyResponse)
         {
             var cleanBody = bodyResponse.Trim();
             if (cleanBody.StartsWith("[") || cleanBody.StartsWith("{"))
             {
-                return new Markdown("json", bodyResponse);
+                return new MarkdownCode("json", bodyResponse);
 
             }
             if (cleanBody.StartsWith("<"))
             {
-                return new Markdown("xml", bodyResponse);
+                return new MarkdownCode("xml", bodyResponse);
 
             }
-            return new Markdown("plaintext", bodyResponse);
+            return new MarkdownCode("plaintext", bodyResponse);
         }
 
-        public static Markdown AsMarkdownCode(string lang, string code) => new Markdown(lang, code);
+        public static MarkdownCode AsMarkdownCode(string lang, string code) => new MarkdownCode(lang, code);
 
         public string RequestSearchTerm
         {
@@ -873,11 +873,11 @@ namespace WireMockInspector.ViewModels
 
         
 
-        private static Markdown ExpectationsAsJson(object? data)
+        private static MarkdownCode ExpectationsAsJson(object? data)
         {
             if (data == null)
             {
-                return  new Markdown("plaintext", string.Empty);
+                return  new MarkdownCode("plaintext", string.Empty);
             }
 
             return AsMarkdownCode("json", JsonConvert.SerializeObject(data, Formatting.Indented));
@@ -906,8 +906,8 @@ namespace WireMockInspector.ViewModels
         public DateTime Timestamp { get; set; }
         public string Method { get; set; }
         public string Path { get; set; }
-        public Markdown RequestDefinition { get; set; }
-        public Markdown ResponseDefinition { get; set; }
+        public MarkdownCode RequestDefinition { get; set; }
+        public MarkdownCode ResponseDefinition { get; set; }
         public string StatusCode { get; set; }
     }
 
@@ -917,7 +917,7 @@ namespace WireMockInspector.ViewModels
     public record ScenarioTransition(string Id, ScenarioNode From, ScenarioNode To, bool Hit)
     {
         public string Description { get; set; }
-        public Markdown MappingDefinition { get; set; }
+        public MarkdownCode MappingDefinition { get; set; }
         public RequestLogViewModel TriggeredBy { get; set; }
         public DateTime? LastHit { get; set; }
     };
@@ -991,19 +991,19 @@ namespace WireMockInspector.ViewModels
         public DateTime? UpdatedOn { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public Markdown Content { get; set; }
+        public MarkdownCode Content { get; set; }
 
         public int PerfectHitCount { get; set; }
         public int PartialHitCount { get; set; }
         public MappingHitType HitType { get; set; }
 
-        public Markdown Code
+        public MarkdownCode Code
         {
             get => _code;
             set => this.RaiseAndSetIfChanged(ref _code, value);
         }
 
-        private Markdown _code;
+        private MarkdownCode _code;
 
         public Scenario Scenario { get; set; }
         public RequestLogViewModel PerfectMatches { get; set; }

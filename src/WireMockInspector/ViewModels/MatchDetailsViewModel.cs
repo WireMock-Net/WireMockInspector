@@ -14,7 +14,7 @@ namespace WireMockInspector.ViewModels;
 public class MatchDetailsViewModel:ViewModelBase
 {
     private ActualValue _actualValue;
-    private Markdown _expectations;
+    private MarkdownCode _expectations;
     public string RuleName { get; set; }
     public bool? Matched { get; set; }
     public bool NoExpectations { get; set; }
@@ -27,7 +27,7 @@ public class MatchDetailsViewModel:ViewModelBase
 
     
     
-    public Markdown Expectations
+    public MarkdownCode Expectations
     {
         get => _expectations;
         set =>  this.RaiseAndSetIfChanged(ref _expectations,  value);
@@ -64,7 +64,7 @@ public class MatchDetailsViewModel:ViewModelBase
         
         CopyExpectations = ReactiveCommand.Create(async () =>
         {
-            if (Expectations is Markdown{rawValue: var value})
+            if (Expectations is MarkdownCode{rawValue: var value})
             {
                 if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
@@ -96,15 +96,15 @@ public class MatchDetailsViewModel:ViewModelBase
         }, this.WhenAnyValue(x=>x.Expectations).Select(IsJsonMarkdown));
     }
 
-    private static Markdown TryToReformat(Markdown markdown)
+    private static MarkdownCode TryToReformat(MarkdownCode markdownCode)
     {
-        if (IsJsonMarkdown(markdown))
+        if (IsJsonMarkdown(markdownCode))
         {
 
             try
             {
               
-                var formatted = JToken.Parse(markdown.rawValue).ToString(Formatting.Indented);
+                var formatted = JToken.Parse(markdownCode.rawValue).ToString(Formatting.Indented);
                 return MainWindowViewModel.AsMarkdownCode("json", formatted);
             }
             catch (Exception e)
@@ -113,10 +113,10 @@ public class MatchDetailsViewModel:ViewModelBase
             }
         }
 
-        return markdown;
+        return markdownCode;
     }
 
-    private static bool IsJsonMarkdown(Markdown rawValue)
+    private static bool IsJsonMarkdown(MarkdownCode rawValue)
     {
         return rawValue?.lang == "json";
     }
@@ -135,11 +135,11 @@ public class SimpleActualValue:ActualValue
 
 public class MarkdownActualValue:ActualValue
 {
-    public Markdown Value { get; set; }
+    public MarkdownCode Value { get; set; }
     public string MarkdownValue { get; set; }
 }
 
-public record Markdown(string lang, string rawValue)
+public record MarkdownCode(string lang, string rawValue)
 {
     public string AsMarkdownSyntax()
     {
