@@ -53,3 +53,7 @@ dotnet tool update WireMockInspector --global --no-cache --ignore-failed-sources
 	// Call Inspect() run WireMockInspect and attach it to the current WireMockServer instance
 	wireMock.Inspect();
 	```
+	If you don't have an access to WireMockServer instance then you can call the extension method directly:
+	```cs
+	WireMockServerExtensions.Inspect("http://localhost:9095");
+	```
