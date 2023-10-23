@@ -62,7 +62,10 @@ public class CodeBlockViewer : TextEditor
                 _currentLang = md.lang;
                 CodeBlockViewer _textEditor = this;
 
-                _textMateInstallation.SetGrammar(_registryOptions.GetScopeByLanguageId(_registryOptions.GetLanguageByExtension("."+md.lang).Id));    
+                if (_registryOptions.GetLanguageByExtension("." + md.lang) is { } languageByExtension)
+                {
+                    _textMateInstallation.SetGrammar(_registryOptions.GetScopeByLanguageId(languageByExtension.Id));
+                }    
             }
         }
         else
