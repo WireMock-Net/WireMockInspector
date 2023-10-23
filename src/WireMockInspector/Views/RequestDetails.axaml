@@ -80,7 +80,7 @@
                       <views:CodeBlockViewer Code="{Binding Value}" />
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type viewModels:KeyValueListActualValue}">
-                      <DataGrid ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedActualValueGridItem}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
+                      <DataGrid ItemsSource="{Binding Items}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
                         <DataGrid.Styles>
                           <Style Selector="DataGridColumnHeader">
                             <Setter Property="Background" Value="#505050"></Setter>
@@ -104,19 +104,102 @@
                 <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,5">
                   <DockPanel HorizontalAlignment="Stretch">
                     <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Expectations</Label>
-                    <SplitButton HorizontalAlignment="Right" Margin="0,0,5,5" Padding="0">
-                      <PathIcon Data="{StaticResource settings_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
-                      <SplitButton.Flyout>
-                        <MenuFlyout Placement="Bottom">
-                          <MenuItem Header="Reformat" Command="{Binding ReformatExpectations}"  />
-                          <MenuItem Header="Copy" Command="{Binding CopyExpectations}"  />
-                        </MenuFlyout>
-                      </SplitButton.Flyout>
-                    </SplitButton>
                   </DockPanel>
                 </Border>
-                <views:CodeBlockViewer Code="{Binding Expectations}" IsVisible="{Binding !NoExpectations}"/>
-                <TextBlock FontSize="10" Margin="5,5,0,0" IsVisible="{Binding NoExpectations}">(No Expectations)</TextBlock>
+                <ContentControl Content="{Binding Expectations}">
+                 <ContentControl.DataTemplates>
+                   <DataTemplate x:DataType="viewModels:RichExpectations">
+                     <TabControl Classes="minor">
+                      <TabItem Header="Formatted" >
+                        <ItemsControl ItemsSource="{Binding  Matchers}" >
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="viewModels:ExpectationMatcher">
+                              <StackPanel Orientation="Vertical">
+                                <ItemsControl ItemsSource="{Binding Tags}">
+                                  <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                      <WrapPanel Orientation="Horizontal" Margin="0,5,0,5"></WrapPanel>
+                                    </ItemsPanelTemplate>
+                                  </ItemsControl.ItemsPanel>
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                      <Border BorderThickness="1" BorderBrush="Wheat" CornerRadius="5" Margin="0,5,5,0">
+                                        <TextBlock Margin="5" Text="{Binding}"></TextBlock>
+                                      </Border>
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <!-- <DataGrid ItemsSource="{Binding Attributes}" HeadersVisibility="None" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single"> -->
+                                <!--   <DataGrid.Styles> -->
+                                <!--     <Style Selector="DataGridColumnHeader"> -->
+                                <!--       <Setter Property="Background" Value="#505050"></Setter> -->
+                                <!--     </Style> -->
+                                <!--     <Style Selector="DataGridColumnHeader TextBlock"> -->
+                                <!--       <Setter Property="Foreground" Value="White"></Setter> -->
+                                <!--     </Style> -->
+                                <!--     <Style Selector="DataGridCell TextBlock"> -->
+                                <!--       <Setter Property="FontSize" Value="10"></Setter> -->
+                                <!--     </Style> -->
+                                <!--     <Style Selector="DataGridCell.valuecell TextBlock"> -->
+                                <!--       <Setter Property="TextAlignment" Value="Center"></Setter> -->
+                                <!--     </Style> -->
+                                <!--   </DataGrid.Styles> -->
+                                <!--   <DataGrid.Columns> -->
+                                <!--     <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/> -->
+                                <!--     <DataGridTextColumn Header="Value" Binding="{Binding Value}"  CellStyleClasses="valuecell"/> -->
+                                <!--   </DataGrid.Columns> -->
+                                <!-- </DataGrid> -->
+                                <ItemsControl ItemsSource="{Binding Patterns}">
+                                  <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                      <views:CodeBlockViewer Margin="0,5,0,0" Code="{Binding }" />
+                                    </DataTemplate>
+                                  </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                              </StackPanel>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </TabItem>
+                      <TabItem Header="Raw">
+                        <views:CodeBlockViewer Code="{Binding Definition}" />
+                      </TabItem>
+                    </TabControl>
+                  </DataTemplate>
+                   <DataTemplate x:DataType="viewModels:RawExpectations">
+                     <StackPanel >
+                       <views:CodeBlockViewer Code="{Binding Definition}" />
+                     </StackPanel>
+                   </DataTemplate>
+                   <DataTemplate x:DataType="viewModels:MissingExpectations">
+                     <TextBlock FontSize="10" Margin="5,5,0,0" >(No Expectations)</TextBlock>
+                   </DataTemplate>
+                   <DataTemplate x:DataType="viewModels:SimpleStringExpectations">
+                     <SelectableTextBlock Margin="5,0,0,0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Value}" FontWeight="Bold"></SelectableTextBlock>
+                   </DataTemplate>
+                   <DataTemplate x:DataType="viewModels:SimpleKeyValueExpectations">
+                     <DataGrid ItemsSource="{Binding Items}" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
+                       <DataGrid.Styles>
+                         <Style Selector="DataGridColumnHeader">
+                           <Setter Property="Background" Value="#505050"></Setter>
+                         </Style>
+                         <Style Selector="DataGridColumnHeader TextBlock">
+                           <Setter Property="Foreground" Value="White"></Setter>
+                         </Style>
+                         <Style Selector="DataGridCell TextBlock">
+                           <Setter Property="FontSize" Value="10"></Setter>
+                         </Style>
+                       </DataGrid.Styles>
+                       <DataGrid.Columns>
+                         <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/>
+                         <DataGridTextColumn Header="Value" Binding="{Binding Value}" />
+                       </DataGrid.Columns>
+                     </DataGrid>
+                   </DataTemplate>
+                 </ContentControl.DataTemplates>
+                </ContentControl>
+               
+              
               </StackPanel>
             </Expander>
           </DataTemplate>

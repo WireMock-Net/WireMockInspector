@@ -6,17 +6,20 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using DynamicData;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
 using RestEase;
+using TextMateSharp.Internal.Grammars.Parser;
 using WireMock.Admin.Mappings;
 using WireMock.Admin.Requests;
 using WireMock.Admin.Scenarios;
 using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace WireMockInspector.ViewModels
 {
@@ -681,8 +684,6 @@ namespace WireMockInspector.ViewModels
         private static MappingDetails GetMappingDetails(RequestViewModel req, MappingModel expectations)
         {
             var isPerfectMatch = req.Raw.RequestMatchResult?.IsPerfectMatch == true;
-            var statusCode = req.Raw.Response?.StatusCode?.ToString()?? string.Empty;
-            var statusCodeFormatted = $"{statusCode} ({HttpStatusCodeToDescriptionConverter.TranslateStatusCode(statusCode)})";
             return new MappingDetails
             {
                 MatchingStatus = req.MatchingStatus,
@@ -703,7 +704,12 @@ namespace WireMockInspector.ViewModels
                         {
                             Value = req.Raw.Request.ClientIP
                         },
-                        Expectations = ExpectationsAsJson(expectations.Request?.ClientIP),
+                        Expectations = CastAsModel<ClientIPModel>(expectations.Request?.ClientIP)  switch
+                        {
+                            string s => new SimpleStringExpectations {Value = s},
+                            ClientIPModel {Matchers: {} } cim => MapToRichExpectations(cim, cim.Matchers, cim.MatchOperator),
+                            _ =>  MissingExpectations.Instance,
+                        },
                         NoExpectations = expectations.Request?.ClientIP is null
                     },
                     new()
@@ -714,7 +720,11 @@ namespace WireMockInspector.ViewModels
                         {
                             Value = req.Raw.Request.Method
                         },
-                        Expectations = ExpectationsAsJson(expectations.Request?.Methods),
+                        Expectations = expectations.Request?.Methods switch
+                        {
+                            string[]  methods=> new SimpleStringExpectations {Value = string.Join(", ", methods)},
+                            _ => MissingExpectations.Instance
+                        },
                         NoExpectations = expectations.Request?.Methods is null
                     },
                     new()
@@ -725,7 +735,12 @@ namespace WireMockInspector.ViewModels
                         {
                             Value = req.Raw.Request.Url
                         },
-                        Expectations = ExpectationsAsJson(expectations.Request?.Url),
+                        Expectations = CastAsModel<UrlModel>(expectations.Request?.Url) switch
+                        {
+                            string s => new SimpleStringExpectations {Value = s},
+                            UrlModel {Matchers:{}} urlModel => MapToRichExpectations(urlModel, urlModel.Matchers, urlModel.MatchOperator),
+                            _ => MissingExpectations.Instance
+                        },
                         NoExpectations = expectations.Request?.Url is null
                     },
                     new()
@@ -736,7 +751,12 @@ namespace WireMockInspector.ViewModels
                         {
                             Value = req.Raw.Request.Path
                         },
-                        Expectations = ExpectationsAsJson(expectations.Request?.Path),
+                        Expectations = CastAsModel<PathModel>(expectations.Request?.Path) switch
+                        {
+                            string s => new SimpleStringExpectations {Value = s},
+                            PathModel {Matchers: { }} pathModel => MapToRichExpectations(pathModel, pathModel.Matchers, pathModel.MatchOperator),
+                            _ => MissingExpectations.Instance
+                        },
                         NoExpectations = expectations.Request?.Path is null
                     },
                     new()
@@ -747,7 +767,11 @@ namespace WireMockInspector.ViewModels
                         {
                             Items = req.Raw.Request.Headers?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>()
                         },
-                        Expectations = ExpectationsAsJson(expectations.Request?.Headers),
+                        Expectations = expectations.Request?.Headers switch
+                        {
+                            IList<HeaderModel> headers => ExpectationsAsJson(headers),
+                            _ => MissingExpectations.Instance
+                        },
                         NoExpectations = expectations.Request?.Headers is null
                     },
                     new()
@@ -787,7 +811,7 @@ namespace WireMockInspector.ViewModels
                                 _ => new MarkdownCode("plaintext", "")
                             }
                         },
-                        Expectations = ExpectationsAsJson(expectations.Request?.Body),
+                        Expectations = MapToRichExpectations(expectations.Request?.Body),
                         NoExpectations = expectations.Request?.Body is null
                     }
                 },
@@ -799,9 +823,13 @@ namespace WireMockInspector.ViewModels
                         Matched = isPerfectMatch,
                         ActualValue = new SimpleActualValue
                         {
-                            Value = statusCodeFormatted
+                            Value = FormatStatusCode(req.Raw.Response.StatusCode)
                         },
-                        Expectations = ExpectationsAsJson(expectations.Response?.StatusCode?.ToString())
+                        Expectations = expectations.Response?.StatusCode switch
+                        {
+                            not null  => new SimpleStringExpectations(){Value = FormatStatusCode(expectations.Response?.StatusCode)},
+                            _ => MissingExpectations.Instance
+                        }
                     },
                     new ()
                     {
@@ -811,7 +839,19 @@ namespace WireMockInspector.ViewModels
                         {
                             Items = req.Raw.Response?.Headers?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>()
                         },
-                        Expectations = ExpectationsAsJson(expectations.Response?.Headers)
+                        Expectations = expectations.Response?.Headers switch
+                        {
+                            not null => new SimpleKeyValueExpectations
+                            {
+                                Items = expectations.Response?.Headers.OrderBy(x=>x.Key).SelectMany(x=> x.Value switch
+                                {
+                                    string v=> new[]{new KeyValuePair<string,string>(x.Key, v)},
+                                    JArray vals => vals.ToObject<string[]>().Select(vv=> new KeyValuePair<string,string>(x.Key, vv)),
+                                    _ => Array.Empty<KeyValuePair<string, string>>()
+                                } ).ToList() ?? new List<KeyValuePair<string, string>>()
+                            },
+                            _ => MissingExpectations.Instance
+                        } 
                     },
                     new ()
                     {
@@ -821,16 +861,115 @@ namespace WireMockInspector.ViewModels
                         {
                             Value =  GetActualForRequestBody(req)
                         },
-                        Expectations = expectations.Response switch
+                        Expectations = new RawExpectations()
                         {
-                            {Body: {} bodyResponse} => WrapBodyInMarkdown(bodyResponse), 
-                            {BodyAsJson: {} bodyAsJson} => new MarkdownCode("json", bodyAsJson.ToString()!),
-                            {BodyAsBytes: {} bodyAsBytes} =>  new MarkdownCode("plaintext", bodyAsBytes.ToString()?? string.Empty),
-                            {BodyAsFile: {} bodyAsFile} =>  new MarkdownCode("plaintext",bodyAsFile),
-                            _ => new MarkdownCode("plaintext",string.Empty)
+                            Definition = expectations.Response switch
+                            {
+                                {Body: {} bodyResponse} => WrapBodyInMarkdown(bodyResponse), 
+                                {BodyAsJson: {} bodyAsJson} => new MarkdownCode("json", bodyAsJson.ToString()!),
+                                {BodyAsBytes: {} bodyAsBytes} =>  new MarkdownCode("plaintext", bodyAsBytes.ToString()?? string.Empty),
+                                {BodyAsFile: {} bodyAsFile} =>  new MarkdownCode("plaintext",bodyAsFile),
+                                _ => new MarkdownCode("plaintext",string.Empty)
+                            }
                         }
                     }
                 }
+            };
+        }
+
+        private static string FormatStatusCode(object? code)
+        {
+            var statusCode = code?.ToString() ?? string.Empty;
+            var statusCodeFormatted = $"{statusCode} ({HttpStatusCodeToDescriptionConverter.TranslateStatusCode(statusCode)})";
+            return statusCodeFormatted;
+        }
+
+        private static object CastAsModel<T>(object? input)
+        {
+            if (input is JObject o)
+            {
+                return o.ToObject<T>();
+            }
+
+            return input;
+        }
+
+        private static ExpectationsModel MapToRichExpectations(BodyModel? requestBody)
+        {
+            if (requestBody == null)
+                return MissingExpectations.Instance;
+
+            var matchers = requestBody.Matcher != null ? new[] {requestBody.Matcher!} : requestBody.Matchers ?? Array.Empty<MatcherModel>();
+
+            return MapToRichExpectations(requestBody, matchers, requestBody.MatchOperator);
+        }
+
+        private static ExpectationsModel MapToRichExpectations(object definition, MatcherModel[] matchers, string? matchOperator)
+        {
+            IEnumerable<string> GetPatterns(MatcherModel m)
+            {
+                if (string.IsNullOrWhiteSpace(m.Pattern.ToString()) == false)
+                {
+                    yield return m.Pattern.ToString();
+                }
+                else
+                {
+                    foreach (var pattern in m.Patterns)
+                    {
+                        if (string.IsNullOrWhiteSpace(pattern.ToString()) == false)
+                        {
+                            yield return pattern.ToString();
+                        }
+                    }
+                }
+            }
+
+            IEnumerable<string> GetTags(MatcherModel m)
+            {
+                yield return m.Name;
+                
+                if (m.IgnoreCase == true)
+                {
+                    yield return "Ignore case";
+                }
+                else
+                {
+                    yield return "Case sensitive";
+                }
+
+                if (m.RejectOnMatch == true)
+                {
+                    yield return "Reject on match";
+                }
+
+                if (m.Regex == true)
+                {
+                    yield return "Regex";
+                }
+
+                if (string.IsNullOrWhiteSpace(m.MatchOperator) == false)
+                {
+                    yield return $"Match operator: {m.MatchOperator}";
+                }
+            }
+
+            return new RichExpectations
+            {
+                Definition = AsMarkdownCode("json", JsonConvert.SerializeObject(definition, Formatting.Indented)),
+                Operator = matchOperator,
+                Matchers = matchers.Select(x => new ExpectationMatcher()
+                {
+                    Attributes = new[]
+                    {
+                        new KeyValuePair<string, string>("Matcher", x.Name),
+                        new KeyValuePair<string, string>("Reject on match", x.RejectOnMatch == true ? "✅" : "❌"),
+                        new KeyValuePair<string, string>("Ignore case", x.IgnoreCase == true ? "✅" : "❌"),
+                        new KeyValuePair<string, string>("Regex", x.Regex == true ? "✅" : "❌"),
+                        new KeyValuePair<string, string>("Operator", x.MatchOperator?.ToString()),
+                    }.Where(x => string.IsNullOrWhiteSpace(x.Value) == false).ToList(),
+                    Tags = GetTags(x).ToList(),
+                    Patterns = GetPatterns(x).Select(y => new MarkdownCode("json", y).TryToReformat()).ToList()
+                }).ToList()
             };
         }
 
@@ -873,14 +1012,17 @@ namespace WireMockInspector.ViewModels
 
         
 
-        private static MarkdownCode ExpectationsAsJson(object? data)
+        private static ExpectationsModel ExpectationsAsJson(object? data)
         {
             if (data == null)
             {
-                return  new MarkdownCode("plaintext", string.Empty);
+                return MissingExpectations.Instance;
             }
 
-            return AsMarkdownCode("json", JsonConvert.SerializeObject(data, Formatting.Indented));
+            return new RawExpectations()
+            {
+                Definition = AsMarkdownCode("json", JsonConvert.SerializeObject(data, Formatting.Indented))
+            };
         }
 
         private static bool? IsMatched(RequestViewModel req, string rule)

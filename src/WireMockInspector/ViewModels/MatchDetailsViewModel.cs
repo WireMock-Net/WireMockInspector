@@ -11,10 +11,51 @@ using ReactiveUI;
 
 namespace WireMockInspector.ViewModels;
 
+public class ExpectationMatcher
+{
+    
+    public IReadOnlyList<KeyValuePair<string,string>> Attributes { get; set; }
+    public List<string> Tags { get; set; }
+    public List<MarkdownCode> Patterns { get; set; }
+}
+
+public abstract class ExpectationsModel
+{
+   
+}
+
+public class SimpleKeyValueExpectations: ExpectationsModel
+{
+    public IReadOnlyList<KeyValuePair<string,string>> Items { get; set; }
+    
+}
+
+class SimpleStringExpectations : ExpectationsModel
+{
+    public string Value { get; set; }
+}
+
+public class MissingExpectations:ExpectationsModel
+{
+    public static readonly MissingExpectations Instance = new MissingExpectations();
+}
+
+public class RawExpectations:ExpectationsModel
+{
+    public MarkdownCode Definition { get; set; }
+}
+
+public class RichExpectations:ExpectationsModel
+{
+    public MarkdownCode Definition { get; set; }
+    public string? Operator { get; set; }
+    public List<ExpectationMatcher> Matchers { get; set; }
+}    
+
 public class MatchDetailsViewModel:ViewModelBase
 {
     private ActualValue _actualValue;
-    private MarkdownCode _expectations;
+    
     public string RuleName { get; set; }
     public bool? Matched { get; set; }
     public bool NoExpectations { get; set; }
@@ -25,19 +66,20 @@ public class MatchDetailsViewModel:ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _actualValue, value);
     }
 
-    
-    
-    public MarkdownCode Expectations
+    public ExpectationsModel Expectations
     {
         get => _expectations;
-        set =>  this.RaiseAndSetIfChanged(ref _expectations,  value);
+        set => this.RaiseAndSetIfChanged(ref _expectations, value);
     }
+
+    private ExpectationsModel _expectations;
+
+
+
 
     public ICommand ReformatActualValue { get; set; }
     public ICommand CopyActualValue { get; set; }
     
-    public ICommand ReformatExpectations{ get; set; }
-    public ICommand CopyExpectations{ get; set; }
 
     public MatchDetailsViewModel()
     {
@@ -62,16 +104,7 @@ public class MatchDetailsViewModel:ViewModelBase
             
         });
         
-        CopyExpectations = ReactiveCommand.Create(async () =>
-        {
-            if (Expectations is MarkdownCode{rawValue: var value})
-            {
-                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                {
-                    await desktop.MainWindow!.Clipboard.SetTextAsync(value);
-                }
-            }
-        });
+       
         
         ReformatActualValue = ReactiveCommand.Create(() =>
         {
@@ -79,47 +112,18 @@ public class MatchDetailsViewModel:ViewModelBase
             {
                 ActualValue = new MarkdownActualValue()
                 {
-                    Value = TryToReformat(rawValue)
+                    Value = rawValue.TryToReformat()
                 };
             }
         }, 
             this.WhenAnyValue(x=>x.ActualValue).Select(x =>
             {
-                return x is MarkdownActualValue {Value: { } va} && IsJsonMarkdown(va);
+                return x is MarkdownActualValue {Value: { } va} && va.IsJsonMarkdown();
             }));
-        ReformatExpectations= ReactiveCommand.Create(() =>
-        {
-            if (string.IsNullOrWhiteSpace(Expectations.rawValue) == false)
-            {
-                Expectations = TryToReformat(Expectations);
-            }
-        }, this.WhenAnyValue(x=>x.Expectations).Select(IsJsonMarkdown));
+        
     }
 
-    private static MarkdownCode TryToReformat(MarkdownCode markdownCode)
-    {
-        if (IsJsonMarkdown(markdownCode))
-        {
-
-            try
-            {
-              
-                var formatted = JToken.Parse(markdownCode.rawValue).ToString(Formatting.Indented);
-                return MainWindowViewModel.AsMarkdownCode("json", formatted);
-            }
-            catch (Exception e)
-            {
-                
-            }
-        }
-
-        return markdownCode;
-    }
-
-    private static bool IsJsonMarkdown(MarkdownCode rawValue)
-    {
-        return rawValue?.lang == "json";
-    }
+    
 }
 
 
@@ -152,11 +156,36 @@ public record MarkdownCode(string lang, string rawValue)
     }
 
     public override string ToString() => AsMarkdownSyntax();
+    
+    public  MarkdownCode TryToReformat()
+    {
+        if (IsJsonMarkdown())
+        {
+
+            try
+            {
+              
+                var formatted = JToken.Parse(this.rawValue).ToString(Formatting.Indented);
+                return MainWindowViewModel.AsMarkdownCode("json", formatted);
+            }
+            catch (Exception e)
+            {
+                
+            }
+        }
+
+        return this;
+    }
+
+    public bool IsJsonMarkdown()
+    {
+        return this.lang == "json";
+    }
 };
 
 public class KeyValueListActualValue:ActualValue
 {
-    public KeyValuePair<string,string> SelectedActualValueGridItem { get; set; }
+    public KeyValuePair<string, string> SelectedActualValueGridItem { get; set; } = new KeyValuePair<string, string>();
     public IReadOnlyList<KeyValuePair<string,string>> Items { get; set; }
 }
 
