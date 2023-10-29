@@ -65,7 +65,7 @@
                                 Classes.partial="{Binding HitType, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=OnlyPartialMatch}"
                                 Classes.unmatched="{Binding HitType, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=Unmatched}"
                                             ></PathIcon>
-                            <TextBlock Grid.Column="1" Text="{Binding UpdatedOn, StringFormat={}{0:s}}" Foreground="white" VerticalAlignment="Center" ></TextBlock>
+                            <TextBlock Grid.Column="1" Text="{Binding UpdatedOn, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff}}" Foreground="white" VerticalAlignment="Center" ></TextBlock>
                             <SelectableTextBlock Grid.Column="2"  Text="{Binding Id}" Width="300" Foreground="white" VerticalAlignment="Center" Margin="10,0"></SelectableTextBlock>
                             <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                               <Label>Perfect matches:</Label>
