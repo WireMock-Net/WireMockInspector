@@ -1,7 +1,6 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Styling;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.TextMate;
@@ -10,23 +9,24 @@ using WireMockInspector.ViewModels;
 
 namespace WireMockInspector.Views;
 
-public class CodeBlockViewer:TextEditor, IStyleable
+public class CodeBlockViewer : TextEditor 
 {
-    Type IStyleable.StyleKey => typeof(TextEditor);
+    protected override Type StyleKeyOverride { get; } =  typeof(TextEditor);
+
     public CodeBlockViewer()
     {
-        this.Initialized += (sender, args) =>
-        {
-            //First of all you need to have a reference for your TextEditor for it to be used inside AvaloniaEdit.TextMate project.
-            var _textEditor = this;
-            _textEditor.Background = new SolidColorBrush(Color.FromRgb(30, 30, 30));
-            _textEditor.TextArea.TextView.Margin = new Thickness(10);
-            _textEditor.ShowLineNumbers = true;
-            _textEditor.IsReadOnly = true;
-            _textEditor.FontFamily = "Cascadia Code,Consolas,Menlo,Monospace";
-        };
         this._registryOptions = new RegistryOptions(ThemeName.DarkPlus);
         this._textMateInstallation = this.InstallTextMate(_registryOptions);
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.Background = new SolidColorBrush(Color.FromRgb(30, 30, 30));
+        this.TextArea.TextView.Margin = new Thickness(10, 0);
+        this.ShowLineNumbers = true;
+        this.IsReadOnly = true;
+        this.FontFamily = "Cascadia Code,Consolas,Menlo,Monospace";
     }
 
     static CodeBlockViewer()
