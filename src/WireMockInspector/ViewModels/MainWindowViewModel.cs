@@ -291,7 +291,7 @@ namespace WireMockInspector.ViewModels
                             },
                             Scenario = model.Scenario is {} scenarioName && enrichedScenarios.TryGetValue(scenarioName, out var scenario)? scenario with {CurrentTransitionId = mappingId, ThisMappingTransition = $"[{model.WhenStateIs}] -> [{model.SetStateTo}]"}: null
                         };
-                    }).OfType<MappingViewModel>().OrderBy(x=>x.UpdatedOn);
+                    }).OfType<MappingViewModel>().OrderByDescending(x=>x.UpdatedOn);
                     Mappings.AddRange(mappings);
                     MappingSearchTerm = string.Empty;
                     DataLoaded = true;
