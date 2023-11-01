@@ -16,7 +16,7 @@ public class ExpectationMatcher
     
     public IReadOnlyList<KeyValuePair<string,string>> Attributes { get; set; }
     public List<string> Tags { get; set; }
-    public List<MarkdownCode> Patterns { get; set; }
+    public List<Text> Patterns { get; set; }
 }
 
 public abstract class ExpectationsModel
@@ -27,6 +27,17 @@ public abstract class ExpectationsModel
 public class SimpleKeyValueExpectations: ExpectationsModel
 {
     public IReadOnlyList<KeyValuePair<string,string>> Items { get; set; }
+    
+}
+
+public class GridExpectationItem
+{
+    public string Name { get; set; }
+    public IReadOnlyList<ExpectationMatcher> Matchers { get; set; }
+}
+public class GridExpectations: ExpectationsModel
+{
+    public IReadOnlyList<GridExpectationItem> Items { get; set; }
     
 }
 
@@ -143,7 +154,10 @@ public class MarkdownActualValue:ActualValue
     public string MarkdownValue { get; set; }
 }
 
-public record MarkdownCode(string lang, string rawValue)
+public record Text();
+
+public record SimpleText(string Value):Text;
+public record MarkdownCode(string lang, string rawValue):Text
 {
     public string AsMarkdownSyntax()
     {

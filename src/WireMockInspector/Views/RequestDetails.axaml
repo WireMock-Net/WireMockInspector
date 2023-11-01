@@ -57,7 +57,7 @@
               </Expander.Header>
 
               <StackPanel Orientation="Vertical">
-                <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,0,0,15">
+                <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,0,0,10">
                   <DockPanel HorizontalAlignment="Stretch">
                     <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Actual value</Label>
                     <SplitButton HorizontalAlignment="Right" Margin="0,0,5,5" Padding="0">
@@ -93,15 +93,15 @@
                           </Style>
                         </DataGrid.Styles>
                         <DataGrid.Columns>
-                          <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/>
-                          <DataGridTextColumn Header="Value" Binding="{Binding Value}" />
+                          <DataGridTextColumn Header="Key" Width="Auto"  Binding="{Binding Key}"/>
+                          <DataGridTextColumn Header="Value" Width="*" Binding="{Binding Value}" />
                         </DataGrid.Columns>
                       </DataGrid>
                     </DataTemplate>
 
                   </ContentControl.DataTemplates>
                 </ContentControl>
-                <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,5">
+                <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,10">
                   <DockPanel HorizontalAlignment="Stretch">
                     <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Expectations</Label>
                   </DockPanel>
@@ -109,9 +109,7 @@
                 <ContentControl Content="{Binding Expectations}">
                  <ContentControl.DataTemplates>
                    <DataTemplate x:DataType="viewModels:RichExpectations">
-                     <TabControl Classes="minor">
-                      <TabItem Header="Formatted" >
-                        <ItemsControl ItemsSource="{Binding  Matchers}" >
+                    <ItemsControl ItemsSource="{Binding  Matchers}" >
                           <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="viewModels:ExpectationMatcher">
                               <StackPanel Orientation="Vertical">
@@ -129,30 +127,19 @@
                                     </DataTemplate>
                                   </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <!-- <DataGrid ItemsSource="{Binding Attributes}" HeadersVisibility="None" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single"> -->
-                                <!--   <DataGrid.Styles> -->
-                                <!--     <Style Selector="DataGridColumnHeader"> -->
-                                <!--       <Setter Property="Background" Value="#505050"></Setter> -->
-                                <!--     </Style> -->
-                                <!--     <Style Selector="DataGridColumnHeader TextBlock"> -->
-                                <!--       <Setter Property="Foreground" Value="White"></Setter> -->
-                                <!--     </Style> -->
-                                <!--     <Style Selector="DataGridCell TextBlock"> -->
-                                <!--       <Setter Property="FontSize" Value="10"></Setter> -->
-                                <!--     </Style> -->
-                                <!--     <Style Selector="DataGridCell.valuecell TextBlock"> -->
-                                <!--       <Setter Property="TextAlignment" Value="Center"></Setter> -->
-                                <!--     </Style> -->
-                                <!--   </DataGrid.Styles> -->
-                                <!--   <DataGrid.Columns> -->
-                                <!--     <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/> -->
-                                <!--     <DataGridTextColumn Header="Value" Binding="{Binding Value}"  CellStyleClasses="valuecell"/> -->
-                                <!--   </DataGrid.Columns> -->
-                                <!-- </DataGrid> -->
                                 <ItemsControl ItemsSource="{Binding Patterns}">
                                   <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                      <views:CodeBlockViewer Margin="0,5,0,0" Code="{Binding }" />
+                                      <ContentControl Content="{Binding}">
+                                        <ContentControl.DataTemplates>
+                                          <DataTemplate x:DataType="viewModels:MarkdownCode">
+                                            <views:CodeBlockViewer Margin="0,5,0,0" Code="{Binding }" />
+                                          </DataTemplate>
+                                          <DataTemplate x:DataType="viewModels:SimpleText">
+                                            <SelectableTextBlock Margin="5" Text="{Binding Value}" FontWeight="Bold"></SelectableTextBlock>
+                                          </DataTemplate>
+                                        </ContentControl.DataTemplates>
+                                      </ContentControl>
                                     </DataTemplate>
                                   </ItemsControl.ItemTemplate>
                                 </ItemsControl>
@@ -160,11 +147,6 @@
                             </DataTemplate>
                           </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                      </TabItem>
-                      <TabItem Header="Raw">
-                        <views:CodeBlockViewer Code="{Binding Definition}" />
-                      </TabItem>
-                    </TabControl>
                   </DataTemplate>
                    <DataTemplate x:DataType="viewModels:RawExpectations">
                      <StackPanel >
@@ -191,8 +173,81 @@
                          </Style>
                        </DataGrid.Styles>
                        <DataGrid.Columns>
-                         <DataGridTextColumn Header="Key"  Binding="{Binding Key}"/>
-                         <DataGridTextColumn Header="Value" Binding="{Binding Value}" />
+                         <DataGridTextColumn Header="Key" Width="Auto" Binding="{Binding Key}"/>
+                         <DataGridTextColumn Header="Value" Width="*" Binding="{Binding Value}" />
+                       </DataGrid.Columns>
+                     </DataGrid>
+                   </DataTemplate>
+                   <DataTemplate x:DataType="viewModels:GridExpectations">
+                     <DataGrid ItemsSource="{Binding Items}" VerticalScrollBarVisibility="Disabled" CanUserReorderColumns="False" CanUserResizeColumns="True" AutoGenerateColumns="False" AreRowGroupHeadersFrozen="True" GridLinesVisibility="All" ClipboardCopyMode="ExcludeHeader" SelectionMode="Single">
+                       <DataGrid.Styles>
+                         <Style Selector="DataGridColumnHeader">
+                           <Setter Property="Background" Value="#505050"></Setter>
+                         </Style>
+                         <Style Selector="DataGridColumnHeader TextBlock">
+                           <Setter Property="Foreground" Value="White"></Setter>
+                         </Style>
+                         <Style Selector="DataGridCell TextBlock">
+                           <Setter Property="FontSize" Value="10"></Setter>
+                         </Style>
+                       </DataGrid.Styles>
+                       <DataGrid.Columns>
+                         <DataGridTextColumn Header="Key" IsReadOnly="True"  Width="Auto" Binding="{Binding Name}"/>
+                         <DataGridTemplateColumn Header="Patterns" Width="*">
+                          <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                              <ItemsControl ItemsSource="{Binding  Matchers}" >
+                                <ItemsControl.ItemsPanel>
+                                  <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical" />
+                                  </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                  <DataTemplate x:DataType="viewModels:ExpectationMatcher">
+                                    <StackPanel Orientation="Vertical">
+                                      <ItemsControl ItemsSource="{Binding Tags}">
+                                        <ItemsControl.ItemsPanel>
+                                          <ItemsPanelTemplate>
+                                            <WrapPanel Orientation="Horizontal" Margin="12,5,12,5"></WrapPanel>
+                                          </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                          <DataTemplate>
+                                            <Border BorderThickness="1" BorderBrush="Wheat" CornerRadius="5" Margin="0,5,5,0">
+                                              <TextBlock Margin="5" Text="{Binding}"></TextBlock>
+                                            </Border>
+                                          </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                      </ItemsControl>
+                                      <ItemsControl ItemsSource="{Binding Patterns}">
+                                        <ItemsControl.ItemsPanel>
+                                          <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Vertical" />
+                                          </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                          <DataTemplate>
+                                            <ContentControl Content="{Binding}">
+                                              <ContentControl.DataTemplates>
+                                                <DataTemplate x:DataType="viewModels:MarkdownCode">
+                                                  <SelectableTextBlock Margin="12,5" FontSize="10" Text="{Binding rawValue}"></SelectableTextBlock>
+                                                </DataTemplate>
+                                                <DataTemplate x:DataType="viewModels:SimpleText">
+                                                  <SelectableTextBlock Margin="12, 5" FontSize="10"  Text="{Binding Value}"></SelectableTextBlock>
+                                                </DataTemplate>
+                                              </ContentControl.DataTemplates>
+                                            </ContentControl>
+                                          </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                      </ItemsControl>
+                                    </StackPanel>
+                                  </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                              </ItemsControl>
+                            </DataTemplate>
+                          </DataGridTemplateColumn.CellTemplate>  
+                         </DataGridTemplateColumn>
+                         
                        </DataGrid.Columns>
                      </DataGrid>
                    </DataTemplate>
