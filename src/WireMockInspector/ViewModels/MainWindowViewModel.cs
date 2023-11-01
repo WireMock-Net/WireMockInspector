@@ -769,7 +769,14 @@ namespace WireMockInspector.ViewModels
                         },
                         Expectations = expectations.Request?.Headers switch
                         {
-                            IList<HeaderModel> headers => ExpectationsAsJson(headers),
+                            IList<HeaderModel> headers => new GridExpectations()
+                            {
+                                Items = headers.Select(x=> new GridExpectationItem
+                                {
+                                    Name = x.Name,
+                                    Matchers = x.Matchers!=null ? MapToRichExpectations(x, x.Matchers.ToArray(), x.MatchOperator).Matchers: Array.Empty<ExpectationMatcher>() 
+                                }).ToList()
+                            },
                             _ => MissingExpectations.Instance
                         },
                         NoExpectations = expectations.Request?.Headers is null
@@ -793,7 +800,18 @@ namespace WireMockInspector.ViewModels
                         {
                             Items = req.Raw.Request.Query?.OrderBy(x=>x.Key).SelectMany(x=> x.Value.Select(v => new KeyValuePair<string,string>(x.Key, v))).ToList() ?? new List<KeyValuePair<string, string>>(),
                         },
-                        Expectations = ExpectationsAsJson(expectations.Request?.Params),
+                        Expectations = expectations.Request?.Params switch
+                        {
+                            IList<ParamModel> paramModels => new GridExpectations()
+                            {
+                                Items = paramModels.Select(x=> new GridExpectationItem
+                                {
+                                    Name = x.Name,
+                                    Matchers = x.Matchers!=null ? MapToRichExpectations(x, x.Matchers.ToArray(), null).Matchers: Array.Empty<ExpectationMatcher>() 
+                                }).ToList()
+                            },
+                            _ => MissingExpectations.Instance
+                        },
                         NoExpectations = expectations.Request?.Params is null
                     },
                     new()
@@ -904,7 +922,7 @@ namespace WireMockInspector.ViewModels
             return MapToRichExpectations(requestBody, matchers, requestBody.MatchOperator);
         }
 
-        private static ExpectationsModel MapToRichExpectations(object definition, MatcherModel[] matchers, string? matchOperator)
+        private static RichExpectations MapToRichExpectations(object definition, IReadOnlyList<MatcherModel> matchers, string? matchOperator)
         {
             IEnumerable<string> GetPatterns(MatcherModel m)
             {
@@ -968,7 +986,11 @@ namespace WireMockInspector.ViewModels
                         new KeyValuePair<string, string>("Operator", x.MatchOperator?.ToString()),
                     }.Where(x => string.IsNullOrWhiteSpace(x.Value) == false).ToList(),
                     Tags = GetTags(x).ToList(),
-                    Patterns = GetPatterns(x).Select(y => new MarkdownCode("json", y).TryToReformat()).ToList()
+                    Patterns = GetPatterns(x).Select(y => y.Trim() switch
+                    {
+                      var v when v.StartsWith("{") || v.StartsWith("[") => (Text) new MarkdownCode("json", y).TryToReformat(),
+                      _ =>  (Text)new SimpleText(y)
+                    } ).ToList()
                 }).ToList()
             };
         }
