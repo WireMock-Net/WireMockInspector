@@ -84,6 +84,11 @@ public class NewVersionInfoViewModel:ViewModelBase
         OpenWebsite(@$"https://github.com/{_repositorySku}/releases/");
     }
 
+    public void OpenUpdateInstructions()
+    {
+        OpenWebsite(@$"https://github.com/{_repositorySku}/#how-to-update");
+    }
+
     private static void OpenWebsite(string url)
     {
         Process.Start(new ProcessStartInfo
