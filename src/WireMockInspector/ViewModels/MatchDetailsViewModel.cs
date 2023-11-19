@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using DiffPlex.DiffBuilder.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
@@ -61,7 +62,15 @@ public class RichExpectations:ExpectationsModel
     public MarkdownCode Definition { get; set; }
     public string? Operator { get; set; }
     public List<ExpectationMatcher> Matchers { get; set; }
-}    
+}
+
+
+public class CodeDiffViewModel
+{
+    public MarkdownCode Left { get; set; }
+    public MarkdownCode Right { get; set; }
+    
+}
 
 public class MatchDetailsViewModel:ViewModelBase
 {
@@ -84,6 +93,15 @@ public class MatchDetailsViewModel:ViewModelBase
     }
 
     private ExpectationsModel _expectations;
+
+
+    public CodeDiffViewModel Diff
+    {
+        get => _diff;
+        set => this.RaiseAndSetIfChanged(ref _diff, value);
+    }
+
+    private CodeDiffViewModel _diff;
 
 
 
@@ -157,7 +175,7 @@ public class MarkdownActualValue:ActualValue
 public record Text();
 
 public record SimpleText(string Value):Text;
-public record MarkdownCode(string lang, string rawValue):Text
+public record MarkdownCode(string lang, string rawValue, List<DiffPiece>? oldTextLines = null):Text
 {
     public string AsMarkdownSyntax()
     {
@@ -180,7 +198,7 @@ public record MarkdownCode(string lang, string rawValue):Text
             {
               
                 var formatted = JToken.Parse(this.rawValue).ToString(Formatting.Indented);
-                return MainWindowViewModel.AsMarkdownCode("json", formatted);
+                return new MarkdownCode("json", formatted);
             }
             catch (Exception e)
             {
