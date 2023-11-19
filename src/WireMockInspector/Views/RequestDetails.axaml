@@ -253,8 +253,19 @@
                    </DataTemplate>
                  </ContentControl.DataTemplates>
                 </ContentControl>
-               
-              
+                <Border BorderThickness="0,0,0,1" BorderBrush="#808080" Margin="0,15,0,10" IsVisible="{Binding Diff, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <DockPanel HorizontalAlignment="Stretch">
+                    <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Diff</Label>
+                  </DockPanel>
+                </Border>
+                <Grid IsVisible="{Binding Diff, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                    <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                  </Grid.ColumnDefinitions>
+                  <views:CodeBlockViewer Margin="0,5,0,0" Code="{Binding Diff.Left }" />
+                  <views:CodeBlockViewer Grid.Column="1" Margin="0,5,0,0" Code="{Binding Diff.Right }" />
+                </Grid>
               </StackPanel>
             </Expander>
           </DataTemplate>

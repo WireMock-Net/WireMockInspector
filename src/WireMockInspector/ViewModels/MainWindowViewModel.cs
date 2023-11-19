@@ -7,7 +7,11 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using DiffPlex;
+using DiffPlex.DiffBuilder;
+using DiffPlex.DiffBuilder.Model;
 using DynamicData;
+using JsonDiffPatchDotNet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
@@ -19,6 +23,7 @@ using WireMock.Admin.Scenarios;
 using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
+using ChangeType = DiffPlex.DiffBuilder.Model.ChangeType;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace WireMockInspector.ViewModels
@@ -223,7 +228,7 @@ namespace WireMockInspector.ViewModels
                                     {
                                         LastHit = hitCalculator.GetFirstPerfectHitDateAfter(m.Guid, estimatedScenarioStateDate ?? DateTime.MinValue),
                                         Description = $"[{m.WhenStateIs}] -> [{m.SetStateTo}]",
-                                        MappingDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(m, Formatting.Indented)),
+                                        MappingDefinition = new MarkdownCode("json", JsonConvert.SerializeObject(m, Formatting.Indented)),
                                         TriggeredBy = new RequestLogViewModel()
                                         {
                                             MapToLogEntries(hitCalculator.GetPerfectHitCountAfter(m.Guid, estimatedScenarioStateDate))
@@ -272,7 +277,7 @@ namespace WireMockInspector.ViewModels
                             ExpectedPaths = GetExpectedPathsDescription(model),
                             Description = model.Title != model.Description? model.Description: null,
                             UpdatedOn = model.UpdatedAt,
-                            Content = AsMarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)),
+                            Content = new MarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)),
                             PartialHitCount = partialHitCount,
                             PerfectHitCount = perfectHitCount,
                             PerfectMatches = new RequestLogViewModel()
@@ -438,7 +443,7 @@ namespace WireMockInspector.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(code =>
                 {
-                    SelectedMapping.Code = AsMarkdownCode("cs", code);
+                    SelectedMapping.Code = new MarkdownCode("cs", code);
                 });
 
             this.WhenAnyValue(x => x.SelectedRequest)
@@ -483,8 +488,8 @@ namespace WireMockInspector.ViewModels
                     Timestamp = l.Request.DateTime,
                     Method = l.Request.Method,
                     Path =  l.Request.Path,
-                    RequestDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Request, Formatting.Indented)),
-                    ResponseDefinition = AsMarkdownCode("json", JsonConvert.SerializeObject(l.Response, Formatting.Indented)),
+                    RequestDefinition = new MarkdownCode("json", JsonConvert.SerializeObject(l.Request, Formatting.Indented)),
+                    ResponseDefinition = new MarkdownCode("json", JsonConvert.SerializeObject(l.Response, Formatting.Indented)),
                     StatusCode = l.Response.StatusCode?.ToString()
                 }  )
                 .ToList();
@@ -814,24 +819,7 @@ namespace WireMockInspector.ViewModels
                         },
                         NoExpectations = expectations.Request?.Params is null
                     },
-                    new()
-                    {
-                        RuleName = "Body",
-                        Matched = IsMatched(req, "BodyMatcher"),
-                        ActualValue = new MarkdownActualValue
-                        {
-                            Value = req.Raw.Request.DetectedBodyType switch
-                            {
-                                "String" or "FormUrlEncoded" => WrapBodyInMarkdown(req.Raw.Request.Body?? string.Empty),
-                                "Json" => AsMarkdownCode("json", req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty),
-                                "Bytes" => new MarkdownCode("plaintext", req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty),
-                                "File" => new MarkdownCode("plaintext","[FileContent]"),
-                                _ => new MarkdownCode("plaintext", "")
-                            }
-                        },
-                        Expectations = MapToRichExpectations(expectations.Request?.Body),
-                        NoExpectations = expectations.Request?.Body is null
-                    }
+                    MapToRequestBodyViewModel(req, expectations)
                 },
                 ResponseParts = new MatchDetailsList
                 {
@@ -893,6 +881,146 @@ namespace WireMockInspector.ViewModels
                     }
                 }
             };
+        }
+        
+        private static (string, string) ProcessDiff(JToken left, JToken right, JToken diff)
+        {
+            var leftViewBuilder = new StringBuilder();
+            var rightViewBuilder = new StringBuilder();
+
+            foreach (var prop in diff.Children<JProperty>())
+            {
+                string key = prop.Name;
+                var value = prop.Value;
+
+                if (value is JArray {Count: 2})
+                {
+                    // Modification
+                    leftViewBuilder.AppendLine($"m: {key}: {left[key]}");
+                    rightViewBuilder.AppendLine($"m: {key}: {right[key]}");
+                }
+                else if (value is JArray {Count: 3})
+                {
+                    // No Changes
+                    leftViewBuilder.AppendLine($"{key}: {left[key]}");
+                    rightViewBuilder.AppendLine($"{key}: {right[key]}");
+                }
+                else if (value is JArray {Count: 1})
+                {
+                    // Addition or Deletion
+                    if (left[key] == null)
+                    {
+                        // Addition
+                        leftViewBuilder.AppendLine($"");
+                        rightViewBuilder.AppendLine($"{key}: {right[key]}");
+                    }
+                    else
+                    {
+                        // Deletion
+                        leftViewBuilder.AppendLine($"{key}: {left[key]}");
+                        rightViewBuilder.AppendLine($"");
+                    }
+                }
+            }
+
+            return (leftViewBuilder.ToString(), rightViewBuilder.ToString());
+        }
+
+        private static MatchDetailsViewModel MapToRequestBodyViewModel(RequestViewModel req, MappingModel expectations)
+        {
+            var actualValue = req.Raw.Request.DetectedBodyType switch
+            {
+                "String" or "FormUrlEncoded" => WrapBodyInMarkdown(req.Raw.Request.Body?? string.Empty),
+                "Json" => new MarkdownCode("json", req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty),
+                "Bytes" => new MarkdownCode("plaintext", req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty),
+                "File" => new MarkdownCode("plaintext","[FileContent]"),
+                _ => new MarkdownCode("plaintext", "")
+            };
+            
+            var expectationsModel = MapToRichExpectations(expectations.Request?.Body);
+            CodeDiffViewModel diffModel = null;
+            if (actualValue is {lang: "json"} && expectationsModel is RichExpectations {Matchers.Count: 1} re)
+            {
+                
+                if (re.Matchers[0].Patterns[0] is MarkdownCode {lang: "json", rawValue: var expectedValue})
+                {
+                    
+                   
+                    var b = new SideBySideDiffBuilder(new Differ());
+                    var ignoreCase = re.Matchers[0].Tags.Contains("Ignore case");
+                    var diff = b.BuildDiffModel
+                    (
+                        oldText: JsonHelper.ToComparableForm(expectedValue),
+                        newText: JsonHelper.ToComparableForm(actualValue.rawValue),
+                        ignoreWhitespace: false,
+                        ignoreCase: ignoreCase
+                    );
+
+                    foreach (var (a1, a2) in diff.OldText.Lines.Zip(diff.NewText.Lines))
+                    {
+                        if (a1.Type == ChangeType.Modified && a2.Type == ChangeType.Modified)
+                        {
+                            // INFO: When new line was added, we don't want to report previous line as change (',' is added at the end of line in json)
+                            if (string.Equals(a1.Text.TrimEnd(','), a2.Text.TrimEnd(','), ignoreCase? StringComparison.OrdinalIgnoreCase: StringComparison.Ordinal))
+                            {
+                                a1.Type = ChangeType.Unchanged;
+                                a2.Type = ChangeType.Unchanged;
+                            }
+                            
+                        }
+                    }
+                    
+                    diffModel =  new CodeDiffViewModel
+                    {
+                        Left = new MarkdownCode("json", PresentDiffLinexs(diff.OldText.Lines), diff.OldText.Lines),
+                        Right = new MarkdownCode("json", PresentDiffLinexs(diff.NewText.Lines),diff.NewText.Lines)
+                    };
+                }
+            }
+            
+            return new()
+            {
+                RuleName = "Body",
+                Matched = IsMatched(req, "BodyMatcher"),
+                ActualValue = new MarkdownActualValue
+                {
+                    Value = actualValue
+                },
+                Expectations = expectationsModel,
+                NoExpectations = expectations.Request?.Body is null,
+                Diff = diffModel
+            };
+        }
+
+        private static string PresentDiffLinexs(List<DiffPiece> lines)
+        {
+            var leftBuilder = new StringBuilder();
+            foreach (var oldLine in lines)
+            {
+                switch (oldLine.Type)
+                {
+                    case ChangeType.Unchanged:
+                        leftBuilder.AppendLine(oldLine.Text);
+                        break;
+                    case ChangeType.Deleted:
+                        leftBuilder.AppendLine(oldLine.Text);
+                        break;
+                    case ChangeType.Inserted:
+                        leftBuilder.AppendLine(oldLine.Text);
+                        break;
+                    case ChangeType.Imaginary:
+                        leftBuilder.AppendLine(oldLine.Text);
+                        break;
+                    case ChangeType.Modified:
+                        leftBuilder.AppendLine(oldLine.Text);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            var l = leftBuilder.ToString();
+            return l;
         }
 
         private static string FormatStatusCode(object? code)
@@ -973,7 +1101,7 @@ namespace WireMockInspector.ViewModels
 
             return new RichExpectations
             {
-                Definition = AsMarkdownCode("json", JsonConvert.SerializeObject(definition, Formatting.Indented)),
+                Definition = new MarkdownCode("json", JsonConvert.SerializeObject(definition, Formatting.Indented)),
                 Operator = matchOperator,
                 Matchers = matchers.Select(x => new ExpectationMatcher()
                 {
@@ -988,11 +1116,16 @@ namespace WireMockInspector.ViewModels
                     Tags = GetTags(x).ToList(),
                     Patterns = GetPatterns(x).Select(y => y.Trim() switch
                     {
-                      var v when v.StartsWith("{") || v.StartsWith("[") => (Text) new MarkdownCode("json", y).TryToReformat(),
+                      var v when IsJsonString(v) => (Text) new MarkdownCode("json", y).TryToReformat(),
                       _ =>  (Text)new SimpleText(y)
                     } ).ToList()
                 }).ToList()
             };
+        }
+
+        private static bool IsJsonString(string v)
+        {
+            return v.StartsWith("{") || v.StartsWith("[");
         }
 
         private static MarkdownCode GetActualForRequestBody(RequestViewModel req)
@@ -1009,7 +1142,7 @@ namespace WireMockInspector.ViewModels
         private static MarkdownCode WrapBodyInMarkdown(string bodyResponse)
         {
             var cleanBody = bodyResponse.Trim();
-            if (cleanBody.StartsWith("[") || cleanBody.StartsWith("{"))
+            if (IsJsonString(cleanBody))
             {
                 return new MarkdownCode("json", bodyResponse);
 
@@ -1022,7 +1155,6 @@ namespace WireMockInspector.ViewModels
             return new MarkdownCode("plaintext", bodyResponse);
         }
 
-        public static MarkdownCode AsMarkdownCode(string lang, string code) => new MarkdownCode(lang, code);
 
         public string RequestSearchTerm
         {
@@ -1043,7 +1175,7 @@ namespace WireMockInspector.ViewModels
 
             return new RawExpectations()
             {
-                Definition = AsMarkdownCode("json", JsonConvert.SerializeObject(data, Formatting.Indented))
+                Definition = new MarkdownCode("json", JsonConvert.SerializeObject(data, Formatting.Indented))
             };
         }
 
