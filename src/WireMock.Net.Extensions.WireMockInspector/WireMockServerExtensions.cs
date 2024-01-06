@@ -34,7 +34,7 @@ public static class WireMockServerExtensions
             var inspectorProcess = Process.Start(new ProcessStartInfo
             {
                 FileName = "wiremockinspector",
-                Arguments = $"attach --adminUrl {wireMockUrl} --autoLoad --instanceName {title}",
+                Arguments = $"attach --adminUrl {wireMockUrl} --autoLoad --instanceName \"{title}\"",
                 UseShellExecute = false
             });
 
