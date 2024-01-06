@@ -36,16 +36,20 @@ namespace WireMockInspector
                     attachCommand.AddOption(autoLoadOption);
                     var instanceNameOption = new Option<string>("--instanceName") { IsRequired = false };
                     attachCommand.AddOption(instanceNameOption);
+                    
+                    var requestFiltersOption = new Option<string>("--requestFilters") { IsRequired = false };
+                    attachCommand.AddOption(requestFiltersOption);
 
-                    attachCommand.SetHandler((adminUrl, autoLoad, instanceName) =>
+                    attachCommand.SetHandler((adminUrl, autoLoad, instanceName, requestFilters) =>
                     {
                         mainWindow.Settings = new StartupSettings
                         {
                             AdminUrl = adminUrl,
                             InstanceName = instanceName,
-                            AutoLoad = autoLoad
+                            AutoLoad = autoLoad,
+                            RequestFilters = requestFilters
                         };
-                    }, adminUrlOption, autoLoadOption, instanceNameOption);
+                    }, adminUrlOption, autoLoadOption, instanceNameOption, requestFiltersOption);
                     rootCommand.AddCommand(attachCommand);
                     rootCommand.SetHandler(() => { });
                     rootCommand.Invoke(args);
@@ -63,5 +67,6 @@ namespace WireMockInspector
         public string AdminUrl { get; set; }
         public bool AutoLoad { get; set; }
         public string InstanceName { get; set; }
+        public string RequestFilters { get; set; }
     }
 }

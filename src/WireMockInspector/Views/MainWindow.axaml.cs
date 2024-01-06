@@ -49,9 +49,13 @@ namespace WireMockInspector.Views
                 if (Settings != null)
                 {
                     ViewModel.AdminUrl = Settings.AdminUrl;
+                    
                     if (Settings.AutoLoad)
                     {
-                      ViewModel.LoadRequestsCommand.Execute().Subscribe().DisposeWith(disposables);
+                      ViewModel.LoadRequestsCommand.Execute().ObserveOn(RxApp.MainThreadScheduler).Subscribe(_ =>
+                      {
+                          ViewModel.RequestSearchTerm = Settings.RequestFilters;
+                      }).DisposeWith(disposables);
                     }
             
                     if (string.IsNullOrWhiteSpace(Settings.InstanceName) == false)
