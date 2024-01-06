@@ -258,13 +258,19 @@
                     <Label DockPanel.Dock="Left" VerticalAlignment="Center" >Diff</Label>
                   </DockPanel>
                 </Border>
-                <Grid IsVisible="{Binding Diff, Converter={x:Static ObjectConverters.IsNotNull}}">
-                  <Grid.ColumnDefinitions>
+                <Grid IsVisible="{Binding Diff, Converter={x:Static ObjectConverters.IsNotNull}}" >
+                  <Grid.ColumnDefinitions >
                     <ColumnDefinition Width="0.5*"></ColumnDefinition>
-                    <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                    <ColumnDefinition  Width="0.5*"></ColumnDefinition>
                   </Grid.ColumnDefinitions>
-                  <views:CodeBlockViewer Margin="0,5,0,0" Code="{Binding Diff.Left }" />
-                  <views:CodeBlockViewer Grid.Column="1" Margin="0,5,0,0" Code="{Binding Diff.Right }" />
+                  <Grid.RowDefinitions >
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                  </Grid.RowDefinitions>
+                  <TextBlock Grid.Row="0" Grid.Column="0" TextAlignment="Center" HorizontalAlignment="Stretch" Background="#ff6674ff" Margin="0,0,1,0" >EXPECTED</TextBlock>
+                  <TextBlock Grid.Row="0" Grid.Column="1" TextAlignment="Center" HorizontalAlignment="Stretch" Background="#ff6674ff" Margin="1,0,0,0">ACTUAL</TextBlock>
+                  <views:CodeBlockViewer Grid.Row="1" Margin="0,5,1,0" Code="{Binding Diff.Left }"  />
+                  <views:CodeBlockViewer Grid.Row="1" Grid.Column="1" Margin="1,5,0,0" Code="{Binding Diff.Right }" />
                 </Grid>
               </StackPanel>
             </Expander>
