@@ -378,24 +378,12 @@ internal static class CSharpFormatter
 
     private const string Null = "null";
 
-    public static object ConvertToAnonymousObjectDefinition(object jsonBody)
-    {
-        var serializedBody = JsonConvert.SerializeObject(jsonBody);
-        using var jsonReader = new JsonTextReader(new StringReader(serializedBody));
-        jsonReader.DateParseHandling = DateParseHandling.None;
-        var deserializedBody = JObject.Load(jsonReader);
-
-        return ConvertJsonToAnonymousObjectDefinition(deserializedBody, 2);
-    }
-
     public static string ConvertJsonToAnonymousObjectDefinition(JToken token, int ind = 0)
     {
         return token switch
         {
             JArray jArray => FormatArray(jArray, ind),
             JObject jObject => FormatObject(jObject, ind),
-            JProperty jProperty =>
-                $"{FormatPropertyName(jProperty.Name)} = {ConvertJsonToAnonymousObjectDefinition(jProperty.Value, ind)}",
             JValue jValue => jValue.Type switch
             {
                 JTokenType.None => Null,
@@ -418,8 +406,6 @@ internal static class CSharpFormatter
             _ => $"UNHANDLED_CASE: {token}"
         };
     }
-
-    public static string ToCSharpBooleanLiteral(bool value) => value ? "true" : "false";
 
     public static string ToCSharpStringLiteral(string? value)
     {
@@ -447,11 +433,23 @@ internal static class CSharpFormatter
 
     private static string FormatObject(JObject jObject, int ind)
     {
+        
         var indStr = new string(' ', 4 * ind);
         var indStrSub = new string(' ', 4 * (ind + 1));
-        var items = jObject.Properties().Select(x => ConvertJsonToAnonymousObjectDefinition(x, ind + 1));
+        var shouldBeDictionary = jObject.Properties().Any(x => Char.IsDigit(x.Name[0]));
 
-        return $"new\r\n{indStr}{{\r\n{indStrSub}{string.Join($",\r\n{indStrSub}", items)}\r\n{indStr}}}";
+        if (shouldBeDictionary)
+        {
+            var items = jObject.Properties().Select(x =>  $"[\"{x.Name}\"] = {ConvertJsonToAnonymousObjectDefinition(x.Value, ind + 1)}");
+            return $"new Dictionary<string, object>\r\n{indStr}{{\r\n{indStrSub}{string.Join($",\r\n{indStrSub}", items)}\r\n{indStr}}}";   
+        }
+        else
+        {
+            var items = jObject.Properties().Select(x =>  $"{FormatPropertyName(x.Name)} = {ConvertJsonToAnonymousObjectDefinition(x.Value, ind + 1)}");
+            return $"new\r\n{indStr}{{\r\n{indStrSub}{string.Join($",\r\n{indStrSub}", items)}\r\n{indStr}}}";    
+        }
+        
+        
     }
 
     private static string FormatArray(JArray jArray, int ind)
