@@ -52,10 +52,13 @@ namespace WireMockInspector.Views
                     
                     if (Settings.AutoLoad)
                     {
-                      ViewModel.LoadRequestsCommand.Execute().ObserveOn(RxApp.MainThreadScheduler).Subscribe(_ =>
-                      {
-                          ViewModel.RequestSearchTerm = Settings.RequestFilters;
-                      }).DisposeWith(disposables);
+                        ViewModel.LoadRequestsCommand.Execute()
+                            .ObserveOn(RxApp.MainThreadScheduler)
+                            .DiscardExceptions()
+                            .Subscribe(_ =>
+                            {
+                                ViewModel.RequestSearchTerm = Settings.RequestFilters;
+                            }).DisposeWith(disposables);
                     }
             
                     if (string.IsNullOrWhiteSpace(Settings.InstanceName) == false)
