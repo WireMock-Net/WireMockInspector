@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
@@ -23,6 +24,7 @@ using WireMock.Admin.Scenarios;
 using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
+using WireMockInspector.CodeGenerators;
 using ChangeType = DiffPlex.DiffBuilder.Model.ChangeType;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -456,13 +458,12 @@ namespace WireMockInspector.ViewModels
                         Response = model.Raw.Response,
                         Config = 
                         {
+                         
+                            SelectedTemplate = MappingCodeGenerator.DefaultTemplateName,
+                            Templates = GetAvailableTemplates().ToList(),
                             IncludeClientIP = false,
-                            IncludeDateTime = false,
                             IncludePath = true,
-                            IncludeAbsolutePath = false,
                             IncludeUrl = false,
-                            IncludeAbsoluteUrl = false,
-                            IncludeProxyUrl = false,
                             IncludeQuery = true,
                             IncludeMethod = true,
                             IncludeHeaders = true,
@@ -475,7 +476,22 @@ namespace WireMockInspector.ViewModels
                     };
                 }).ToProperty(this, x=>x.CodeGenerator, out _codeGenerator);
         }
+
+
+      
         
+        private IEnumerable<string> GetAvailableTemplates()
+        {
+            var templateDir = PathHelper.GetTemplateDir();
+
+            yield return MappingCodeGenerator.DefaultTemplateName;
+            
+            foreach (var file  in Directory.GetFiles(templateDir, "*.liquid"))
+            {
+                yield return Path.GetFileName(file);
+            }
+        }
+
         private readonly ObservableAsPropertyHelper<MappingCodeGeneratorViewModel> _codeGenerator;
         public  MappingCodeGeneratorViewModel CodeGenerator => _codeGenerator.Value;
 
@@ -1326,3 +1342,4 @@ namespace WireMockInspector.ViewModels
         PerfectMatch
     }
 }
+

@@ -1,0 +1,149 @@
+﻿using System.IO;
+using System.Linq;
+using System.Reflection;
+using Fluid;
+using Fluid.Values;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using WireMock.Admin.Requests;
+using WireMockInspector.ViewModels;
+
+namespace WireMockInspector.CodeGenerators;
+
+public static class MappingCodeGenerator
+{
+
+    class JsonDataSourceReader 
+    {
+        object? ConvertJsonToObject(JToken xDocument)
+        {
+            return xDocument switch
+            {
+                JArray jArray => jArray.Select(ConvertJsonToObject).ToArray(),
+                JObject jObject => jObject.Properties().ToDictionary(x => x.Name, x => ConvertJsonToObject(x.Value)),
+                JValue jValue => jValue.Value,
+                _ => null
+            };
+        }
+
+        public object? Read(string content)
+        {
+            var json = JToken.Parse(content);
+
+            if (json is JObject jo && jo.ContainsKey("$schema"))
+            {
+                jo.Remove("$schema");
+            }
+
+            return ConvertJsonToObject(json);
+        }
+    }
+
+    public static string EscapeStringForCSharp(string value) => CSharpFormatter.ToCSharpStringLiteral(value);
+
+    private static string ReadEmbeddedResource(string resourceName)
+    {
+        // Get the current assembly
+        Assembly assembly = Assembly.GetExecutingAssembly();
+
+        // Using stream to read the embedded file.
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        // Make sure the resource is available
+        if (stream == null) throw new FileNotFoundException("The specified embedded resource cannot be found.", resourceName);
+        using StreamReader reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+    public const string DefaultTemplateName = "(default)";
+    public static string GenerateCSharpCode(LogRequestModel logRequest, LogResponseModel logResponse, MappingCodeGeneratorConfigViewModel config)
+    { 
+        var options = new TemplateOptions();
+        options.ValueConverters.Add(o => o is JToken t?  t.ToString(): null );
+        options.Filters.AddFilter("escape_string_for_csharp", (input, arguments, templateContext) => new StringValue(EscapeStringForCSharp(input.ToStringValue()) ));
+        options.Filters.AddFilter("format_as_anonymous_object", (input, arguments, templateContext) =>
+        {
+            var ind = arguments.Values.FirstOrDefault() is NumberValue nv ? (int)nv.ToNumberValue() : 0;
+            
+            return input switch
+            {
+                StringValue dv => CSharpFormatter.TryToConvertJsonToAnonymousObject(dv.ToStringValue(), ind) switch
+                {
+                    { } s => new StringValue(s),
+                    _ => NilValue.Instance, 
+                },
+                _ => input
+            };
+        });
+        var parser = new FluidParser();
+        
+        var templateCode ="";
+        if (config.SelectedTemplate == DefaultTemplateName)
+        {
+            templateCode = ReadEmbeddedResource("WireMockInspector.CodeGenerators.default_template.liquid");
+        }
+        else if(string.IsNullOrWhiteSpace(config.SelectedTemplate) == false)
+        {
+            var templatePath = Path.Combine(PathHelper.GetTemplateDir(), config.SelectedTemplate);
+            if (File.Exists(templatePath))
+            {
+                templateCode = File.ReadAllText(templatePath);
+            }
+        }
+        
+        
+        if (parser.TryParse(templateCode, out var ftemplate, out var error))
+        {
+            var reader = new JsonDataSourceReader();
+
+            var data = reader.Read(JsonConvert.SerializeObject(
+                new
+                {
+                    request = new
+                    {
+                        ClientIP = logRequest.ClientIP,
+                        DateTime = logRequest.DateTime,
+                        Path = logRequest.Path,
+                        AbsolutePath = logRequest.AbsolutePath,
+                        Url = logRequest.Url,
+                        AbsoluteUrl = logRequest.AbsoluteUrl,
+                        ProxyUrl = logRequest.ProxyUrl,
+                        Query = logRequest.Query,
+                        Method = logRequest.Method,
+                        Headers = logRequest.Headers,
+                        Cookies = logRequest.Cookies,
+                        Body = logRequest.Body,
+                        BodyAsJson = logRequest.BodyAsJson?.ToString(),
+                        BodyAsBytes = logRequest.BodyAsBytes,
+                        BodyEncoding = logRequest.BodyEncoding,
+                        DetectedBodyType = logRequest.DetectedBodyType,
+                        DetectedBodyTypeFromContentType = logRequest.DetectedBodyTypeFromContentType
+                    },
+                    response = new
+                    {
+                        StatusCode = logResponse.StatusCode,
+                        Headers = logResponse.Headers,
+                        BodyDestination = logResponse.BodyDestination,
+                        Body = logResponse.Body,
+                        BodyAsJson = logResponse.BodyAsJson?.ToString(),
+                        BodyAsBytes = logResponse.BodyAsBytes,
+                        BodyAsFile = logResponse.BodyAsFile,
+                        BodyAsFileIsCached = logResponse.BodyAsFileIsCached,
+                        BodyOriginal = logResponse.BodyOriginal,
+                        BodyEncoding = logResponse.BodyEncoding,
+                        DetectedBodyType = logResponse.DetectedBodyType,
+                        DetectedBodyTypeFromContentType = logResponse.DetectedBodyTypeFromContentType,
+                        FaultType = logResponse.FaultType,
+                        FaultPercentage = logResponse.FaultPercentage
+                    },
+                    config
+                }));
+            var result = ftemplate.Render(new TemplateContext(new
+            {
+               data = data 
+            }, options));
+            return result;
+        }
+
+        return error;
+        
+    }
+}
