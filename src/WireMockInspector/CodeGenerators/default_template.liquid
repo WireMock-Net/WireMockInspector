@@ -1,0 +1,76 @@
+{%- assign request = data.request -%}
+{%- assign response = data.response -%}
+{%- assign config = data.config -%}
+
+var mappingBuilder = new MappingBuilder();
+mappingBuilder
+    .Given(Request.Create()
+{%- if config.IncludeMethod %}
+        .UsingMethod({{ request.Method | escape_string_for_csharp }})
+{%- endif -%}
+{%- if config.IncludePath %}
+        .WithPath({{ request.Path | escape_string_for_csharp }})
+{%- endif -%}
+{%- if config.IncludeClientIP and request.ClientIP %}
+        .WithClientIP({{ request.ClientIP | escape_string_for_csharp }})
+{%- endif -%}
+{%- if config.IncludeAbsolutePath and request.AbsolutePath %}
+        .WithAbsolutePath({{ request.AbsolutePath | escape_string_for_csharp }})
+{%- endif -%}
+{%- if config.IncludeUrl and request.Url %}
+        .WithUrl({{ request.Url | escape_string_for_csharp }})
+{%- endif -%}
+{%- if config.IncludeAbsoluteUrl and request.AbsoluteUrl %}
+        .WithAbsoluteUrl({{ request.AbsoluteUrl | escape_string_for_csharp }})
+{%- endif -%}
+{%- if config.IncludeProxyUrl and request.ProxyUrl %}
+        .WithProxyUrl({{ request.ProxyUrl | escape_string_for_csharp }})
+{%- endif -%}
+{%- if config.IncludeQuery and request.Query %}
+    {%- for item in request.Query %}
+        {%- assign query_key = item[0] %}
+        {%- assign query_values = item[1] | join: ", " | escape_string_for_csharp %}
+        .WithParam({{ query_key | escape_string_for_csharp }}, {{ query_values }})
+{%- endfor -%}
+{%- endif -%}
+{%- if config.IncludeHeaders and request.Headers %}
+    {%- for item in request.Headers %}
+        {%- assign header_key = item[0] %}
+        {%- assign header_values = item[1] | join: ", " | escape_string_for_csharp %}
+        .WithHeader({{ header_key | escape_string_for_csharp }}, {{ header_values }})
+{%- endfor -%}
+{%- endif -%}
+{%- if config.IncludeCookies and request.Cookies %}
+    {%- for item in request.Cookies %}
+        {%- assign cookie_key = item[0] %}
+        {%- assign cookie_value = item[1] | escape_string_for_csharp %}
+        .WithCookie({{ cookie_key | escape_string_for_csharp }}, {{ cookie_value }})
+{%- endfor -%}
+{%- endif -%}
+{%- if config.IncludeBody %}
+    {%- if request.Body %}
+        {%- assign body = request.Body | escape_string_for_csharp %}
+        .WithBody({{ body }})
+    {%- elsif request.BodyAsJson %}
+        .WithBodyAsJson({{ request.BodyAsJson | format_as_anonymous_object: 2 }})
+    {%- endif -%}
+{%- endif -%}
+    )
+    .RespondWith(Response.Create(){%- if config.IncludeStatusCode and response.StatusCode %}
+        .WithStatusCode({{ response.StatusCode }}){%- endif -%}
+{%- if config.IncludeHeadersResponse and response.Headers %}
+    {%- for item in response.Headers %}
+        {%- assign header_key = item[0] %}
+        {%- assign header_values = item[1] | join: ", " | escape_string_for_csharp %}
+        .WithHeader({{ header_key | escape_string_for_csharp }}, {{ header_values }})
+{%- endfor -%}
+{%- endif -%}
+{%- if config.IncludeBodyResponse %}
+    {%- if response.Body %}
+        {%- assign body = response.Body | escape_string_for_csharp %}
+        .WithBody({{ body }})
+     {%- elsif response.BodyAsJson %}
+        .WithBodyAsJson({{ response.BodyAsJson | format_as_anonymous_object: 2 }})
+    {%- endif -%}
+{%- endif %}
+    );

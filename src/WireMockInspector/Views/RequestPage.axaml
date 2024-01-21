@@ -52,34 +52,18 @@
             <SplitView Margin="0,5,0,0" DataContext="{Binding CodeGenerator}" OpenPaneLength="180" Name="CodeGeneratorOptions" DisplayMode="Inline">
               <SplitView.Pane>
                 <StackPanel  Margin="10,5"  DataContext="{Binding Config }">
-
-                  <CheckBox Content="DateTime" IsChecked="{Binding IncludeDateTime}" />
+                  <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}"></ComboBox>
                   <CheckBox Content="ClientIP" IsChecked="{Binding IncludeClientIP}" />
                   <CheckBox Content="Method" IsChecked="{Binding IncludeMethod}" />
                   <CheckBox Content="Path" IsChecked="{Binding IncludePath}" />
-
-                  <CheckBox Content="AbsolutePath" IsChecked="{Binding IncludeAbsolutePath}" />
-
                   <CheckBox Content="Url" IsChecked="{Binding IncludeUrl}" />
-
-                  <CheckBox Content="AbsoluteUrl" IsChecked="{Binding IncludeAbsoluteUrl}" />
-
-                  <CheckBox Content="ProxyUrl" IsChecked="{Binding IncludeProxyUrl}" />
-
                   <CheckBox Content="Query" IsChecked="{Binding IncludeQuery}" />
-
                   <CheckBox Content="Request Headers" IsChecked="{Binding IncludeHeaders}" />
-
                   <CheckBox Content="Cookies" IsChecked="{Binding IncludeCookies}" />
-
                   <CheckBox Content="Request Body" IsChecked="{Binding IncludeBody}" />
-
                   <CheckBox Content="StatusCode" IsChecked="{Binding IncludeStatusCode}" />
-
                   <CheckBox Content="Response Headers" IsChecked="{Binding IncludeHeadersResponse}" />
-
                   <CheckBox Content="Response Body" IsChecked="{Binding IncludeBodyResponse}" />
-                
                 </StackPanel>
               </SplitView.Pane>
               <views:CodeBlockViewer Code="{Binding OutputCode}" />
