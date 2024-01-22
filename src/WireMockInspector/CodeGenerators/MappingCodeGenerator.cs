@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Web;
 using Fluid;
 using Fluid.Values;
 using Newtonsoft.Json;
@@ -54,6 +57,24 @@ public static class MappingCodeGenerator
         return reader.ReadToEnd();
     }
     public const string DefaultTemplateName = "(default)";
+
+
+    private static JToken? TryParseJson(string? payload)
+    {
+        try
+        {
+            return payload switch
+            {
+                {  } => JToken.Parse(payload),
+                _ => null
+            };
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+    
     public static string GenerateCSharpCode(LogRequestModel logRequest, LogResponseModel logResponse, MappingCodeGeneratorConfigViewModel config)
     { 
         var options = new TemplateOptions();
@@ -95,47 +116,48 @@ public static class MappingCodeGenerator
             var reader = new JsonDataSourceReader();
 
             var data = reader.Read(JsonConvert.SerializeObject(
-                new
+            new
+            {
+                request = new
                 {
-                    request = new
-                    {
-                        ClientIP = logRequest.ClientIP,
-                        DateTime = logRequest.DateTime,
-                        Path = logRequest.Path,
-                        AbsolutePath = logRequest.AbsolutePath,
-                        Url = logRequest.Url,
-                        AbsoluteUrl = logRequest.AbsoluteUrl,
-                        ProxyUrl = logRequest.ProxyUrl,
-                        Query = logRequest.Query,
-                        Method = logRequest.Method,
-                        Headers = logRequest.Headers,
-                        Cookies = logRequest.Cookies,
-                        Body = logRequest.Body,
-                        BodyAsJson = logRequest.BodyAsJson?.ToString(),
-                        BodyAsBytes = logRequest.BodyAsBytes,
-                        BodyEncoding = logRequest.BodyEncoding,
-                        DetectedBodyType = logRequest.DetectedBodyType,
-                        DetectedBodyTypeFromContentType = logRequest.DetectedBodyTypeFromContentType
-                    },
-                    response = new
-                    {
-                        StatusCode = logResponse.StatusCode,
-                        Headers = logResponse.Headers,
-                        BodyDestination = logResponse.BodyDestination,
-                        Body = logResponse.Body,
-                        BodyAsJson = logResponse.BodyAsJson?.ToString(),
-                        BodyAsBytes = logResponse.BodyAsBytes,
-                        BodyAsFile = logResponse.BodyAsFile,
-                        BodyAsFileIsCached = logResponse.BodyAsFileIsCached,
-                        BodyOriginal = logResponse.BodyOriginal,
-                        BodyEncoding = logResponse.BodyEncoding,
-                        DetectedBodyType = logResponse.DetectedBodyType,
-                        DetectedBodyTypeFromContentType = logResponse.DetectedBodyTypeFromContentType,
-                        FaultType = logResponse.FaultType,
-                        FaultPercentage = logResponse.FaultPercentage
-                    },
-                    config
-                }));
+                    ClientIP = logRequest.ClientIP,
+                    DateTime = logRequest.DateTime,
+                    Path = logRequest.Path,
+                    FullPath = GetFullPath(logRequest),
+                    AbsolutePath = logRequest.AbsolutePath,
+                    Url = logRequest.Url,
+                    AbsoluteUrl = logRequest.AbsoluteUrl,
+                    ProxyUrl = logRequest.ProxyUrl,
+                    Query = logRequest.Query.OrNullWhenEmpty(),
+                    Method = logRequest.Method,
+                    Headers = logRequest.Headers.OrNullWhenEmpty(),
+                    Cookies = logRequest.Cookies.OrNullWhenEmpty(),
+                    Body = logRequest.Body,
+                    BodyAsJson = (TryParseJson(logRequest.Body) ?? logRequest.BodyAsJson)?.ToString(),
+                    BodyAsBytes = logRequest.BodyAsBytes,
+                    BodyEncoding = logRequest.BodyEncoding,
+                    DetectedBodyType = logRequest.DetectedBodyType,
+                    DetectedBodyTypeFromContentType = logRequest.DetectedBodyTypeFromContentType
+                },
+                response = new
+                {
+                    StatusCode = logResponse.StatusCode,
+                    Headers = logResponse.Headers.OrNullWhenEmpty(),
+                    BodyDestination = logResponse.BodyDestination,
+                    Body = logResponse.Body,
+                    BodyAsJson = (TryParseJson(logResponse.Body) ?? logResponse.BodyAsJson)?.ToString(),
+                    BodyAsBytes = logResponse.BodyAsBytes,
+                    BodyAsFile = logResponse.BodyAsFile,
+                    BodyAsFileIsCached = logResponse.BodyAsFileIsCached,
+                    BodyOriginal = logResponse.BodyOriginal,
+                    BodyEncoding = logResponse.BodyEncoding,
+                    DetectedBodyType = logResponse.DetectedBodyType,
+                    DetectedBodyTypeFromContentType = logResponse.DetectedBodyTypeFromContentType,
+                    FaultType = logResponse.FaultType,
+                    FaultPercentage = logResponse.FaultPercentage
+                },
+                config
+            }));
             var result = ftemplate.Render(new TemplateContext(new
             {
                data = data 
@@ -145,5 +167,23 @@ public static class MappingCodeGenerator
 
         return error;
         
+    }
+
+    private static string GetFullPath(LogRequestModel logRequest)
+    {
+        var query = HttpUtility.ParseQueryString("");
+        if (logRequest.Query is { } requestQuery)
+        {
+            foreach (var p in requestQuery)
+            {
+                query[p.Key] = p.Value.ToString();
+            }
+        }
+        var fullQuery = query.ToString();
+        if (string.IsNullOrWhiteSpace(fullQuery) == false)
+        {
+            return $"{logRequest.Path}?{fullQuery}";
+        }
+        return logRequest.Path;
     }
 }

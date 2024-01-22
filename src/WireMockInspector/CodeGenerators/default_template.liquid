@@ -48,11 +48,11 @@ mappingBuilder
 {%- endfor -%}
 {%- endif -%}
 {%- if config.IncludeBody %}
-    {%- if request.Body %}
-        {%- assign body = request.Body | escape_string_for_csharp %}
-        .WithBody({{ body }})
-    {%- elsif request.BodyAsJson %}
+    {%- if request.BodyAsJson %}
         .WithBodyAsJson({{ request.BodyAsJson | format_as_anonymous_object: 2 }})
+    {%- elsif request.Body %}
+        {%- assign body = request.Body | escape_string_for_csharp %}
+        .WithBody({{ body }})   
     {%- endif -%}
 {%- endif -%}
     )
@@ -66,11 +66,11 @@ mappingBuilder
 {%- endfor -%}
 {%- endif -%}
 {%- if config.IncludeBodyResponse %}
-    {%- if response.Body %}
+    {%- if response.BodyAsJson %}
+        .WithBodyAsJson({{ response.BodyAsJson | format_as_anonymous_object: 2 }})
+    {%- elsif response.Body %}
         {%- assign body = response.Body | escape_string_for_csharp %}
         .WithBody({{ body }})
-     {%- elsif response.BodyAsJson %}
-        .WithBodyAsJson({{ response.BodyAsJson | format_as_anonymous_object: 2 }})
     {%- endif -%}
 {%- endif %}
     );
