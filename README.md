@@ -57,3 +57,21 @@ dotnet tool update WireMockInspector --global --no-cache --ignore-failed-sources
 	```cs
 	WireMockServerExtensions.Inspect("http://localhost:9095");
 	```
+
+
+## Code generator
+
+WireMockInspect offers two methods for generating C# code to create mappings, which is particularly useful when used in conjunction with the [WireMock.NET proxy](https://github.com/WireMock-Net/WireMock.Net/wiki/Proxying) feature. The first method is accessible via the 'Code' tab for a selected mapping. Here, you can view the code provided by the endpoint http://localhost:9095/__admin/mappings/code/MAPPING_GUID:
+
+![](mapping_code_generator.gif)
+
+The second method involves using the 'Code' tab for a selected request.
+
+![](request_code_generator.png)
+
+This approach employs a completely different mechanism for code generation. You can customize the generated code by using a custom liquid template:
+
+1) Download the [default template](https://github.com/WireMock-Net/WireMockInspector/blob/main/src/WireMockInspector/CodeGenerators/default_template.liquid) and save it to your directory at `%LOCALAPPDATA%\WireMockInspector\templates\` .
+2) Rename the file appropiately to reflect its purpose
+3) Modify the template according to your requirements.
+3) In the WireMockInspector, under the 'Show Options' section on the 'Code' tab, select your customized template from combo box.
