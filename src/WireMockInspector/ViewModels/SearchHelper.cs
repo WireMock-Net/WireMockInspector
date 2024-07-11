@@ -1,4 +1,5 @@
-﻿using Lucene.Net.Analysis.Standard;
+﻿using System;
+using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Store;
@@ -29,13 +30,13 @@ public class SearchHelper
         foreach (var request in requests)
         {
             var doc = new Document
-            {
-                new StringField("_id", request.Raw.Guid.ToString(), Field.Store.YES),
-                new StringField("clientip", request.Raw.Request.ClientIP.ToLower(), Field.Store.NO),
-                new StringField("method", request.Method.ToLower(), Field.Store.NO),
-                new StringField("url", request.Raw.Request.Url.ToLower(), Field.Store.NO),
-                new StringField("path", request.Path.ToLower(), Field.Store.NO)
-            };
+        {
+            new StringField("_id", request.Raw.Guid.ToString(), Field.Store.YES),
+            new StringField("clientip", request.Raw.Request.ClientIP.ToLower(), Field.Store.NO),
+            new StringField("method", request.Method.ToLower(), Field.Store.NO),
+            new StringField("url", request.Raw.Request.Url.ToLower(), Field.Store.NO),
+            new StringField("path", request.Path.ToLower(), Field.Store.NO)
+        };
 
             if (request.Raw.Request.Headers is { } headers)
                 foreach (var (key, val) in headers)
@@ -60,13 +61,13 @@ public class SearchHelper
                     doc.Add(new StringField("param", key.ToLower(), Field.Store.NO));
                     foreach (var v in val)
                     {
-                        doc.Add(new StringField( ToFieldName("param",key), v.ToLower(), Field.Store.NO));
+                        doc.Add(new StringField(ToFieldName("param", key), v.ToLower(), Field.Store.NO));
                     }
                 }
 
             if (request.Raw.Request.Body is { } requestBody)
             {
-                doc.Add(new StringField("request.body", requestBody.ToLower(), Field.Store.NO));
+                doc.Add(new TextField("request.body", requestBody.ToLower(), Field.Store.NO));
             }
 
             doc.Add(new StringField("status", request.Raw.Response.StatusCode?.ToString()?.ToLower() ?? "", Field.Store.NO));
@@ -83,11 +84,11 @@ public class SearchHelper
 
             if (request.Raw.Response.Body is { } responseBody)
             {
-                doc.Add(new StringField("response.body", responseBody.ToLower(), Field.Store.NO));
+                doc.Add(new TextField("response.body", responseBody.ToLower(), Field.Store.NO));
             }
             else if (request.Raw.Response.BodyAsJson is { } responseBodyAsJson)
             {
-                doc.Add(new StringField("response.body", responseBodyAsJson.ToString()?.ToLower() ?? string.Empty, Field.Store.NO));
+                doc.Add(new TextField("response.body", responseBodyAsJson.ToString()?.ToLower() ?? string.Empty, Field.Store.NO));
             }
 
             indexWriter.AddDocument(doc);
