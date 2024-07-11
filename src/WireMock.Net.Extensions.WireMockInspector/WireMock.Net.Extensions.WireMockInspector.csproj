@@ -27,6 +27,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WireMock.Net.Abstractions" Version="1.5.24" />
+    <PackageReference Include="WireMock.Net.Abstractions" Version="1.5.60" />
   </ItemGroup>
 </Project>
