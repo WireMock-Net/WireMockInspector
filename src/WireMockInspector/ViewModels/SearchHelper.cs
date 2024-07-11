@@ -30,13 +30,13 @@ public class SearchHelper
         foreach (var request in requests)
         {
             var doc = new Document
-        {
-            new StringField("_id", request.Raw.Guid.ToString(), Field.Store.YES),
-            new StringField("clientip", request.Raw.Request.ClientIP.ToLower(), Field.Store.NO),
-            new StringField("method", request.Method.ToLower(), Field.Store.NO),
-            new StringField("url", request.Raw.Request.Url.ToLower(), Field.Store.NO),
-            new StringField("path", request.Path.ToLower(), Field.Store.NO)
-        };
+            {
+                new StringField("_id", request.Raw.Guid.ToString(), Field.Store.YES),
+                new StringField("clientip", request.Raw.Request.ClientIP.ToLower(), Field.Store.NO),
+                new StringField("method", request.Method.ToLower(), Field.Store.NO),
+                new StringField("url", request.Raw.Request.Url.ToLower(), Field.Store.NO),
+                new StringField("path", request.Path.ToLower(), Field.Store.NO)
+            };
 
             if (request.Raw.Request.Headers is { } headers)
                 foreach (var (key, val) in headers)
