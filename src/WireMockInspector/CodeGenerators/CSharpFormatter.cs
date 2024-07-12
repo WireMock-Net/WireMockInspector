@@ -185,6 +185,7 @@ internal static class CSharpFormatter
         }
         
         
+        
     }
 
     private static string FormatArray(JArray jArray, int ind)

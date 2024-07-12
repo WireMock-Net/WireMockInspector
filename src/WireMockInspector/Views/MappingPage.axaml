@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
              xmlns:views="clr-namespace:WireMockInspector.Views"
-             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MainWindowViewModel"
              x:Class="WireMockInspector.Views.MappingPage">
@@ -96,7 +95,6 @@
                             <SelectableTextBlock  Text="{Binding Description}" IsVisible="{Binding Description, Converter={x:Static ObjectConverters.IsNotNull}}" Foreground="white" VerticalAlignment="Center" Margin="5,5"></SelectableTextBlock>
                           </StackPanel>
                         </StackPanel>
-
                       </Border>
                     </DataTemplate>
                   </ListBox.ItemTemplate>
@@ -145,9 +143,9 @@
                     <Image Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedMapping.Scenario, Converter={x:Static  viewModels:GraphConverter.Instance}}"></Image>
                   </Grid>
                 </TabItem>
-                <TabItem Header="Code">
-                  <views:CodeBlockViewer Code="{Binding SelectedMapping.Code}" />
-                </TabItem>
+                  <TabItem Header="Code">
+                      <views:CodeBlockViewer Code="{Binding SelectedMapping.Code}" />
+                  </TabItem>
               </TabControl>
             </views:ContentWithSidebar.Sidebar>
           </views:ContentWithSidebar>

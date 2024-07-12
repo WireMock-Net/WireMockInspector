@@ -1,0 +1,115 @@
+﻿{%- assign request = data.request -%}
+{%- assign response = data.response -%}
+{%- assign config = data.config -%}
+{
+    "Priority": 0,
+    "Request": {
+        {%- if config.IncludePath %}
+        "Path": {
+            "Matchers": [
+                {
+                    "Name": "WildcardMatcher",
+                    "Pattern": {{ request.Path | escape_json }}
+                }
+            ]
+        },
+        {%- endif %}
+        {%- if config.IncludeMethod %}
+        "Methods": [
+            {{ request.Method | escape_json }}
+        ],
+        {%- endif %}
+        {%- if config.IncludeClientIP and request.ClientIP %}
+        "ClientIP": {{ request.ClientIP | escape_json }},
+        {%- endif %}
+        {%- if config.IncludeAbsolutePath and request.AbsolutePath %}
+        "AbsolutePath": {{ request.AbsolutePath | escape_json }},
+        {%- endif %}
+        {%- if config.IncludeUrl and request.Url %}
+        "Url": {{ request.Url | escape_json }},
+        {%- endif %}
+        {%- if config.IncludeAbsoluteUrl and request.AbsoluteUrl %}
+        "AbsoluteUrl": {{ request.AbsoluteUrl | escape_json }},
+        {%- endif %}
+        {%- if config.IncludeProxyUrl and request.ProxyUrl %}
+        "ProxyUrl": {{ request.ProxyUrl | escape_json }},
+        {%- endif %}
+       {%- if config.IncludeQuery and request.Query %}
+        "Params": [
+            {%- for item in request.Query %}
+                {%- assign query_key = item[0] %}
+                {%- assign query_values = item[1] %}
+                {
+                    "Name": {{ query_key | escape_json }},
+                    "Matchers": [
+                        {%- for value in query_values %}
+                        {
+                            "Name": "ExactMatcher",
+                            "Pattern": {{ value | escape_json }}
+                        }{%- if forloop.last == false %},{% endif %}
+                        {%- endfor %}
+                    ]
+                }{%- if forloop.last == false %},{% endif %}
+            {%- endfor %}
+        ],
+        {%- endif %}
+        {%- if config.IncludeHeaders and request.Headers %}
+        "Headers": [
+            {%- for item in request.Headers %}
+                {%- assign header_key = item[0] %}
+                {%- assign header_values = item[1] | join: "\", \"" | escape_json %}
+                {
+                    "Name": {{ header_key | escape_json }},
+                    "Matchers": [
+                        {
+                            "Name": "ExactMatcher",
+                            "Pattern": {{ header_values }}
+                        }
+                    ]
+                }{%- if forloop.last == false %},{% endif %}
+            {%- endfor %}
+        ],
+        {%- endif %}
+        
+        {%- if config.IncludeBody %}
+            {%- if request.BodyAsJson %}
+        "Body": {
+              "Matcher": {
+                "Name": "WildcardMatcher",
+                "Pattern": {{ request.BodyAsJson | escape_json }}
+              }
+          },
+            {%- elsif request.Body %}
+        "Body": {
+              "Matcher": {
+                "Name": "WildcardMatcher",
+                "Pattern": {{ request.Body | escape_json }}
+              }
+          },
+            {%- endif %}
+        {%- endif %}
+    },
+    "Response": {
+        {%- if config.IncludeStatusCode and response.StatusCode %}
+        "StatusCode": {{ response.StatusCode }},
+        {%- endif %}
+        "BodyDestination": "SameAsSource",
+        {%- if config.IncludeHeadersResponse and response.Headers %}
+        "Headers": {
+            {%- for item in response.Headers %}
+                {%- assign header_key = item[0] %}
+                {%- assign header_values = item[1] | join: ", " | escape_json %}
+                {{ header_key | escape_json }}: {{ header_values }}{%- if forloop.last == false %},{% endif %}
+            {%- endfor %}
+        },
+        {%- endif %}
+        {%- if config.IncludeBodyResponse %}
+            {%- if response.BodyAsJson %}
+        "BodyAsJson": {{ response.BodyAsJson | escape_json }},
+            {%- elsif response.Body %}
+                {%- assign body = response.Body | escape_json %}
+        "Body": {{ body }}
+            {%- endif %}
+        {%- endif %}
+    }
+}

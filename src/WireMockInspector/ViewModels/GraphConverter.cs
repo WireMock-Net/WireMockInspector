@@ -20,7 +20,7 @@ public class GraphConverter : IValueConverter
 {
     public static readonly GraphConverter Instance = new ();
 
-    class EndNode : Microsoft.Msagl.Drawing.Node
+    private class EndNode : Microsoft.Msagl.Drawing.Node
     {
         public EndNode(string id) : base(id)
         {
@@ -146,7 +146,7 @@ public class GraphConverter : IValueConverter
     }
 
 
-    static string PrintSvgAsString(Graph drawingGraph)
+    private static string PrintSvgAsString(Graph drawingGraph)
     {
         var ms = new MemoryStream();
         var writer = new StreamWriter(ms);
@@ -159,7 +159,7 @@ public class GraphConverter : IValueConverter
             .Replace("font-family=\"Arial\"", "font-family=\"Consolas\"");
     }
 
-    static void AssignLabelsDimensions(Graph drawingGraph, int maxTextLength)
+    private static void AssignLabelsDimensions(Graph drawingGraph, int maxTextLength)
     {
         // In general, the label dimensions should depend on the viewer
         foreach (var na in drawingGraph.Nodes)

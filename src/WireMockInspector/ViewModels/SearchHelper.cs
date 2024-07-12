@@ -12,7 +12,7 @@ namespace WireMockInspector.ViewModels;
 
 public class SearchHelper
 {
-    const LuceneVersion luceneVersion = LuceneVersion.LUCENE_48;
+    private const LuceneVersion luceneVersion = LuceneVersion.LUCENE_48;
 
     private readonly IndexWriter indexWriter;
     private readonly StandardAnalyzer standardAnalyzer;

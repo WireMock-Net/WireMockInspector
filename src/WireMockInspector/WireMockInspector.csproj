@@ -21,12 +21,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaXaml Remove="Models\**" />
+    <Compile Remove="Models\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <None Remove="Models\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Assets\request_search.md" />
+    <None Remove="CodeGenerators\Json\default_template.liquid" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,6 +82,7 @@
 
 
   <ItemGroup>
-    <EmbeddedResource Include="CodeGenerators\default_template.liquid" />
+    <EmbeddedResource Include="CodeGenerators\Code\default_template.liquid" />
+    <EmbeddedResource Include="CodeGenerators\Json\default_template.liquid" />
   </ItemGroup>
 </Project>
