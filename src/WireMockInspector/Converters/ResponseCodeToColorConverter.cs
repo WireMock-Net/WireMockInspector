@@ -3,7 +3,7 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 
-namespace WireMockInspector.ViewModels;
+namespace WireMockInspector.Converters;
 
 public class ResponseCodeToColorConverter : IValueConverter
 {
@@ -14,7 +14,7 @@ public class ResponseCodeToColorConverter : IValueConverter
         {
             var color = (statusCode / 100) switch
             {
-                1 => Color.FromRgb(173, 216, 230), 
+                1 => Color.FromRgb(173, 216, 230),
                 2 => Color.FromRgb(0, 150, 0),
                 3 => Color.FromRgb(255, 165, 0),
                 4 => Color.FromRgb(255, 0, 0),

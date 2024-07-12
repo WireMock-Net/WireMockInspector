@@ -3,12 +3,12 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 
-namespace WireMockInspector.ViewModels;
+namespace WireMockInspector.Converters;
 
 public class RequestMethodToColorConverter : IValueConverter
 {
     public static readonly RequestMethodToColorConverter Instance = new RequestMethodToColorConverter();
-    
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is string requestMethod)
