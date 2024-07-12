@@ -133,8 +133,6 @@ public class MatchDetailsViewModel : ViewModelBase
 
         });
 
-
-
         ReformatActualValue = ReactiveCommand.Create(() =>
         {
             if (this.ActualValue is MarkdownActualValue { Value: { } rawValue } markdown)
@@ -209,6 +207,11 @@ public record MarkdownCode(string lang, string rawValue, List<DiffPiece>? oldTex
     public bool IsJsonMarkdown()
     {
         return this.lang == "json";
+    }
+
+    public bool IsXmlMarkdown()
+    {
+        return this.lang == "xml";
     }
 };
 
