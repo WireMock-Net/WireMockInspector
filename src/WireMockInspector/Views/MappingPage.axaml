@@ -61,9 +61,9 @@
                             <PathIcon
                                 Margin="5,0, 15,0"
                                 VerticalAlignment="Center"
-                                Classes.perfect="{Binding HitType, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=PerfectMatch}"
-                                Classes.partial="{Binding HitType, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=OnlyPartialMatch}"
-                                Classes.unmatched="{Binding HitType, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=Unmatched}"
+                                Classes.perfect="{Binding HitType, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=PerfectMatch}"
+                                Classes.partial="{Binding HitType, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=OnlyPartialMatch}"
+                                Classes.unmatched="{Binding HitType, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=Unmatched}"
                                             ></PathIcon>
                             <TextBlock Grid.Column="1" Text="{Binding UpdatedOn, StringFormat={}{0:yyyy-MM-dd HH:mm:ss.fff}}" Foreground="white" VerticalAlignment="Center" ></TextBlock>
                             <SelectableTextBlock Grid.Column="2"  Text="{Binding Id}" Width="300" Foreground="white" VerticalAlignment="Center" Margin="10,0"></SelectableTextBlock>
@@ -141,7 +141,7 @@
                         <TextBlock Margin="5,0,0,0" VerticalAlignment="Center" FontWeight="Bold" Text="{Binding SelectedMapping.Scenario.ThisMappingTransition}" Foreground="Orange"></TextBlock>
                       </StackPanel>
                     </StackPanel>
-                    <Image Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedMapping.Scenario, Converter={x:Static  viewModels:GraphConverter.Instance}}"></Image>
+                    <Image Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedMapping.Scenario, Converter={x:Static  converters:GraphConverter.Instance}}"></Image>
                   </Grid>
                 </TabItem>
                   <TabItem Header="Code">

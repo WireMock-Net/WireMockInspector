@@ -5,6 +5,7 @@
              xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             xmlns:converters="clr-namespace:WireMockInspector.Converters"
              xmlns:views="clr-namespace:WireMockInspector.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="viewModels:MatchDetailsList"
@@ -47,9 +48,9 @@
                 <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
                   <Panel Margin="5,0,15,0" VerticalAlignment="Center">
                     <PathIcon
-                      Classes.matched="{Binding Matched, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=true}"
-                      Classes.unmatched="{Binding Matched, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=false}"
-                      Classes.inconclusive="{Binding Matched, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=null}"
+                      Classes.matched="{Binding Matched, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=true}"
+                      Classes.unmatched="{Binding Matched, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=false}"
+                      Classes.inconclusive="{Binding Matched, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=null}"
                                   ></PathIcon>
                   </Panel>
                   <TextBlock Text="{Binding RuleName}"></TextBlock>

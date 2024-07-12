@@ -6,6 +6,7 @@
         xmlns:views="clr-namespace:WireMockInspector.Views"
         xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
         xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+        xmlns:converters="clr-namespace:WireMockInspector.Converters"
         xmlns:system="clr-namespace:System;assembly=System.Runtime"
         mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
         x:Class="WireMockInspector.Views.MainWindow"
@@ -89,14 +90,14 @@
                     <NumericUpDown  Value="{Binding Value}" HorizontalContentAlignment="Right" ShowButtonSpinner="False"  VerticalAlignment="Center"  ParsingNumberStyle="Number" Increment="1"></NumericUpDown>
                   </DataTemplate>
                   <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="Enum">
-                    <ComboBox SelectedItem="{Binding Path=Value}" ItemsSource="{Binding Path=Type, Converter={x:Static viewModels:EnumItemsConverter.Instance}}" HorizontalAlignment="Stretch">
+                    <ComboBox SelectedItem="{Binding Path=Value}" ItemsSource="{Binding Path=Type, Converter={x:Static converters:EnumItemsConverter.Instance}}" HorizontalAlignment="Stretch">
                     </ComboBox>
                   </DataTemplate>
                   <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="object">
                     <TextBlock Text="{Binding Value}" VerticalAlignment="Center" Foreground="Red"></TextBlock>
                   </DataTemplate>
                   <DataTemplate DataType="viewModels:SettingsWrapper" x:Key="stringlist">
-                    <TextBox Text="{Binding Value, Converter={x:Static viewModels:StringListConverter.Instance}}" VerticalAlignment="Center" Foreground="Red"></TextBox>
+                    <TextBox Text="{Binding Value, Converter={x:Static converters:StringListConverter.Instance}}" VerticalAlignment="Center" Foreground="Red"></TextBox>
                   </DataTemplate>
                 </viewModels:SettingsWrapperTemplateSelector>
               </DataGrid.DataTemplates>

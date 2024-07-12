@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:views="clr-namespace:WireMockInspector.Views"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             xmlns:converters="clr-namespace:WireMockInspector.Converters"
              xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              x:DataType="viewModels:MainWindowViewModel"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -61,9 +62,9 @@
                             <PathIcon
                               Margin="5,0, 15,0"
                               VerticalAlignment="Center"
-                              Classes.notstarted="{Binding Status, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=NotStarted}"
-                              Classes.started="{Binding Status, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=Started}"
-                              Classes.finished="{Binding Status, Converter={x:Static viewModels:StringMatchConverter.Instance}, ConverterParameter=Finished}"
+                              Classes.notstarted="{Binding Status, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=NotStarted}"
+                              Classes.started="{Binding Status, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=Started}"
+                              Classes.finished="{Binding Status, Converter={x:Static converters:StringMatchConverter.Instance}, ConverterParameter=Finished}"
                             ></PathIcon>
                             <TextBlock Grid.Column="1"  Text="{Binding ScenarioName }" Foreground="white" VerticalAlignment="Center" Margin="10,0"></TextBlock>
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -88,7 +89,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Vertical" >
                     </StackPanel>
-                    <Image Margin="5" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedScenario, Converter={x:Static  viewModels:GraphConverter.Instance}}"></Image>
+                    <Image Margin="5" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Source="{Binding SelectedScenario, Converter={x:Static  converters:GraphConverter.Instance}}"></Image>
                   </Grid>
                 </TabItem>
                 <TabItem Header="Transitions" >
