@@ -50,7 +50,7 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.11" />
     <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.6" />
     <PackageReference Include="DiffPlex" Version="1.7.2" />
-    <PackageReference Include="Fluid.Core" Version="2.10.0" />
+    <PackageReference Include="Fluid.Core" Version="2.11.0" />
     <PackageReference Include="JsonDiffPatch.Net" Version="2.3.0" />
     <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
     <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
