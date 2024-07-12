@@ -437,7 +437,7 @@ namespace WireMockInspector.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(code =>
                 {
-                    SelectedMapping.Code = new MarkdownCode("cs", code);
+                    SelectedMapping.Code = new MarkdownCode("csharp", code);
                 });
 
             this.WhenAnyValue(x => x.SelectedRequest)

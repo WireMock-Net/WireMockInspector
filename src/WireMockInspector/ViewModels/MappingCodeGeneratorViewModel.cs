@@ -51,7 +51,7 @@ public class MappingCodeGeneratorViewModel : ViewModelBase
             .Select(x =>
             {
                 var code = MappingCodeGenerator.Generate(Request, Response, x);
-                return new MarkdownCode("cs", code);
+                return new MarkdownCode("csharp", code);
             }).ToProperty(this, x => x.OutputCode, out _outputCode);
     }
 }

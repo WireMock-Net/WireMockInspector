@@ -191,7 +191,6 @@ public record MarkdownCode(string lang, string rawValue, List<DiffPiece>? oldTex
     {
         if (IsJsonMarkdown())
         {
-
             try
             {
 
