@@ -27,10 +27,10 @@ public class CSharpSyntaxHighlighter : DocumentColorizingTransformer
     };
 
     // Colors
-    private static readonly SolidColorBrush KeywordBrush = new SolidColorBrush(Colors.Blue);
-    private static readonly SolidColorBrush MethodBrush = new SolidColorBrush(Colors.Yellow);
-    private static readonly SolidColorBrush StringLiteralBrush = new SolidColorBrush(Colors.LightBlue);
-    private static readonly SolidColorBrush ClassNameBrush = new SolidColorBrush(Colors.Teal);
+    private static readonly SolidColorBrush KeywordBrush = new SolidColorBrush(Color.Parse("#3988D6"));
+    private static readonly SolidColorBrush MethodBrush = new SolidColorBrush(Color.Parse("#ADD795"));
+    private static readonly SolidColorBrush StringLiteralBrush = new SolidColorBrush(Color.Parse("#D6936B"));
+    private static readonly SolidColorBrush ClassNameBrush = new SolidColorBrush(Color.Parse("#41C2B0"));
 
     protected override void ColorizeLine(DocumentLine line)
     {

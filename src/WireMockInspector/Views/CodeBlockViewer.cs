@@ -77,11 +77,13 @@ namespace WireMockInspector.Views
                     }
 
                     this.TextArea.TextView.LineTransformers.Add(new DiffLineBackgroundRenderer(md.oldTextLines));
-
-                    // Adding syntax highlighter for C#
                     if (md.lang == "csharp")
                     {
                         this.TextArea.TextView.LineTransformers.Add(new CSharpSyntaxHighlighter());
+                    }
+                    if (md.lang == "json")
+                    {
+                        this.TextArea.TextView.LineTransformers.Add(new JsonSyntaxHighlighter());
                     }
                 }
             }
