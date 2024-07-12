@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <None Remove="Assets\request_search.md" />
-    <None Remove="CodeGenerators\Json\default_template.liquid" />
   </ItemGroup>
 
   <ItemGroup>
