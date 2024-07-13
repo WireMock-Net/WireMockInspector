@@ -15,10 +15,10 @@ public class CSharpSyntaxHighlighter : DocumentColorizingTransformer
     };
 
     // Matches method calls like `.UsingMethod("....")`
-    private static readonly Regex MethodCallRegex = new Regex(@"\.(\w+)\(", RegexOptions.Compiled);
+    private static readonly Regex MethodCallRegex = new(@"\.(\w+)\(", RegexOptions.Compiled);
 
     // Matches string literals
-    private static readonly Regex StringLiteralRegex = new Regex(@"""(\\.|[^\\\""])*""", RegexOptions.Compiled);
+    private static readonly Regex StringLiteralRegex = new(@"""(\\.|[^\\\""])*""", RegexOptions.Compiled);
 
     // Custom list for additional class names to be highlighted
     private static readonly string[] CustomClasses = new string[]
@@ -27,10 +27,10 @@ public class CSharpSyntaxHighlighter : DocumentColorizingTransformer
     };
 
     // Colors
-    private static readonly SolidColorBrush KeywordBrush = new SolidColorBrush(Color.Parse("#3988D6"));
-    private static readonly SolidColorBrush MethodBrush = new SolidColorBrush(Color.Parse("#ADD795"));
-    private static readonly SolidColorBrush StringLiteralBrush = new SolidColorBrush(Color.Parse("#D6936B"));
-    private static readonly SolidColorBrush ClassNameBrush = new SolidColorBrush(Color.Parse("#41C2B0"));
+    private static readonly SolidColorBrush KeywordBrush = new(Color.Parse("#3988D6"));
+    private static readonly SolidColorBrush MethodBrush = new(Color.Parse("#ADD795"));
+    private static readonly SolidColorBrush StringLiteralBrush = new(Color.Parse("#D6936B"));
+    private static readonly SolidColorBrush ClassNameBrush = new(Color.Parse("#41C2B0"));
 
     protected override void ColorizeLine(DocumentLine line)
     {

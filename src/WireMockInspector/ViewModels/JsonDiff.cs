@@ -6,7 +6,7 @@ namespace WireMockInspector.ViewModels;
 
 public class AlphabeticallySortedJsonDiffFormatter 
 {
-    public static readonly AlphabeticallySortedJsonDiffFormatter Instance = new AlphabeticallySortedJsonDiffFormatter();
+    public static readonly AlphabeticallySortedJsonDiffFormatter Instance = new();
     
     public string Format(JToken? diff)
     {

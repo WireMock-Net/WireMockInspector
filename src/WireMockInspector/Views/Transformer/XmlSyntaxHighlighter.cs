@@ -8,12 +8,12 @@ namespace WireMockInspector.Views.Transformer
     public class XmlSyntaxHighlighter : DocumentColorizingTransformer
     {
         // Regex patterns for XML elements
-        private static readonly Regex TagRegex = new Regex(@"<(/?[\w\s]*)(.*?)>", RegexOptions.Compiled);
-        private static readonly Regex AttributeRegex = new Regex(@"\b(\w+)(\s*=\s*)(""[^""]*"")", RegexOptions.Compiled);
-        private static readonly Regex CommentRegex = new Regex(@"<!--(.*?)-->", RegexOptions.Compiled);
+        private static readonly Regex TagRegex = new(@"<(/?[\w\s-]+)(.*?)>", RegexOptions.Compiled);
+        private static readonly Regex AttributeRegex = new(@"\b(\w+)(\s*=\s*)(""[^""]*"")", RegexOptions.Compiled);
+        private static readonly Regex CommentRegex = new(@"<!--(.*?)-->", RegexOptions.Compiled);
 
         // Colors
-        private static readonly SolidColorBrush TagBrush = new SolidColorBrush(Color.Parse("#3988D6"));
+        private static readonly SolidColorBrush TagBrush = new SolidColorBrush(Color.Parse("#ADD795"));
         private static readonly SolidColorBrush AttributeNameBrush = new SolidColorBrush(Color.Parse("#41C2B0"));
         private static readonly SolidColorBrush AttributeValueBrush = new SolidColorBrush(Color.Parse("#D6936B"));
         private static readonly SolidColorBrush CommentBrush = new SolidColorBrush(Color.Parse("#ADD795"));
@@ -26,10 +26,13 @@ namespace WireMockInspector.Views.Transformer
             // Highlight XML tags
             foreach (Match match in TagRegex.Matches(lineText))
             {
+                // Highlight the tag name
                 ChangeLinePart(
                     lineStartOffset + match.Index,
-                    lineStartOffset + match.Index + match.Groups[1].Length + 1, // Tag name
+                    lineStartOffset + match.Index + match.Groups[1].Length + 2, // Tag name
                     element => element.TextRunProperties.SetForegroundBrush(TagBrush));
+
+                // Highlight attributes within the tag
                 if (match.Groups[2].Success)
                 {
                     HighlightAttributes(lineText, lineStartOffset + match.Index + match.Groups[1].Length + 1, match.Groups[2].Value);
@@ -46,7 +49,7 @@ namespace WireMockInspector.Views.Transformer
             }
         }
 
-        private void HighlightAttributes(string text, int offset, string attributesText)
+        private void HighlightAttributes(string lineText, int offset, string attributesText)
         {
             foreach (Match match in AttributeRegex.Matches(attributesText))
             {

@@ -7,7 +7,7 @@ namespace WireMockInspector.Converters;
 
 public class ResponseCodeToColorConverter : IValueConverter
 {
-    public static readonly ResponseCodeToColorConverter Instance = new ResponseCodeToColorConverter();
+    public static readonly ResponseCodeToColorConverter Instance = new();
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is string responseCode && int.TryParse(responseCode, out int statusCode))

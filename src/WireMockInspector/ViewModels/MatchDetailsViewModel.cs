@@ -9,6 +9,7 @@ using DiffPlex.DiffBuilder.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
+using WireMockInspector.CodeGenerators;
 
 namespace WireMockInspector.ViewModels;
 
@@ -49,7 +50,7 @@ internal class SimpleStringExpectations : ExpectationsModel
 
 public class MissingExpectations : ExpectationsModel
 {
-    public static readonly MissingExpectations Instance = new MissingExpectations();
+    public static readonly MissingExpectations Instance = new();
 }
 
 public class RawExpectations : ExpectationsModel
@@ -187,19 +188,20 @@ public record MarkdownCode(string lang, string rawValue, List<DiffPiece>? oldTex
 
     public MarkdownCode TryToReformat()
     {
-        if (IsJsonMarkdown())
+        try
         {
-            try
+            if (IsJsonMarkdown())
             {
-
                 var formatted = JToken.Parse(this.rawValue).ToString(Formatting.Indented);
-                return new MarkdownCode("json", formatted);
+                return new MarkdownCode(lang, formatted);
             }
-            catch (Exception e)
+            else if (IsXmlMarkdown())
             {
-
+                return new MarkdownCode(lang, XmlFormatter.PrettyPrintXml(rawValue));
             }
         }
+        catch (Exception)
+        {}
 
         return this;
     }

@@ -37,7 +37,7 @@ public class GraphConverter : IValueConverter
                 CurrentState: var currentState
             })
         {
-            Graph drawingGraph = new Graph("graph");
+            Graph drawingGraph = new("graph");
             var currentNodeColor = new Color(0, 120, 215);
             var nodeCache = new Dictionary<string, Node>();
             foreach (var n in transitions.SelectMany(x => new[] { x.From, x.To }).OfType<ScenarioNode>().DistinctBy(x => x.Id))
@@ -132,7 +132,7 @@ public class GraphConverter : IValueConverter
             var svg = PrintSvgAsString(drawingGraph);
 
             var al = new AvaloniaAssetLoader();
-            XmlDocument xml = new XmlDocument();
+            XmlDocument xml = new();
             xml.LoadXml(svg);
             return new Avalonia.Svg.SvgImage()
             {

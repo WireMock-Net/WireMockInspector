@@ -6,7 +6,7 @@ namespace WireMockInspector.Converters;
 
 public class HttpStatusCodeToDescriptionConverter : IValueConverter
 {
-    public static readonly HttpStatusCodeToDescriptionConverter Instance = new HttpStatusCodeToDescriptionConverter();
+    public static readonly HttpStatusCodeToDescriptionConverter Instance = new();
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         return TranslateStatusCode(value);

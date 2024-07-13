@@ -7,7 +7,7 @@ namespace WireMockInspector.Converters;
 
 public class RequestMethodToColorConverter : IValueConverter
 {
-    public static readonly RequestMethodToColorConverter Instance = new RequestMethodToColorConverter();
+    public static readonly RequestMethodToColorConverter Instance = new();
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
