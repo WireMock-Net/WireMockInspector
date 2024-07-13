@@ -45,7 +45,7 @@ public class CodeGenerator
         using var stream = assembly.GetManifestResourceStream(resourceName);
         // Make sure the resource is available
         if (stream == null) throw new FileNotFoundException("The specified embedded resource cannot be found.", resourceName);
-        using StreamReader reader = new StreamReader(stream);
+        using StreamReader reader = new(stream);
         return reader.ReadToEnd();
     }
     public const string DefaultTemplateName = "(default)";

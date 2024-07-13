@@ -12,19 +12,20 @@ using Microsoft.Msagl.Layout.Layered;
 using Microsoft.Msagl.Miscellaneous;
 using Svg;
 using Svg.Model;
+using WireMockInspector.ViewModels;
 using Color = Microsoft.Msagl.Drawing.Color;
 
-namespace WireMockInspector.ViewModels;
+namespace WireMockInspector.Converters;
 
 public class GraphConverter : IValueConverter
 {
-    public static readonly GraphConverter Instance = new ();
+    public static readonly GraphConverter Instance = new();
 
-    private class EndNode : Microsoft.Msagl.Drawing.Node
+    private class EndNode : Node
     {
         public EndNode(string id) : base(id)
         {
-            Attr.Shape = Microsoft.Msagl.Drawing.Shape.Circle;
+            Attr.Shape = Shape.Circle;
         }
     }
 
@@ -36,16 +37,16 @@ public class GraphConverter : IValueConverter
                 CurrentState: var currentState
             })
         {
-            Microsoft.Msagl.Drawing.Graph drawingGraph = new Microsoft.Msagl.Drawing.Graph("graph");
+            Graph drawingGraph = new("graph");
             var currentNodeColor = new Color(0, 120, 215);
             var nodeCache = new Dictionary<string, Node>();
-            foreach (var n in transitions.SelectMany(x => new[] {x.From, x.To}).OfType<ScenarioNode>().DistinctBy(x=>x.Id))
+            foreach (var n in transitions.SelectMany(x => new[] { x.From, x.To }).OfType<ScenarioNode>().DistinctBy(x => x.Id))
             {
-                
+
                 var node = n switch
                 {
                     ScenarioEdgeNode => new EndNode(n.Id),
-                    _ => new Microsoft.Msagl.Drawing.Node(n.Id)
+                    _ => new Node(n.Id)
                 };
 
                 nodeCache[n.Id] = node;
@@ -62,19 +63,19 @@ public class GraphConverter : IValueConverter
             foreach (var scenarioTransition in transitions)
             {
                 var edge = drawingGraph.AddEdge(scenarioTransition.From.Id, scenarioTransition.Id, scenarioTransition.To.Id);
-                
+
                 if (scenarioTransition.Hit)
                 {
                     if (nodeCache.TryGetValue(scenarioTransition.From.Id, out var fromNode))
                     {
-                        if (scenarioTransition.From is ScenarioEdgeNode {Current: true})
+                        if (scenarioTransition.From is ScenarioEdgeNode { Current: true })
                         {
                             fromNode.Attr.FillColor = currentNodeColor;
                         }
                         else
                         {
-                            fromNode.Attr.FillColor = visitedColor;    
-                        }   
+                            fromNode.Attr.FillColor = visitedColor;
+                        }
                     }
 
                     if (nodeCache.TryGetValue(scenarioTransition.To.Id, out var toNode) && toNode is EndNode)
@@ -82,7 +83,7 @@ public class GraphConverter : IValueConverter
                         toNode.Attr.FillColor = currentNodeColor;
                     }
                 }
-                
+
                 if (scenarioTransition.Id == currentTransition)
                 {
                     edge.Attr.Color = Color.Orange;
@@ -109,7 +110,7 @@ public class GraphConverter : IValueConverter
             {
                 if (n.Attr.Id == currentState)
                 {
-                    
+
                     n.Attr.FillColor = currentNodeColor;
                 }
 
@@ -131,7 +132,7 @@ public class GraphConverter : IValueConverter
             var svg = PrintSvgAsString(drawingGraph);
 
             var al = new AvaloniaAssetLoader();
-            XmlDocument xml = new XmlDocument();
+            XmlDocument xml = new();
             xml.LoadXml(svg);
             return new Avalonia.Svg.SvgImage()
             {

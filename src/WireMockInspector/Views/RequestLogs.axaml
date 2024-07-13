@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:WireMockInspector.ViewModels"
+             xmlns:converters="clr-namespace:WireMockInspector.Converters"
              xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:views="clr-namespace:WireMockInspector.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -15,11 +16,11 @@
           <Expander.Header>
             <DockPanel  HorizontalAlignment="Stretch">
               <TextBlock VerticalAlignment="Center" Margin="0,0,10,0" Text="{Binding Timestamp, StringFormat={}{0:s}}"></TextBlock>
-              <Border Width="100" BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding Method, Converter={x:Static viewModels:RequestMethodToColorConverter.Instance}}">
+              <Border Width="100" BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding Method, Converter={x:Static converters:RequestMethodToColorConverter.Instance}}">
                 <TextBlock TextAlignment="Center"  Text="{Binding Method}" Margin="5" Foreground="white"></TextBlock>
               </Border>
               <TextBlock Margin="10,0" VerticalAlignment="Center" Text="{Binding Path}"></TextBlock>
-              <Border HorizontalAlignment="Right" DockPanel.Dock="Right" ToolTip.Tip="{Binding StatusCode, Converter={x:Static viewModels:HttpStatusCodeToDescriptionConverter.Instance}}" Grid.Column="4"  BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding StatusCode, Converter={x:Static viewModels:ResponseCodeToColorConverter.Instance}}">
+              <Border HorizontalAlignment="Right" DockPanel.Dock="Right" ToolTip.Tip="{Binding StatusCode, Converter={x:Static converters:HttpStatusCodeToDescriptionConverter.Instance}}" Grid.Column="4"  BorderThickness="2" Margin="5,0" VerticalAlignment="Center" CornerRadius="5" BorderBrush="{Binding StatusCode, Converter={x:Static converters:ResponseCodeToColorConverter.Instance}}">
                 <TextBlock TextAlignment="Center"  Text="{Binding StatusCode}" Margin="5" Foreground="white"></TextBlock>
               </Border>
             </DockPanel>

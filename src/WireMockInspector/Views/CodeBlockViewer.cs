@@ -81,9 +81,13 @@ namespace WireMockInspector.Views
                     {
                         this.TextArea.TextView.LineTransformers.Add(new CSharpSyntaxHighlighter());
                     }
-                    if (md.lang == "json")
+                    else if (md.lang == "json")
                     {
                         this.TextArea.TextView.LineTransformers.Add(new JsonSyntaxHighlighter());
+                    }
+                    else if (md.lang == "xml")
+                    {
+                        this.TextArea.TextView.LineTransformers.Add(new XmlSyntaxHighlighter());
                     }
                 }
             }

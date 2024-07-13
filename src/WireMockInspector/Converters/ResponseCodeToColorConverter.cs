@@ -3,18 +3,18 @@ using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 
-namespace WireMockInspector.ViewModels;
+namespace WireMockInspector.Converters;
 
 public class ResponseCodeToColorConverter : IValueConverter
 {
-    public static readonly ResponseCodeToColorConverter Instance = new ResponseCodeToColorConverter();
+    public static readonly ResponseCodeToColorConverter Instance = new();
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is string responseCode && int.TryParse(responseCode, out int statusCode))
         {
             var color = (statusCode / 100) switch
             {
-                1 => Color.FromRgb(173, 216, 230), 
+                1 => Color.FromRgb(173, 216, 230),
                 2 => Color.FromRgb(0, 150, 0),
                 3 => Color.FromRgb(255, 165, 0),
                 4 => Color.FromRgb(255, 0, 0),

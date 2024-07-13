@@ -8,18 +8,18 @@ namespace WireMockInspector.Views.Transformer
     public class JsonSyntaxHighlighter : DocumentColorizingTransformer
     {
         // Regex patterns for different JSON components
-        private static readonly Regex PropertyNameRegex = new Regex(@"""[^""\\]*(?:\\.[^""\\]*)*""(?=\s*:)", RegexOptions.Compiled);
-        private static readonly Regex StringLiteralRegex = new Regex(@"""[^""\\]*(?:\\.[^""\\]*)*""(?=\s*[,}\]])(?!\s*:)", RegexOptions.Compiled);
-        private static readonly Regex NumberRegex = new Regex(@"\b\d+(\.\d+)?\b", RegexOptions.Compiled);
-        private static readonly Regex BooleanNullRegex = new Regex(@"\b(true|false|null)\b", RegexOptions.Compiled);
-        private static readonly Regex PunctuationRegex = new Regex(@"[\[\]{}:,]", RegexOptions.Compiled);
+        private static readonly Regex PropertyNameRegex = new(@"""[^""\\]*(?:\\.[^""\\]*)*""(?=\s*:)", RegexOptions.Compiled);
+        private static readonly Regex StringLiteralRegex = new(@"""[^""\\]*(?:\\.[^""\\]*)*""(?=\s*[,}\]])(?!\s*:)", RegexOptions.Compiled);
+        private static readonly Regex NumberRegex = new(@"\b\d+(\.\d+)?\b", RegexOptions.Compiled);
+        private static readonly Regex BooleanNullRegex = new(@"\b(true|false|null)\b", RegexOptions.Compiled);
+        private static readonly Regex PunctuationRegex = new(@"[\[\]{}:,]", RegexOptions.Compiled);
 
         // Colors using the same palette as CSharpSyntaxHighlighter
-        private static readonly SolidColorBrush PropertyNameBrush = new SolidColorBrush(Color.Parse("#ADD795"));
-        private static readonly SolidColorBrush StringLiteralBrush = new SolidColorBrush(Color.Parse("#D6936B"));
-        private static readonly SolidColorBrush NumberBrush = new SolidColorBrush(Color.Parse("#ADD795"));
-        private static readonly SolidColorBrush BooleanNullBrush = new SolidColorBrush(Color.Parse("#41C2B0"));
-        private static readonly SolidColorBrush PunctuationBrush = new SolidColorBrush(Color.Parse("#3988D6"));
+        private static readonly SolidColorBrush PropertyNameBrush = new(Color.Parse("#ADD795"));
+        private static readonly SolidColorBrush StringLiteralBrush = new(Color.Parse("#D6936B"));
+        private static readonly SolidColorBrush NumberBrush = new(Color.Parse("#ADD795"));
+        private static readonly SolidColorBrush BooleanNullBrush = new(Color.Parse("#41C2B0"));
+        private static readonly SolidColorBrush PunctuationBrush = new(Color.Parse("#3988D6"));
 
         protected override void ColorizeLine(DocumentLine line)
         {

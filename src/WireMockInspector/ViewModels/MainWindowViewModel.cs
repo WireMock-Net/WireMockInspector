@@ -21,6 +21,7 @@ using WireMock.Admin.Scenarios;
 using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
+using WireMockInspector.Converters;
 using ChangeType = DiffPlex.DiffBuilder.Model.ChangeType;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -104,7 +105,7 @@ namespace WireMockInspector.ViewModels
         public NewVersionInfoViewModel NewVersion => _newVersion.Value;
 
 
-        private GithubUpdater _githubUpdater = new GithubUpdater("cezarypiatek/WireMockInspector");
+        private GithubUpdater _githubUpdater = new("cezarypiatek/WireMockInspector");
         private WireMockInspectorSettingsManager _settingsManager = new();
 
         public ObservableCollection<SettingsWrapper> Settings { get; set; } = new();
@@ -966,6 +967,7 @@ namespace WireMockInspector.ViewModels
             {
                 "String" or "FormUrlEncoded" => WrapBodyInMarkdown(req.Raw.Request.Body?? string.Empty),
                 "Json" => new MarkdownCode("json", req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty),
+                "Xml" => new MarkdownCode("xml", req.Raw.Request.Body?.ToString() ?? string.Empty).TryToReformat(),
                 "Bytes" => new MarkdownCode("plaintext", req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty),
                 "File" => new MarkdownCode("plaintext","[FileContent]"),
                 _ => new MarkdownCode("plaintext", "")
@@ -1167,7 +1169,8 @@ namespace WireMockInspector.ViewModels
             return req.Raw.Response?.DetectedBodyType.ToString() switch
             {
                 "Json" => new MarkdownCode("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
-                "Bytes" => new MarkdownCode("plaintext", req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty),
+                "Xml" => new MarkdownCode("xml", req.Raw.Response.Body?.ToString() ?? string.Empty).TryToReformat(),
+                "Bytes" => new MarkdownCode("plaintext", req.Raw.Response.BodyAsBytes?.ToString() ?? string.Empty),
                 "File" => new MarkdownCode("plaintext",req.Raw.Response.BodyAsFile?.ToString() ?? string.Empty),
                 _ => WrapBodyInMarkdown( req.Raw.Response?.Body?? string.Empty),
             };
@@ -1183,7 +1186,7 @@ namespace WireMockInspector.ViewModels
             }
             if (cleanBody.StartsWith("<"))
             {
-                return new MarkdownCode("xml", bodyResponse);
+                return new MarkdownCode("xml", bodyResponse).TryToReformat();
 
             }
             return new MarkdownCode("plaintext", bodyResponse);
