@@ -20,7 +20,6 @@ namespace WireMockInspector.Views
 
         public MainWindow()
         {
-            
             InitializeComponent();
             this.WhenActivated((disposables) =>
             {

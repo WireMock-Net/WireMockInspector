@@ -4,13 +4,14 @@ using Avalonia.Controls.ApplicationLifetimes;
 using DynamicData.Binding;
 using ReactiveUI;
 using WireMock.Admin.Requests;
-using WireMockInspector.CodeGenerators.Code;
+using WireMockInspector.CodeGenerators.Json;
 
 namespace WireMockInspector.ViewModels;
 
-public class MappingCodeGeneratorViewModel : ViewModelBase
+public class MappingJsonGeneratorViewModel : ViewModelBase
 {
     public ICommand CopyActualValue { get; set; }
+
     private LogRequestModel _request;
     public LogRequestModel Request
     {
@@ -35,8 +36,8 @@ public class MappingCodeGeneratorViewModel : ViewModelBase
 
     private readonly ObservableAsPropertyHelper<MarkdownCode> _outputCode;
     public MarkdownCode OutputCode => _outputCode.Value;
-  
-    public MappingCodeGeneratorViewModel()
+
+    public MappingJsonGeneratorViewModel()
     {
         CopyActualValue = ReactiveCommand.Create(async () =>
         {
@@ -47,11 +48,11 @@ public class MappingCodeGeneratorViewModel : ViewModelBase
         });
 
         Config.WhenAnyPropertyChanged()
-            .Where(x=> x is not null)
+            .Where(x => x is not null)
             .Select(x =>
             {
-                var code = MappingCodeGenerator.Generate(Request, Response, x);
-                return new MarkdownCode("csharp", code);
+                var code = MappingJsonGenerator.Generate(Request, Response, x);
+                return new MarkdownCode("json", code);
             }).ToProperty(this, x => x.OutputCode, out _outputCode);
     }
 }

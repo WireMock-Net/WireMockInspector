@@ -21,7 +21,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
@@ -75,6 +74,7 @@
 
 
   <ItemGroup>
-    <EmbeddedResource Include="CodeGenerators\default_template.liquid" />
+    <EmbeddedResource Include="CodeGenerators\Code\default_template.liquid" />
+    <EmbeddedResource Include="CodeGenerators\Json\default_template.liquid" />
   </ItemGroup>
 </Project>

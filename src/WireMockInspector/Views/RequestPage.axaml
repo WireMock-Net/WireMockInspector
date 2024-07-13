@@ -45,32 +45,64 @@
           <TabItem Header="Response">
             <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
           </TabItem>
-          <TabItem Header="Code">
-          <ScrollViewer>
-            <StackPanel>
-            <ToggleButton IsChecked="{Binding #CodeGeneratorOptions.IsPaneOpen }">Show options</ToggleButton>
-            <SplitView Margin="0,5,0,0" DataContext="{Binding CodeGenerator}" OpenPaneLength="180" Name="CodeGeneratorOptions" DisplayMode="Inline">
-              <SplitView.Pane>
-                <StackPanel  Margin="10,5"  DataContext="{Binding Config }">
-                  <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}"></ComboBox>
-                  <CheckBox Content="ClientIP" IsChecked="{Binding IncludeClientIP}" />
-                  <CheckBox Content="Method" IsChecked="{Binding IncludeMethod}" />
-                  <CheckBox Content="Path" IsChecked="{Binding IncludePath}" />
-                  <CheckBox Content="Url" IsChecked="{Binding IncludeUrl}" />
-                  <CheckBox Content="Query" IsChecked="{Binding IncludeQuery}" />
-                  <CheckBox Content="Request Headers" IsChecked="{Binding IncludeHeaders}" />
-                  <CheckBox Content="Cookies" IsChecked="{Binding IncludeCookies}" />
-                  <CheckBox Content="Request Body" IsChecked="{Binding IncludeBody}" />
-                  <CheckBox Content="StatusCode" IsChecked="{Binding IncludeStatusCode}" />
-                  <CheckBox Content="Response Headers" IsChecked="{Binding IncludeHeadersResponse}" />
-                  <CheckBox Content="Response Body" IsChecked="{Binding IncludeBodyResponse}" />
-                </StackPanel>
-              </SplitView.Pane>
-              <views:CodeBlockViewer Code="{Binding OutputCode}" />
-            </SplitView>
-          </StackPanel>
-          </ScrollViewer>
-          </TabItem>
+            <TabItem Header="Code">
+                <ScrollViewer>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton IsChecked="{Binding #CodeGeneratorOptions.IsPaneOpen}" Margin="0,0,10,0">Show options</ToggleButton>
+                            <Button DataContext="{Binding CodeGenerator}" Command="{Binding CopyActualValue}">Copy</Button>
+                        </StackPanel>
+                        <SplitView Margin="0,5,0,0" DataContext="{Binding CodeGenerator}" OpenPaneLength="180" Name="CodeGeneratorOptions" DisplayMode="Inline">
+                            <SplitView.Pane>
+                                <StackPanel  Margin="10,5"  DataContext="{Binding Config }">
+                                    <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}"></ComboBox>
+                                    <CheckBox Content="ClientIP" IsChecked="{Binding IncludeClientIP}" />
+                                    <CheckBox Content="Method" IsChecked="{Binding IncludeMethod}" />
+                                    <CheckBox Content="Path" IsChecked="{Binding IncludePath}" />
+                                    <CheckBox Content="Url" IsChecked="{Binding IncludeUrl}" />
+                                    <CheckBox Content="Query" IsChecked="{Binding IncludeQuery}" />
+                                    <CheckBox Content="Request Headers" IsChecked="{Binding IncludeHeaders}" />
+                                    <CheckBox Content="Cookies" IsChecked="{Binding IncludeCookies}" />
+                                    <CheckBox Content="Request Body" IsChecked="{Binding IncludeBody}" />
+                                    <CheckBox Content="StatusCode" IsChecked="{Binding IncludeStatusCode}" />
+                                    <CheckBox Content="Response Headers" IsChecked="{Binding IncludeHeadersResponse}" />
+                                    <CheckBox Content="Response Body" IsChecked="{Binding IncludeBodyResponse}" />
+                                </StackPanel>
+                            </SplitView.Pane>
+                            <views:CodeBlockViewer Code="{Binding OutputCode}" />
+                        </SplitView>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Definition">
+                <ScrollViewer>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton IsChecked="{Binding #JsonGeneratorOptions.IsPaneOpen}" Margin="0,0,10,0">Show options</ToggleButton>
+                            <Button DataContext="{Binding JsonGenerator}" Command="{Binding CopyActualValue}">Copy</Button>
+                        </StackPanel>
+                        <SplitView Margin="0,5,0,0" DataContext="{Binding JsonGenerator}" OpenPaneLength="180" Name="JsonGeneratorOptions" DisplayMode="Inline">
+                            <SplitView.Pane>
+                                <StackPanel  Margin="10,5"  DataContext="{Binding Config }">
+                                    <ComboBox ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}"></ComboBox>
+                                    <CheckBox Content="ClientIP" IsChecked="{Binding IncludeClientIP}" />
+                                    <CheckBox Content="Method" IsChecked="{Binding IncludeMethod}" />
+                                    <CheckBox Content="Path" IsChecked="{Binding IncludePath}" />
+                                    <CheckBox Content="Url" IsChecked="{Binding IncludeUrl}" />
+                                    <CheckBox Content="Query" IsChecked="{Binding IncludeQuery}" />
+                                    <CheckBox Content="Request Headers" IsChecked="{Binding IncludeHeaders}" />
+                                    <CheckBox Content="Cookies" IsChecked="{Binding IncludeCookies}" />
+                                    <CheckBox Content="Request Body" IsChecked="{Binding IncludeBody}" />
+                                    <CheckBox Content="StatusCode" IsChecked="{Binding IncludeStatusCode}" />
+                                    <CheckBox Content="Response Headers" IsChecked="{Binding IncludeHeadersResponse}" />
+                                    <CheckBox Content="Response Body" IsChecked="{Binding IncludeBodyResponse}" />
+                                </StackPanel>
+                            </SplitView.Pane>
+                            <views:CodeBlockViewer Code="{Binding OutputCode}" />
+                        </SplitView>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
       </DockPanel>
     </views:ContentWithSidebar.Sidebar>

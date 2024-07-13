@@ -7,24 +7,21 @@ using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 using DiffPlex;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
 using DynamicData;
-using JsonDiffPatchDotNet;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ReactiveUI;
 using RestEase;
-using TextMateSharp.Internal.Grammars.Parser;
 using WireMock.Admin.Mappings;
 using WireMock.Admin.Requests;
 using WireMock.Admin.Scenarios;
 using WireMock.Admin.Settings;
 using WireMock.Client;
 using WireMock.Types;
-using WireMockInspector.CodeGenerators;
+using WireMockInspector.Converters;
 using ChangeType = DiffPlex.DiffBuilder.Model.ChangeType;
 using Formatting = Newtonsoft.Json.Formatting;
 
@@ -40,10 +37,6 @@ namespace WireMockInspector.ViewModels
         }
 
         private bool _dataLoaded;
-
-
-
-
         public string AdminUrl
         {
             get => _adminUrl;
@@ -112,7 +105,7 @@ namespace WireMockInspector.ViewModels
         public NewVersionInfoViewModel NewVersion => _newVersion.Value;
 
 
-        private GithubUpdater _githubUpdater = new GithubUpdater("cezarypiatek/WireMockInspector");
+        private GithubUpdater _githubUpdater = new("cezarypiatek/WireMockInspector");
         private WireMockInspectorSettingsManager _settingsManager = new();
 
         public ObservableCollection<SettingsWrapper> Settings { get; set; } = new();
@@ -445,7 +438,7 @@ namespace WireMockInspector.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(code =>
                 {
-                    SelectedMapping.Code = new MarkdownCode("cs", code);
+                    SelectedMapping.Code = new MarkdownCode("csharp", code);
                 });
 
             this.WhenAnyValue(x => x.SelectedRequest)
@@ -459,7 +452,7 @@ namespace WireMockInspector.ViewModels
                         Config = 
                         {
                          
-                            SelectedTemplate = MappingCodeGenerator.DefaultTemplateName,
+                            SelectedTemplate = CodeGenerators.CodeGenerator.DefaultTemplateName,
                             Templates = GetAvailableTemplates().ToList(),
                             IncludeClientIP = false,
                             IncludePath = true,
@@ -475,17 +468,39 @@ namespace WireMockInspector.ViewModels
                         }
                     };
                 }).ToProperty(this, x=>x.CodeGenerator, out _codeGenerator);
+
+            this.WhenAnyValue(x => x.SelectedRequest)
+                .Where(x=>x is not null)
+                .Select(model =>
+                {
+                    return new MappingJsonGeneratorViewModel()
+                    {
+                        Request = model.Raw.Request,
+                        Response = model.Raw.Response,
+                        Config = 
+                        {
+                            SelectedTemplate = CodeGenerators.CodeGenerator.DefaultTemplateName,
+                            Templates = GetAvailableTemplates().ToList(),
+                            IncludeClientIP = false,
+                            IncludePath = true,
+                            IncludeUrl = false,
+                            IncludeQuery = true,
+                            IncludeMethod = true,
+                            IncludeHeaders = true,
+                            IncludeCookies = true,
+                            IncludeBody = true,
+                            IncludeStatusCode = true,
+                            IncludeHeadersResponse = true,
+                            IncludeBodyResponse = true
+                        }
+                    };
+                }).ToProperty(this, x=>x.JsonGenerator, out _jsonGenerator);
         }
-
-
-      
         
         private IEnumerable<string> GetAvailableTemplates()
         {
             var templateDir = PathHelper.GetTemplateDir();
-
-            yield return MappingCodeGenerator.DefaultTemplateName;
-            
+            yield return CodeGenerators.CodeGenerator.DefaultTemplateName;
             foreach (var file  in Directory.GetFiles(templateDir, "*.liquid"))
             {
                 yield return Path.GetFileName(file);
@@ -494,6 +509,10 @@ namespace WireMockInspector.ViewModels
 
         private readonly ObservableAsPropertyHelper<MappingCodeGeneratorViewModel> _codeGenerator;
         public  MappingCodeGeneratorViewModel CodeGenerator => _codeGenerator.Value;
+
+
+        private readonly ObservableAsPropertyHelper<MappingJsonGeneratorViewModel> _jsonGenerator;
+        public  MappingJsonGeneratorViewModel JsonGenerator => _jsonGenerator.Value;
 
         private static List<RequestLogEntry> MapToLogEntries(IEnumerable<LogEntryModel> logs)
         {
@@ -948,6 +967,7 @@ namespace WireMockInspector.ViewModels
             {
                 "String" or "FormUrlEncoded" => WrapBodyInMarkdown(req.Raw.Request.Body?? string.Empty),
                 "Json" => new MarkdownCode("json", req.Raw.Request.BodyAsJson?.ToString() ?? string.Empty),
+                "Xml" => new MarkdownCode("xml", req.Raw.Request.Body?.ToString() ?? string.Empty).TryToReformat(),
                 "Bytes" => new MarkdownCode("plaintext", req.Raw.Request.BodyAsBytes?.ToString()?? string.Empty),
                 "File" => new MarkdownCode("plaintext","[FileContent]"),
                 _ => new MarkdownCode("plaintext", "")
@@ -1149,7 +1169,8 @@ namespace WireMockInspector.ViewModels
             return req.Raw.Response?.DetectedBodyType.ToString() switch
             {
                 "Json" => new MarkdownCode("json",req.Raw.Response.BodyAsJson?.ToString() ?? string.Empty),
-                "Bytes" => new MarkdownCode("plaintext", req.Raw.Response.BodyAsBytes?.ToString()?? string.Empty),
+                "Xml" => new MarkdownCode("xml", req.Raw.Response.Body?.ToString() ?? string.Empty).TryToReformat(),
+                "Bytes" => new MarkdownCode("plaintext", req.Raw.Response.BodyAsBytes?.ToString() ?? string.Empty),
                 "File" => new MarkdownCode("plaintext",req.Raw.Response.BodyAsFile?.ToString() ?? string.Empty),
                 _ => WrapBodyInMarkdown( req.Raw.Response?.Body?? string.Empty),
             };
@@ -1165,7 +1186,7 @@ namespace WireMockInspector.ViewModels
             }
             if (cleanBody.StartsWith("<"))
             {
-                return new MarkdownCode("xml", bodyResponse);
+                return new MarkdownCode("xml", bodyResponse).TryToReformat();
 
             }
             return new MarkdownCode("plaintext", bodyResponse);
