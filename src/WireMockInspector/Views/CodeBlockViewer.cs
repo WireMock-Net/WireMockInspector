@@ -49,28 +49,18 @@ public class CodeBlockViewer : TextEditor
     }
 
 
-    private  void SetMarkdown(ViewModels.MarkdownCode md)
+    private void SetMarkdown(ViewModels.MarkdownCode md)
     {
         if (md is not null)
         {
-            if (this.Document is not null)
-            {
-                this.Document.Text = md.rawValue;
-            }
-            else
-            {
-                this.Document = new TextDocument(md.rawValue);
-            }
+            
             if (_currentLang != md.lang)
             {
                 _currentLang = md.lang;
-                CodeBlockViewer _textEditor = this;
 
                 if (_registryOptions.GetLanguageByExtension("." + md.lang) is { } languageByExtension)
                 {
                     _textMateInstallation.SetGrammar(_registryOptions.GetScopeByLanguageId(languageByExtension.Id));
-                   
-
                 }
 
 
@@ -80,6 +70,16 @@ public class CodeBlockViewer : TextEditor
                 }
                 this.TextArea.TextView.LineTransformers.Add(new DiffLineBackgroundRenderer(md.oldTextLines));
             }
+            
+            if (this.Document is not null || _currentLang != md.lang)
+            {
+                this.Document.Text = md.rawValue;
+            }
+            else
+            {
+                this.Document = new TextDocument(md.rawValue);
+            }
+           
         }
         else
         {
