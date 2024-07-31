@@ -459,7 +459,7 @@ namespace WireMockInspector.ViewModels
                         Config = 
                         {
                          
-                            SelectedTemplate = MappingCodeGenerator.DefaultTemplateName,
+                            SelectedTemplate = MappingCodeGenerator.DefaultTemplateForCSharp,
                             Templates = GetAvailableTemplates().ToList(),
                             IncludeClientIP = false,
                             IncludePath = true,
@@ -476,15 +476,13 @@ namespace WireMockInspector.ViewModels
                     };
                 }).ToProperty(this, x=>x.CodeGenerator, out _codeGenerator);
         }
-
-
-      
         
         private IEnumerable<string> GetAvailableTemplates()
         {
             var templateDir = PathHelper.GetTemplateDir();
 
-            yield return MappingCodeGenerator.DefaultTemplateName;
+            yield return MappingCodeGenerator.DefaultTemplateForCSharp;
+            yield return MappingCodeGenerator.DefaultTemplateForJSON;
             
             foreach (var file  in Directory.GetFiles(templateDir, "*.liquid"))
             {

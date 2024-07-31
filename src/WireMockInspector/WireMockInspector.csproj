@@ -76,5 +76,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="CodeGenerators\default_template.liquid" />
+    <EmbeddedResource Include="CodeGenerators\json_definition_template.liquid" />
   </ItemGroup>
 </Project>

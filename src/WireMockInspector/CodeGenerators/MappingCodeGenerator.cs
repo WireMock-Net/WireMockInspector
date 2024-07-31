@@ -56,7 +56,8 @@ public static class MappingCodeGenerator
         using StreamReader reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }
-    public const string DefaultTemplateName = "(default)";
+    public const string DefaultTemplateForCSharp = "C# (default)";
+    public const string DefaultTemplateForJSON = "JSON (default)";
 
 
     private static JToken? TryParseJson(string? payload)
@@ -75,10 +76,21 @@ public static class MappingCodeGenerator
         }
     }
     
-    public static string GenerateCSharpCode(LogRequestModel logRequest, LogResponseModel logResponse, MappingCodeGeneratorConfigViewModel config)
+    private static string EscapeStringForJson(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        return JsonConvert.SerializeObject(value);
+    }
+    
+    public static MarkdownCode GenerateCode(LogRequestModel logRequest, LogResponseModel logResponse, MappingCodeGeneratorConfigViewModel config)
     { 
         var options = new TemplateOptions();
         options.ValueConverters.Add(o => o is JToken t?  t.ToString(): null );
+        options.Filters.AddFilter("escape_json", (input, arguments, templateContext) => new StringValue(EscapeStringForJson(input.ToStringValue())));
         options.Filters.AddFilter("escape_string_for_csharp", (input, arguments, templateContext) => new StringValue(EscapeStringForCSharp(input.ToStringValue()) ));
         options.Filters.AddFilter("format_as_anonymous_object", (input, arguments, templateContext) =>
         {
@@ -94,23 +106,9 @@ public static class MappingCodeGenerator
                 _ => input
             };
         });
+
         var parser = new FluidParser();
-        
-        var templateCode ="";
-        if (config.SelectedTemplate == DefaultTemplateName)
-        {
-            templateCode = ReadEmbeddedResource("WireMockInspector.CodeGenerators.default_template.liquid");
-        }
-        else if(string.IsNullOrWhiteSpace(config.SelectedTemplate) == false)
-        {
-            var templatePath = Path.Combine(PathHelper.GetTemplateDir(), config.SelectedTemplate);
-            if (File.Exists(templatePath))
-            {
-                templateCode = File.ReadAllText(templatePath);
-            }
-        }
-        
-        
+        var (lang, templateCode) = GetTemplateCode(config);
         if (parser.TryParse(templateCode, out var ftemplate, out var error))
         {
             var reader = new JsonDataSourceReader();
@@ -162,11 +160,35 @@ public static class MappingCodeGenerator
             {
                data = data 
             }, options));
-            return result;
+            return new MarkdownCode(lang, result);
         }
 
-        return error;
+        return new MarkdownCode("text", $"Error: {error}");
         
+    }
+
+    private static (string lang, string template) GetTemplateCode(MappingCodeGeneratorConfigViewModel config)
+    {
+        if (config.SelectedTemplate == DefaultTemplateForCSharp)
+        {
+            return ("cs", ReadEmbeddedResource("WireMockInspector.CodeGenerators.default_template.liquid"));
+        }
+        
+        if (config.SelectedTemplate == DefaultTemplateForJSON)
+        {
+            return ("json", ReadEmbeddedResource("WireMockInspector.CodeGenerators.json_definition_template.liquid"));
+        }
+        
+        if(string.IsNullOrWhiteSpace(config.SelectedTemplate) == false)
+        {
+            var templatePath = Path.Combine(PathHelper.GetTemplateDir(), config.SelectedTemplate);
+            if (File.Exists(templatePath))
+            {
+                return ("cs", File.ReadAllText(templatePath));
+            }
+        }
+
+        return ("cs",string.Empty);
     }
 
     private static string GetFullPath(LogRequestModel logRequest)

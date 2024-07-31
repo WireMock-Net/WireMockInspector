@@ -39,10 +39,7 @@ public class MappingCodeGeneratorViewModel : ViewModelBase
    
         Config.WhenAnyPropertyChanged()
             .Where(x=> x is not null)
-            .Select(x =>
-            {
-                var code = MappingCodeGenerator.GenerateCSharpCode(Request, Response, x);
-                return new MarkdownCode("cs", code);
-            }).ToProperty(this, x => x.OutputCode, out _outputCode);
+            .Select(x => MappingCodeGenerator.GenerateCode(Request, Response, x))
+            .ToProperty(this, x => x.OutputCode, out _outputCode);
     }
 }
