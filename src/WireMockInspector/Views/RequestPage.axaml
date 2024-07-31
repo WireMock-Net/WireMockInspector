@@ -46,9 +46,9 @@
             <views:RequestDetails DataContext="{Binding Path=RelatedMapping.ResponseParts }" />
           </TabItem>
           <TabItem Header="Code">
-          <ScrollViewer>
-            <StackPanel>
-            <ToggleButton IsChecked="{Binding #CodeGeneratorOptions.IsPaneOpen }">Show options</ToggleButton>
+         
+          <DockPanel>
+            <ToggleButton DockPanel.Dock="Top" IsChecked="{Binding #CodeGeneratorOptions.IsPaneOpen }">Show options</ToggleButton>
             <SplitView Margin="0,5,0,0" DataContext="{Binding CodeGenerator}" OpenPaneLength="180" Name="CodeGeneratorOptions" DisplayMode="Inline">
               <SplitView.Pane>
                 <StackPanel  Margin="10,5"  DataContext="{Binding Config }">
@@ -68,8 +68,8 @@
               </SplitView.Pane>
               <views:CodeBlockViewer Code="{Binding OutputCode}" />
             </SplitView>
-          </StackPanel>
-          </ScrollViewer>
+          </DockPanel>
+       
           </TabItem>
         </TabControl>
       </DockPanel>
