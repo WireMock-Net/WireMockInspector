@@ -9,7 +9,7 @@ WireMockInspect is a cross-platform UI app that facilitates [WireMock](https://w
 WireMockInspector is distributed as `dotnet tool` so it can be easily installed on `Windows/MacOS/Linux` with the following command
 
 ```
-dotnet tool install WireMockInspector --global --no-cache --ignore-failed-sources
+dotnet tool install WireMockInspector --global --no-cache --ignore-failed-sources --add-source https://api.nuget.org/v3/index.json
 ```
 
 After installation, you can easily run the app by executing `wiremockinspector` command.
@@ -17,7 +17,7 @@ After installation, you can easily run the app by executing `wiremockinspector` 
 ## How to update
 
 ```
-dotnet tool update WireMockInspector --global --no-cache --ignore-failed-sources
+dotnet tool update WireMockInspector --global --no-cache --ignore-failed-sources --add-source https://api.nuget.org/v3/index.json
 ```
 
 ## Features
