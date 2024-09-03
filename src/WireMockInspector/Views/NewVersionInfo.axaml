@@ -7,7 +7,7 @@
              x:Class="WireMockInspector.Views.NewVersionInfo"
              x:DataType="viewModels:NewVersionInfoViewModel"
              >
-    <StackPanel Height="75"  IsVisible="{Binding IsVisible}" Margin="0,0,0,20">
+    <StackPanel Name="StackPanel" Height="75" IsVisible="{Binding IsVisible}" Margin="0,0,0,20">
         <Border BorderBrush="#FF0000" BorderThickness="1"  >
             <StackPanel  Orientation="Horizontal" Margin="20" VerticalAlignment="Center">
                 <TextBlock VerticalAlignment="Center" Text="{Binding Version, StringFormat='{} A newer version {0} is available'}"></TextBlock>

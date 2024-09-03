@@ -7,6 +7,8 @@ namespace WireMockInspector.Views
         public NewVersionInfo()
         {
             InitializeComponent();
+            
+            this.StackPanel.IsVisible = false;
         }
     }
 }
