@@ -657,7 +657,7 @@ namespace WireMockInspector.ViewModels
                         var v = x.ToObject<MatchJOBject>();
                         return new MatchInfo
                         {
-                            Matched = v.Score > 0,
+                            Matched = v.Score == 1.0,
                             RuleName = v.Name
                         };
                     }).ToList() ?? new List<MatchInfo>()
