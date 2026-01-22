@@ -58,7 +58,11 @@ namespace WireMockInspector.ViewModels
         private WatchConnectionStatus _watchStatus = WatchConnectionStatus.Disconnected;
 
         private IDisposable? _watchSubscription;
-        private readonly TimeSpan _watchPollingInterval = TimeSpan.FromMilliseconds(200);
+        private readonly TimeSpan _watchPollingInterval = TimeSpan.FromMilliseconds(1000);
+        private string? _lastSettingsHash;
+        private int _lastRequestCount;
+        private int _lastMappingCount;
+        private int _lastScenarioCount;
 
         public string AdminUrl
         {
@@ -406,6 +410,12 @@ namespace WireMockInspector.ViewModels
                 ScenarioTermFilter = string.Empty;
                 DataLoaded = false;
                 _requestSearcher = new SearchHelper();
+                
+                // Reset counters
+                _lastRequestCount = 0;
+                _lastMappingCount = 0;
+                _lastScenarioCount = 0;
+                _lastSettingsHash = null;
             });
         }
         
@@ -1189,6 +1199,12 @@ namespace WireMockInspector.ViewModels
             Mappings.AddRange(mappingVms);
             MappingSearchTerm = string.Empty;
             DataLoaded = true;
+            
+            // Initialize counters for future comparisons
+            _lastRequestCount = requests.Count;
+            _lastMappingCount = mappings.Count;
+            _lastScenarioCount = scenarios.Count;
+            _lastSettingsHash = ComputeSettingsHash(settings);
         }
 
         private (Dictionary<string, Scenario> enrichedScenarios, IEnumerable<MappingViewModel> mappings) CalculateEnrichedScenariosAndMappings(
@@ -1316,37 +1332,59 @@ namespace WireMockInspector.ViewModels
                 Settings.AddRange(MapToSettingsWrappers(serverSettings));
             }
 
-            // Merge Requests (additive only)
-            var existingRequestGuids = new HashSet<Guid>(Requests.Select(r => r.Raw.Guid));
-            var newRequests = requests
-                .Where(r => !existingRequestGuids.Contains(r.Guid))
-                .Select(MapRequestData)
-                .OfType<RequestViewModel>()
-                .OrderByDescending(x => x.Timestamp)
-                .ToList();
+            // Check if any data actually changed to avoid expensive recalculations
+            var hasNewRequests = requests.Count != _lastRequestCount;
+            var hasNewMappings = mappings.Count != _lastMappingCount;
+            var hasNewScenarios = scenarios.Count != _lastScenarioCount;
 
-            if (newRequests.Any())
+            // Early exit if nothing changed
+            if (!hasNewRequests && !hasNewMappings && !hasNewScenarios)
             {
-                foreach (var req in newRequests)
-                {
-                    Requests.Insert(0, req);
-                }
-                _requestSearcher.Load(Requests.ToList());
+                return;
             }
 
-            var (enrichedScenarios, newMappingVms) = CalculateEnrichedScenariosAndMappings(requests, mappings, scenarios);
+            _lastRequestCount = requests.Count;
+            _lastMappingCount = mappings.Count;
+            _lastScenarioCount = scenarios.Count;
 
-            // Merge Mappings (add new, update existing, never remove)
-            MergeMappings(newMappingVms.ToList(), requests);
+            // Merge Requests (additive only)
+            if (hasNewRequests)
+            {
+                var existingRequestGuids = new HashSet<Guid>(Requests.Select(r => r.Raw.Guid));
+                var newRequests = requests
+                    .Where(r => !existingRequestGuids.Contains(r.Guid))
+                    .Select(MapRequestData)
+                    .OfType<RequestViewModel>()
+                    .OrderByDescending(x => x.Timestamp)
+                    .ToList();
 
-            // Merge Scenarios (add new, update existing, never remove)
-            MergeScenarios(enrichedScenarios);
+                if (newRequests.Any())
+                {
+                    foreach (var req in newRequests)
+                    {
+                        Requests.Insert(0, req);
+                    }
+                    _requestSearcher.Load(Requests.ToList());
+                }
+            }
+
+            // Only recalculate expensive enriched data if mappings or scenarios changed
+            if (hasNewMappings || hasNewScenarios || hasNewRequests)
+            {
+                var (enrichedScenarios, newMappingVms) = CalculateEnrichedScenariosAndMappings(requests, mappings, scenarios);
+
+                // Merge Mappings (add new, update existing, never remove)
+                MergeMappings(newMappingVms.ToList(), requests);
+
+                // Merge Scenarios (add new, update existing, never remove)
+                MergeScenarios(enrichedScenarios);
+            }
         }
 
         private void MergeMappings(List<MappingViewModel> newMappings, IList<LogEntryModel> allRequests)
         {
             var existingMappingsDict = Mappings.ToDictionary(m => m.Id, m => m);
-            var needsReorder = false;
+            var hasChanges = false;
 
             foreach (var newMapping in newMappings)
             {
@@ -1368,23 +1406,30 @@ namespace WireMockInspector.ViewModels
                         existingMapping.Scenario = newMapping.Scenario;
                         existingMapping.PerfectMatches = newMapping.PerfectMatches;
                         existingMapping.PartialMatches = newMapping.PartialMatches;
-                        needsReorder = true;
+                        hasChanges = true;
                     }
                 }
                 else
                 {
                     // Add new mapping
                     Mappings.Add(newMapping);
-                    needsReorder = true;
+                    hasChanges = true;
                 }
             }
 
-            // Re-sort if needed
-            if (needsReorder)
+            // Re-sort if needed using a more efficient approach
+            if (hasChanges)
             {
-                var sorted = Mappings.OrderByDescending(x => x.UpdatedOn).ToList();
-                Mappings.Clear();
-                Mappings.AddRange(sorted);
+                // Use an in-place sort by moving items rather than clearing and re-adding
+                var sortedList = Mappings.OrderByDescending(x => x.UpdatedOn).ToList();
+                for (int i = 0; i < sortedList.Count; i++)
+                {
+                    var currentIndex = Mappings.IndexOf(sortedList[i]);
+                    if (currentIndex != i)
+                    {
+                        Mappings.Move(currentIndex, i);
+                    }
+                }
             }
         }
 
@@ -1436,14 +1481,26 @@ namespace WireMockInspector.ViewModels
 
             try
             {
-                var jsonA = JsonConvert.SerializeObject(a);
-                var jsonB = JsonConvert.SerializeObject(b);
-                return jsonA == jsonB;
+                var hashB = ComputeSettingsHash(b);
+                if (_lastSettingsHash != null && _lastSettingsHash == hashB)
+                {
+                    return true;
+                }
+                
+                _lastSettingsHash = hashB;
+                return false;
             }
             catch
             {
                 return false;
             }
+        }
+
+        private string ComputeSettingsHash(SettingsModel settings)
+        {
+            // Only serialize once and cache the hash
+            var json = JsonConvert.SerializeObject(settings);
+            return json.GetHashCode().ToString();
         }
 
         private void StartWatching()
