@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -41,8 +41,24 @@ namespace WireMockInspector.ViewModels
 
         private bool _dataLoaded;
 
+        public bool IsWatching
+        {
+            get => _isWatching;
+            set => this.RaiseAndSetIfChanged(ref _isWatching, value);
+        }
 
+        private bool _isWatching;
 
+        public WatchConnectionStatus WatchStatus
+        {
+            get => _watchStatus;
+            set => this.RaiseAndSetIfChanged(ref _watchStatus, value);
+        }
+
+        private WatchConnectionStatus _watchStatus = WatchConnectionStatus.Disconnected;
+
+        private IDisposable? _watchSubscription;
+        private readonly TimeSpan _watchPollingInterval = TimeSpan.FromMilliseconds(200);
 
         public string AdminUrl
         {
@@ -181,127 +197,7 @@ namespace WireMockInspector.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(x =>
                 {
-                    
-                    Settings.Clear();
-                    serverSettings = x.settings;
-                    serverSettings.ProxyAndRecordSettings ??= new ProxyAndRecordSettingsModel();
-                    serverSettings.ProxyAndRecordSettings.WebProxySettings ??= new WebProxySettingsModel();
-                    serverSettings.ProxyAndRecordSettings.ReplaceSettings ??= new ProxyUrlReplaceSettingsModel();
-                    Settings.AddRange(MapToSettingsWrappers(serverSettings));
-
-
-                    var requests = x.requests.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp).ToList();
-                    SelectedRequest = null;
-                    Requests.Clear();
-                    Requests.AddRange(requests);
-                    RequestSearchTerm = string.Empty;
-                    _requestSearcher.Load(requests);
-                    Mappings.Clear();
-
-                    var hitCalculator = new MappingHitCalculator(x.requests);
-                    var scenarios = x.scenarios.GroupBy(x => x.Name).ToDictionary(x => x.Key, x => x.FirstOrDefault());
-                    
-                    var enrichedScenarios = x.mappings.Where(m => string.IsNullOrWhiteSpace(m.Scenario) == false)
-                        .GroupBy(n => n.Scenario)
-                        .ToDictionary(m => m.Key, mappingsFromScenario =>
-                            {
-                                scenarios.TryGetValue(mappingsFromScenario.Key, out var state);
-                                var estimatedScenarioStateDate = CalculateEstimatedScenarioStateDate(state, mappingsFromScenario, hitCalculator);
-
-
-                                var transitions = mappingsFromScenario.Select(m =>
-                                {
-                                    var hit = hitCalculator.HasPerfectHitAfter(m.Guid, estimatedScenarioStateDate);
-                                    var fromNode = m.WhenStateIs is null
-                                        ? new ScenarioEdgeNode(Guid.NewGuid().ToString(), state?.Started == false || (state is {Started: true, NextState: null, Counter: > 0, Finished: false} && hit), hit)
-                                        : new ScenarioNode(m.WhenStateIs);
-                                    
-                                    var toNode = m.SetStateTo is null
-                                        ? new ScenarioEdgeNode(Guid.NewGuid().ToString(), state?.Finished == true && hit, false)
-                                        : new ScenarioNode(m.SetStateTo);
-                                    
-                                    return new ScenarioTransition
-                                    (
-                                        Id: m.Guid.ToString(),
-                                        From: fromNode,
-                                        To: toNode,
-                                        Hit: hit
-                                    )
-                                    {
-                                        LastHit = hitCalculator.GetFirstPerfectHitDateAfter(m.Guid, estimatedScenarioStateDate ?? DateTime.MinValue),
-                                        Description = $"[{m.WhenStateIs}] -> [{m.SetStateTo}]",
-                                        MappingDefinition = new MarkdownCode("json", JsonConvert.SerializeObject(m, Formatting.Indented)),
-                                        TriggeredBy = new RequestLogViewModel()
-                                        {
-                                            MapToLogEntries(hitCalculator.GetPerfectHitCountAfter(m.Guid, estimatedScenarioStateDate))
-                                        }
-                                    };
-                                }).OrderBy(x=> x.LastHit??DateTime.MaxValue).ToList();
-                                return new Scenario
-                                ( 
-                                    CurrentTransitionId: "", 
-                                    Transitions: transitions, mappingsFromScenario.Key, 
-                                    CurrentState:  state switch
-                                    {
-                                        {Started: false} => "[Not Started]",
-                                        {Finished: true} => "[Finished]",
-                                        {Started: true, NextState: null, Counter: > 0} => "[Started]",
-                                        not null => state.NextState,
-                                        _ => ""
-                                    },
-                                    ThisMappingTransition: ""
-                                )
-                                {
-                                    
-                                    Status = (state?.Started, state?.Finished) switch
-                                    {
-                                        (_, true) => ScenarioStatus.Finished,    
-                                        (true, false) => ScenarioStatus.Started,
-                                        _ => ScenarioStatus.NotStarted
-                                    }
-                                }; 
-                            });
-                    Scenarios.Clear();
-                    Scenarios.AddRange(enrichedScenarios.Values);
-                    SelectedScenario = null;
-                    
-                    var mappings = x.mappings.Select(model =>
-                    {
-                        var partialHitCount = hitCalculator.GetPartialHitCount(model.Guid);
-                        var perfectHitCount = hitCalculator.GetPerfectHitCount(model.Guid);
-                        var mappingId = model.Guid?.ToString();
-                        return new MappingViewModel()
-                        {
-                            Raw = model,
-                            Id = mappingId,
-                            Title = model.Title,
-                            ExpectedMethods = model.Request.Methods ?? Array.Empty<string>(),
-                            ExpectedPaths = GetExpectedPathsDescription(model),
-                            Description = model.Title != model.Description? model.Description: null,
-                            UpdatedOn = model.UpdatedAt,
-                            Content = new MarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)),
-                            PartialHitCount = partialHitCount,
-                            PerfectHitCount = perfectHitCount,
-                            PerfectMatches = new RequestLogViewModel()
-                            {
-                                MapToLogEntries(x.requests.Where(x=>x.MappingGuid == model.Guid).OrderByDescending(x=>x.Request.DateTime))
-                            },
-                            PartialMatches = new RequestLogViewModel()
-                            {
-                                MapToLogEntries(x.requests.Where(x=>x.PartialMappingGuid == model.Guid && x.MappingGuid != model.Guid).OrderByDescending(x=>x.Request.DateTime))
-                            },
-                            HitType = (perfectHitCount, partialHitCount) switch
-                            {
-                                ( > 0, _) => MappingHitType.PerfectMatch,
-                                (_, >0) => MappingHitType.OnlyPartialMatch,
-                                _ => MappingHitType.Unmatched
-                            },
-                            Scenario = model.Scenario is {} scenarioName && enrichedScenarios.TryGetValue(scenarioName, out var scenario)? scenario with {CurrentTransitionId = mappingId, ThisMappingTransition = $"[{model.WhenStateIs}] -> [{model.SetStateTo}]"}: null
-                        };
-                    }).OfType<MappingViewModel>().OrderByDescending(x=>x.UpdatedOn);
-                    Mappings.AddRange(mappings);
-                    MappingSearchTerm = string.Empty;
-                    DataLoaded = true;
+                    ProcessInitialData(x.requests, x.mappings, x.settings, x.scenarios);
                 });
 
             LoadRequestsCommand.ThrownExceptions.ObserveOn(RxApp.MainThreadScheduler).Subscribe(ex =>
@@ -475,6 +371,42 @@ namespace WireMockInspector.ViewModels
                         }
                     };
                 }).ToProperty(this, x=>x.CodeGenerator, out _codeGenerator);
+
+            WatchCommand = ReactiveCommand.Create(() =>
+            {
+                if (IsWatching)
+                {
+                    IsWatching = false;
+                    StopWatching();
+                }
+                else
+                {
+                    IsWatching = true;
+                    StartWatching();
+                }
+            });
+
+            ClearDataCommand = ReactiveCommand.Create(() =>
+            {
+                if (IsWatching)
+                {
+                    IsWatching = false;
+                    StopWatching();
+                }
+
+                Requests.Clear();
+                Mappings.Clear();
+                Scenarios.Clear();
+                Settings.Clear();
+                SelectedRequest = null;
+                SelectedMapping = null;
+                SelectedScenario = null;
+                RequestSearchTerm = string.Empty;
+                MappingSearchTerm = string.Empty;
+                ScenarioTermFilter = string.Empty;
+                DataLoaded = false;
+                _requestSearcher = new SearchHelper();
+            });
         }
         
         private IEnumerable<string> GetAvailableTemplates()
@@ -1204,7 +1136,376 @@ namespace WireMockInspector.ViewModels
             return candidates.All(x=>x.Matched);
         }
 
+        // Watch Mode Implementation
+
+        private async Task<(bool success, IList<LogEntryModel>? requests, IList<MappingModel>? mappings, SettingsModel? settings, IList<ScenarioStateModel>? scenarios)> TryFetchDataAsync()
+        {
+            try
+            {
+                var api = RestClient.For<IWireMockAdminApi>(AdminUrl);
+                var requestsTask = api.GetRequestsAsync();
+                var mappingsTask = api.GetMappingsAsync();
+                var settingsTask = api.GetSettingsAsync();
+                var scenariosTask = api.GetScenariosAsync();
+
+                await Task.WhenAll(requestsTask, mappingsTask, settingsTask, scenariosTask).ConfigureAwait(false);
+
+                foreach (var request in requestsTask.Result)
+                {
+                    request.Response.StatusCode ??= 200;
+                }
+
+                return (true, requestsTask.Result, mappingsTask.Result, settingsTask.Result, scenariosTask.Result);
+            }
+            catch
+            {
+                return (false, null, null, null, null);
+            }
+        }
+
+        private void ProcessInitialData(IList<LogEntryModel> requests, IList<MappingModel> mappings, SettingsModel settings, IList<ScenarioStateModel> scenarios)
+        {
+            Settings.Clear();
+            serverSettings = settings;
+            serverSettings.ProxyAndRecordSettings ??= new ProxyAndRecordSettingsModel();
+            serverSettings.ProxyAndRecordSettings.WebProxySettings ??= new WebProxySettingsModel();
+            serverSettings.ProxyAndRecordSettings.ReplaceSettings ??= new ProxyUrlReplaceSettingsModel();
+            Settings.AddRange(MapToSettingsWrappers(serverSettings));
+
+            var requestVms = requests.Select(MapRequestData).OfType<RequestViewModel>().OrderByDescending(x => x.Timestamp).ToList();
+            SelectedRequest = null;
+            Requests.Clear();
+            Requests.AddRange(requestVms);
+            RequestSearchTerm = string.Empty;
+            _requestSearcher.Load(requestVms);
+            Mappings.Clear();
+
+            var (enrichedScenarios, mappingVms) = CalculateEnrichedScenariosAndMappings(requests, mappings, scenarios);
+
+            Scenarios.Clear();
+            Scenarios.AddRange(enrichedScenarios.Values);
+            SelectedScenario = null;
+
+            Mappings.AddRange(mappingVms);
+            MappingSearchTerm = string.Empty;
+            DataLoaded = true;
+        }
+
+        private (Dictionary<string, Scenario> enrichedScenarios, IEnumerable<MappingViewModel> mappings) CalculateEnrichedScenariosAndMappings(
+            IList<LogEntryModel> requests, IList<MappingModel> mappings, IList<ScenarioStateModel> scenarios)
+        {
+            var hitCalculator = new MappingHitCalculator(requests);
+            var scenariosDict = scenarios.GroupBy(x => x.Name).ToDictionary(x => x.Key, x => x.FirstOrDefault());
+
+            var enrichedScenarios = mappings.Where(m => string.IsNullOrWhiteSpace(m.Scenario) == false)
+                .GroupBy(n => n.Scenario)
+                .ToDictionary(m => m.Key, mappingsFromScenario =>
+                {
+                    scenariosDict.TryGetValue(mappingsFromScenario.Key, out var state);
+                    var estimatedScenarioStateDate = CalculateEstimatedScenarioStateDate(state, mappingsFromScenario, hitCalculator);
+
+                    var transitions = mappingsFromScenario.Select(m =>
+                    {
+                        var hit = hitCalculator.HasPerfectHitAfter(m.Guid, estimatedScenarioStateDate);
+                        var fromNode = m.WhenStateIs is null
+                            ? new ScenarioEdgeNode(Guid.NewGuid().ToString(), state?.Started == false || (state is { Started: true, NextState: null, Counter: > 0, Finished: false } && hit), hit)
+                            : new ScenarioNode(m.WhenStateIs);
+
+                        var toNode = m.SetStateTo is null
+                            ? new ScenarioEdgeNode(Guid.NewGuid().ToString(), state?.Finished == true && hit, false)
+                            : new ScenarioNode(m.SetStateTo);
+
+                        return new ScenarioTransition
+                        (
+                            Id: m.Guid.ToString(),
+                            From: fromNode,
+                            To: toNode,
+                            Hit: hit
+                        )
+                        {
+                            LastHit = hitCalculator.GetFirstPerfectHitDateAfter(m.Guid, estimatedScenarioStateDate ?? DateTime.MinValue),
+                            Description = $"[{m.WhenStateIs}] -> [{m.SetStateTo}]",
+                            MappingDefinition = new MarkdownCode("json", JsonConvert.SerializeObject(m, Formatting.Indented)),
+                            TriggeredBy = new RequestLogViewModel()
+                            {
+                                MapToLogEntries(hitCalculator.GetPerfectHitCountAfter(m.Guid, estimatedScenarioStateDate))
+                            }
+                        };
+                    }).OrderBy(x => x.LastHit ?? DateTime.MaxValue).ToList();
+
+                    return new Scenario
+                    (
+                        CurrentTransitionId: "",
+                        Transitions: transitions, mappingsFromScenario.Key,
+                        CurrentState: state switch
+                        {
+                            { Started: false } => "[Not Started]",
+                            { Finished: true } => "[Finished]",
+                            { Started: true, NextState: null, Counter: > 0 } => "[Started]",
+                            not null => state.NextState,
+                            _ => ""
+                        },
+                        ThisMappingTransition: ""
+                    )
+                    {
+                        Status = (state?.Started, state?.Finished) switch
+                        {
+                            (_, true) => ScenarioStatus.Finished,
+                            (true, false) => ScenarioStatus.Started,
+                            _ => ScenarioStatus.NotStarted
+                        }
+                    };
+                });
+
+            var mappingVms = mappings.Select(model => CreateMappingViewModel(model, requests, hitCalculator, enrichedScenarios))
+                .OfType<MappingViewModel>()
+                .OrderByDescending(x => x.UpdatedOn);
+
+            return (enrichedScenarios, mappingVms);
+        }
+
+        private MappingViewModel CreateMappingViewModel(MappingModel model, IList<LogEntryModel> requests, 
+            MappingHitCalculator hitCalculator, Dictionary<string, Scenario> enrichedScenarios)
+        {
+            var partialHitCount = hitCalculator.GetPartialHitCount(model.Guid);
+            var perfectHitCount = hitCalculator.GetPerfectHitCount(model.Guid);
+            var mappingId = model.Guid?.ToString();
+
+            return new MappingViewModel()
+            {
+                Raw = model,
+                Id = mappingId,
+                Title = model.Title,
+                ExpectedMethods = model.Request.Methods ?? Array.Empty<string>(),
+                ExpectedPaths = GetExpectedPathsDescription(model),
+                Description = model.Title != model.Description ? model.Description : null,
+                UpdatedOn = model.UpdatedAt,
+                Content = new MarkdownCode("json", JsonConvert.SerializeObject(model, Formatting.Indented)),
+                PartialHitCount = partialHitCount,
+                PerfectHitCount = perfectHitCount,
+                PerfectMatches = new RequestLogViewModel()
+                {
+                    MapToLogEntries(requests.Where(x => x.MappingGuid == model.Guid).OrderByDescending(x => x.Request.DateTime))
+                },
+                PartialMatches = new RequestLogViewModel()
+                {
+                    MapToLogEntries(requests.Where(x => x.PartialMappingGuid == model.Guid && x.MappingGuid != model.Guid).OrderByDescending(x => x.Request.DateTime))
+                },
+                HitType = (perfectHitCount, partialHitCount) switch
+                {
+                    ( > 0, _) => MappingHitType.PerfectMatch,
+                    (_, > 0) => MappingHitType.OnlyPartialMatch,
+                    _ => MappingHitType.Unmatched
+                },
+                Scenario = model.Scenario is { } scenarioName && enrichedScenarios.TryGetValue(scenarioName, out var scenario) 
+                    ? scenario with { CurrentTransitionId = mappingId, ThisMappingTransition = $"[{model.WhenStateIs}] -> [{model.SetStateTo}]" } 
+                    : null
+            };
+        }
+
+        private void ProcessMergedData(IList<LogEntryModel> requests, IList<MappingModel> mappings, SettingsModel settings, IList<ScenarioStateModel> scenarios)
+        {
+            // Update Settings (complete replacement)
+            if (!AreSettingsEqual(serverSettings, settings))
+            {
+                Settings.Clear();
+                serverSettings = settings;
+                serverSettings.ProxyAndRecordSettings ??= new ProxyAndRecordSettingsModel();
+                serverSettings.ProxyAndRecordSettings.WebProxySettings ??= new WebProxySettingsModel();
+                serverSettings.ProxyAndRecordSettings.ReplaceSettings ??= new ProxyUrlReplaceSettingsModel();
+                Settings.AddRange(MapToSettingsWrappers(serverSettings));
+            }
+
+            // Merge Requests (additive only)
+            var existingRequestGuids = new HashSet<Guid>(Requests.Select(r => r.Raw.Guid));
+            var newRequests = requests
+                .Where(r => !existingRequestGuids.Contains(r.Guid))
+                .Select(MapRequestData)
+                .OfType<RequestViewModel>()
+                .OrderByDescending(x => x.Timestamp)
+                .ToList();
+
+            if (newRequests.Any())
+            {
+                foreach (var req in newRequests)
+                {
+                    Requests.Insert(0, req);
+                }
+                _requestSearcher.Load(Requests.ToList());
+            }
+
+            var (enrichedScenarios, newMappingVms) = CalculateEnrichedScenariosAndMappings(requests, mappings, scenarios);
+
+            // Merge Mappings (add new, update existing, never remove)
+            MergeMappings(newMappingVms.ToList(), requests);
+
+            // Merge Scenarios (add new, update existing, never remove)
+            MergeScenarios(enrichedScenarios);
+        }
+
+        private void MergeMappings(List<MappingViewModel> newMappings, IList<LogEntryModel> allRequests)
+        {
+            var existingMappingsDict = Mappings.ToDictionary(m => m.Id, m => m);
+            var needsReorder = false;
+
+            foreach (var newMapping in newMappings)
+            {
+                if (existingMappingsDict.TryGetValue(newMapping.Id, out var existingMapping))
+                {
+                    // Update existing if changed
+                    if (!AreMappingsEqual(existingMapping, newMapping))
+                    {
+                        existingMapping.Raw = newMapping.Raw;
+                        existingMapping.Title = newMapping.Title;
+                        existingMapping.ExpectedMethods = newMapping.ExpectedMethods;
+                        existingMapping.ExpectedPaths = newMapping.ExpectedPaths;
+                        existingMapping.Description = newMapping.Description;
+                        existingMapping.UpdatedOn = newMapping.UpdatedOn;
+                        existingMapping.Content = newMapping.Content;
+                        existingMapping.PartialHitCount = newMapping.PartialHitCount;
+                        existingMapping.PerfectHitCount = newMapping.PerfectHitCount;
+                        existingMapping.HitType = newMapping.HitType;
+                        existingMapping.Scenario = newMapping.Scenario;
+                        existingMapping.PerfectMatches = newMapping.PerfectMatches;
+                        existingMapping.PartialMatches = newMapping.PartialMatches;
+                        needsReorder = true;
+                    }
+                }
+                else
+                {
+                    // Add new mapping
+                    Mappings.Add(newMapping);
+                    needsReorder = true;
+                }
+            }
+
+            // Re-sort if needed
+            if (needsReorder)
+            {
+                var sorted = Mappings.OrderByDescending(x => x.UpdatedOn).ToList();
+                Mappings.Clear();
+                Mappings.AddRange(sorted);
+            }
+        }
+
+        private void MergeScenarios(Dictionary<string, Scenario> newScenarios)
+        {
+            var existingScenariosDict = Scenarios.ToDictionary(s => s.ScenarioName, s => s);
+
+            foreach (var newScenario in newScenarios.Values)
+            {
+                if (existingScenariosDict.TryGetValue(newScenario.ScenarioName, out var existingScenario))
+                {
+                    // Update existing if changed
+                    if (!AreScenariosEqual(existingScenario, newScenario))
+                    {
+                        var index = Scenarios.IndexOf(existingScenario);
+                        if (index >= 0)
+                        {
+                            Scenarios[index] = newScenario;
+                        }
+                    }
+                }
+                else
+                {
+                    // Add new scenario
+                    Scenarios.Add(newScenario);
+                }
+            }
+        }
+
+        private bool AreMappingsEqual(MappingViewModel a, MappingViewModel b)
+        {
+            return a.UpdatedOn == b.UpdatedOn &&
+                   a.Title == b.Title &&
+                   a.PerfectHitCount == b.PerfectHitCount &&
+                   a.PartialHitCount == b.PartialHitCount &&
+                   a.HitType == b.HitType;
+        }
+
+        private bool AreScenariosEqual(Scenario a, Scenario b)
+        {
+            return a.CurrentState == b.CurrentState &&
+                   a.Status == b.Status;
+        }
+
+        private bool AreSettingsEqual(SettingsModel a, SettingsModel b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+
+            try
+            {
+                var jsonA = JsonConvert.SerializeObject(a);
+                var jsonB = JsonConvert.SerializeObject(b);
+                return jsonA == jsonB;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void StartWatching()
+        {
+            if (_watchSubscription != null)
+            {
+                StopWatching();
+            }
+
+            WatchStatus = WatchConnectionStatus.Connecting;
+
+            _watchSubscription = Observable
+                .Timer(TimeSpan.Zero, _watchPollingInterval)
+                .SelectMany(_ => Observable.FromAsync(TryFetchDataAsync))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(result =>
+                {
+                    if (result.success && result.requests != null && result.mappings != null && 
+                        result.settings != null && result.scenarios != null)
+                    {
+                        if (WatchStatus != WatchConnectionStatus.Connected)
+                        {
+                            WatchStatus = WatchConnectionStatus.Connected;
+                        }
+
+                        if (!DataLoaded)
+                        {
+                            // First successful load
+                            ProcessInitialData(result.requests, result.mappings, result.settings, result.scenarios);
+                        }
+                        else
+                        {
+                            // Merge with existing data
+                            ProcessMergedData(result.requests, result.mappings, result.settings, result.scenarios);
+                        }
+                    }
+                    else
+                    {
+                        // Connection failed
+                        if (DataLoaded && WatchStatus == WatchConnectionStatus.Connected)
+                        {
+                            WatchStatus = WatchConnectionStatus.Reconnecting;
+                        }
+                        else if (WatchStatus != WatchConnectionStatus.Reconnecting)
+                        {
+                            WatchStatus = WatchConnectionStatus.Connecting;
+                        }
+                    }
+                });
+        }
+
+        private void StopWatching()
+        {
+            _watchSubscription?.Dispose();
+            _watchSubscription = null;
+            WatchStatus = WatchConnectionStatus.Disconnected;
+        }
+
         public ReactiveCommand<Unit, (IList<LogEntryModel> requests, IList<MappingModel> mappings, SettingsModel settings, IList<ScenarioStateModel> scenarios)> LoadRequestsCommand { get; }
+
+        public ReactiveCommand<Unit, Unit> WatchCommand { get; }
+        public ReactiveCommand<Unit, Unit> ClearDataCommand { get; }
 
         private readonly ObservableAsPropertyHelper<MappingDetails> _relatedMapping;
         private SettingsModel serverSettings;

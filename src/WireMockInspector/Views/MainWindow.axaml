@@ -45,11 +45,28 @@
       </Grid.Styles>
       <StackPanel>
         <views:NewVersionInfo DataContext="{Binding NewVersion}" IsVisible="{Binding IsVisible}"></views:NewVersionInfo>
-        <Grid ColumnDefinitions="*, Auto" >
+        <Grid ColumnDefinitions="*, Auto, Auto, Auto, Auto">
           <TextBox MinWidth="1" Text="{Binding AdminUrl, Mode=TwoWay}" Watermark="Admin API URL" Name="AdminUrlCtr" ></TextBox>
-          <Button Grid.Column="1" Command="{Binding LoadRequestsCommand}" Margin="10,0,0,0"  ToolTip.Tip="Load requests">
+          
+          <Button Grid.Column="1" Command="{Binding LoadRequestsCommand}" Margin="10,0,0,0" ToolTip.Tip="Load requests once">
             <PathIcon Data="{StaticResource arrow_sync_circle_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
           </Button>
+          
+          <Button Grid.Column="2" Command="{Binding WatchCommand}" Margin="10,0,0,0" ToolTip.Tip="Toggle watch mode">
+            <Panel>
+              <PathIcon Data="{StaticResource play_circle_regular}" IsVisible="{Binding !IsWatching}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <PathIcon Data="{StaticResource pause_circle_regular}" IsVisible="{Binding IsWatching}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Panel>
+          </Button>
+          
+          <Button Grid.Column="3" Command="{Binding ClearDataCommand}" Margin="10,0,0,0" ToolTip.Tip="Clear all data">
+            <PathIcon Data="{StaticResource dismiss_circle_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
+          </Button>
+          
+          <Border Grid.Column="4" Background="#3baced" CornerRadius="4" Padding="8,4" Margin="10,0,0,0" VerticalAlignment="Center">
+            <TextBlock Text="{Binding WatchStatus, Converter={x:Static viewModels:WatchStatusConverter.Instance}}" 
+                       Foreground="White" FontSize="12" />
+          </Border>
         </Grid>
       </StackPanel>
       <Image Source="../Assets/wiremockinspector.png"  IsVisible="{Binding !DataLoaded}"  Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Width="300" Opacity="0.2"></Image>
