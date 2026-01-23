@@ -392,12 +392,6 @@ namespace WireMockInspector.ViewModels
 
             ClearDataCommand = ReactiveCommand.Create(() =>
             {
-                if (IsWatching)
-                {
-                    IsWatching = false;
-                    StopWatching();
-                }
-
                 Requests.Clear();
                 Mappings.Clear();
                 Scenarios.Clear();
@@ -411,7 +405,7 @@ namespace WireMockInspector.ViewModels
                 DataLoaded = false;
                 _requestSearcher = new SearchHelper();
                 
-                // Reset counters
+                // Reset counters so watch mode treats next poll as initial load
                 _lastRequestCount = 0;
                 _lastMappingCount = 0;
                 _lastScenarioCount = 0;

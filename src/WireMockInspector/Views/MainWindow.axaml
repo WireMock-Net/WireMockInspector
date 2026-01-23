@@ -46,7 +46,7 @@
       <StackPanel>
         <views:NewVersionInfo DataContext="{Binding NewVersion}" IsVisible="{Binding IsVisible}"></views:NewVersionInfo>
         <Grid ColumnDefinitions="*, Auto, Auto, Auto, Auto">
-          <TextBox MinWidth="1" Text="{Binding AdminUrl, Mode=TwoWay}" Watermark="Admin API URL" Name="AdminUrlCtr" ></TextBox>
+          <TextBox MinWidth="1" Text="{Binding AdminUrl, Mode=TwoWay}" Watermark="Admin API URL" Name="AdminUrlCtr" IsEnabled="{Binding !IsWatching}"></TextBox>
           
           <Button Grid.Column="1" Command="{Binding LoadRequestsCommand}" Margin="10,0,0,0" ToolTip.Tip="Load requests once">
             <PathIcon Data="{StaticResource arrow_sync_circle_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
@@ -63,9 +63,9 @@
             <PathIcon Data="{StaticResource dismiss_circle_regular}" HorizontalAlignment="Center" VerticalAlignment="Center" ></PathIcon>
           </Button>
           
-          <Border Grid.Column="4" Background="#3baced" CornerRadius="4" Padding="8,4" Margin="10,0,0,0" VerticalAlignment="Center">
+          <Border Grid.Column="4" Background="#3baced" CornerRadius="4" Padding="8,0" Margin="10,0,0,0" VerticalAlignment="Stretch">
             <TextBlock Text="{Binding WatchStatus, Converter={x:Static viewModels:WatchStatusConverter.Instance}}" 
-                       Foreground="White" FontSize="12" />
+                       Foreground="White" FontSize="12" VerticalAlignment="Center" />
           </Border>
         </Grid>
       </StackPanel>
